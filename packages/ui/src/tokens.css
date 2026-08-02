@@ -1,0 +1,49 @@
+:root {
+  --ink: #12141a;
+  --paper: #e8ecf1;
+  --paper-elevated: #f4f6f9;
+  --stone: #5c6570;
+  --line: #c5ccd6;
+  --accent: #0f6e6a;
+  --accent-fg: #f4f6f9;
+  --radius-control: 12px;
+  --font-display: 'Noto Serif Devanagari', 'Noto Serif', Georgia, serif;
+  --font-sans: 'Manrope', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8ecf1;
+    --paper: #16181f;
+    --paper-elevated: #1c1f28;
+    --stone: #9aa3ad;
+    --line: #2a2f3a;
+    --accent: #3db8b0;
+    --accent-fg: #0a1a19;
+    color-scheme: dark;
+  }
+}
+
+[data-theme='light'] {
+  --ink: #12141a;
+  --paper: #e8ecf1;
+  --paper-elevated: #f4f6f9;
+  --stone: #5c6570;
+  --line: #c5ccd6;
+  --accent: #0f6e6a;
+  --accent-fg: #f4f6f9;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --ink: #e8ecf1;
+  --paper: #16181f;
+  --paper-elevated: #1c1f28;
+  --stone: #9aa3ad;
+  --line: #2a2f3a;
+  --accent: #3db8b0;
+  --accent-fg: #0a1a19;
+  color-scheme: dark;
+}
