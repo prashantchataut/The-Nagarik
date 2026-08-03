@@ -22,7 +22,7 @@ Updated as work ships. Next prompt should take the top **Next slice**.
 
 ## Next slice (recommended)
 
-1. Commit + push local Payload/CMS work to `main` so Git deploys match the live CLI build
+1. ~~Commit + push local Payload/CMS work to `main`~~ (done: `cd82ada`)
 2. Provision Neon; set `DATABASE_URL` + `BLOB_READ_WRITE_TOKEN` on Vercel
 3. Open `/cms`, create first admin; run seed; flip `CONTENT_SOURCE=payload`
 4. Generate Payload migrations; keep `PAYLOAD_DB_PUSH=false` in production
