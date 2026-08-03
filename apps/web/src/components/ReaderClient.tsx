@@ -1,20 +1,37 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Check, LinkSimple, ShareNetwork, TextAa } from '@phosphor-icons/react'
 import type { Dictionary } from '@/lib/i18n'
+
+const TYPE_SCALE_KEY = 'tn_article_type_scale_v1'
 
 export function ShareCopyButton({ dict }: { dict: Dictionary }) {
   const [copied, setCopied] = useState(false)
+
+  async function share() {
+    const url = window.location.href
+    if (navigator.share) {
+      try {
+        await navigator.share({ url, title: document.title })
+        return
+      } catch {
+        /* fall through to copy */
+      }
+    }
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1600)
+  }
+
   return (
     <button
       type="button"
-      className="rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm hover:border-accent active:scale-[0.98]"
-      onClick={async () => {
-        await navigator.clipboard.writeText(window.location.href)
-        setCopied(true)
-        window.setTimeout(() => setCopied(false), 1600)
-      }}
+      className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm hover:border-accent active:scale-[0.98]"
+      onClick={() => void share()}
     >
+      {copied ? <Check size={14} weight="bold" /> : <ShareNetwork size={14} weight="regular" />}
       {copied ? dict.copied : dict.share}
     </button>
   )
@@ -24,9 +41,23 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
   const [size, setSize] = useState<'sm' | 'md' | 'lg'>('md')
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(TYPE_SCALE_KEY) as 'sm' | 'md' | 'lg' | null
+      if (saved === 'sm' || saved === 'md' || saved === 'lg') setSize(saved)
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  useEffect(() => {
     const root = document.documentElement
     const map = { sm: '0.95', md: '1', lg: '1.12' } as const
     root.style.setProperty('--article-type-scale', map[size])
+    try {
+      localStorage.setItem(TYPE_SCALE_KEY, size)
+    } catch {
+      /* ignore */
+    }
   }, [size])
 
   const btn =
@@ -34,6 +65,7 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
 
   return (
     <div className="inline-flex items-center gap-1" role="group" aria-label={dict.textSize}>
+      <TextAa size={14} className="mr-0.5 text-stone" aria-hidden />
       <button type="button" className={btn} data-active={size === 'sm'} onClick={() => setSize('sm')}>
         {dict.textSmall}
       </button>
@@ -43,6 +75,35 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
       <button type="button" className={btn} data-active={size === 'lg'} onClick={() => setSize('lg')}>
         {dict.textLarge}
       </button>
+    </div>
+  )
+}
+
+/** Sticky thin toolbar under masthead — share + type size stay reachable while reading. */
+export function ArticleToolbar({
+  dict,
+  bilingualHref,
+  bilingualLabel,
+}: {
+  dict: Dictionary
+  bilingualHref?: string
+  bilingualLabel?: string
+}) {
+  return (
+    <div className="sticky top-14 z-30 border-b border-line bg-paper/92 backdrop-blur-md md:top-[6.25rem] lg:top-[8.75rem]">
+      <div className="mx-auto flex max-w-[720px] flex-wrap items-center gap-2 px-4 py-2 md:px-0">
+        <ShareCopyButton dict={dict} />
+        <TextSizeControls dict={dict} />
+        {bilingualHref && bilingualLabel ? (
+          <Link
+            href={bilingualHref}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm hover:border-accent"
+          >
+            <LinkSimple size={14} weight="regular" />
+            {dict.availableIn}: {bilingualLabel}
+          </Link>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -133,7 +194,7 @@ export function ConsentBanner({ dict }: { dict: Dictionary }) {
   if (hidden) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper-elevated p-4 shadow-[0_-12px_40px_rgba(18,20,26,0.08)]">
+    <div className="fixed inset-x-0 bottom-16 z-50 border-t border-line bg-paper-elevated p-4 shadow-[0_-12px_40px_rgba(18,20,26,0.08)] lg:bottom-0">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <p className="max-w-2xl text-sm text-stone">{dict.consentBody}</p>
         <div className="flex gap-2">

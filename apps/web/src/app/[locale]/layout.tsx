@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { SiteFooter, SiteHeader } from '@/components/Chrome'
+import { MobileBottomNav } from '@/components/MobileNav'
 import { ConsentBanner } from '@/components/ReaderClient'
 import { FixtureBanner } from '@/components/Story'
 import { getContent } from '@/lib/content'
@@ -22,6 +23,12 @@ export default async function LocaleLayout({
 
   return (
     <div lang={locale}>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[var(--radius-control)] focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-fg"
+      >
+        {dict.home}
+      </a>
       <FixtureBanner dict={dict} show={content.usingDevFixtures} />
       <SiteHeader
         locale={locale}
@@ -29,8 +36,11 @@ export default async function LocaleLayout({
         categories={categories}
         otherLocaleHref={`/${otherLocale}`}
       />
-      <main>{children}</main>
+      <main id="main" className="pb-20 lg:pb-0">
+        {children}
+      </main>
       <SiteFooter locale={locale} dict={dict} categories={categories} />
+      <MobileBottomNav locale={locale} dict={dict} />
       <ConsentBanner dict={dict} />
     </div>
   )

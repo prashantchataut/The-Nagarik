@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { List, MagnifyingGlass, X } from '@phosphor-icons/react'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
 import type { Category } from '@thenagarik/content'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 function todayLabel(locale: AppLocale): string {
   return new Date().toLocaleDateString(locale === 'ne' ? 'ne-NP' : 'en-GB', {
@@ -39,6 +40,7 @@ export function SiteHeader({
         <div className="mx-auto flex h-9 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
           <p className="truncate">{todayLabel(locale)}</p>
           <div className="flex items-center gap-4">
+            <ThemeToggle dict={dict} />
             <Link href={`/${locale}/search`} className="inline-flex items-center gap-1.5 hover:text-ink">
               <MagnifyingGlass size={14} weight="regular" />
               {dict.search}
@@ -83,6 +85,9 @@ export function SiteHeader({
         </form>
 
         <div className="flex items-center gap-2">
+          <div className="md:hidden">
+            <ThemeToggle dict={dict} />
+          </div>
           <Link
             href={`/${locale}/search`}
             className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-control)] text-ink lg:hidden"

@@ -1,11 +1,14 @@
 import {
   CategorySection,
   DualSignalRail,
+  EditorsPicks,
   LeadAndRail,
   OpinionStack,
   UpdateStrip,
+  VisualStrip,
 } from '@/components/Story'
 import { ContinueReadingRail } from '@/components/ContinueReading'
+import { Reveal } from '@/components/Reveal'
 import { getContent } from '@/lib/content'
 import { getEngagementSnapshot } from '@/lib/engagement'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
@@ -44,7 +47,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const mostReadCards = read.items.map((i) => byId.get(i.id)).filter(Boolean) as typeof cards
 
   const opinion = cards.filter((c) => c.categorySlug === 'bichar').slice(0, 3)
-  const sectionCats = categories.filter((c) => c.slug !== 'bichar').slice(0, 4)
+  const editors = cards
+    .filter((c) => {
+      const raw = articles.find((a) => a.id === c.id)
+      return (raw?.editorialPriority ?? 0) >= 7
+    })
+    .slice(0, 3)
+  const visual = cards.filter((c) => c.hero).slice(0, 3)
+  const sectionCats = categories.filter((c) => c.slug !== 'bichar').slice(0, 5)
 
   return (
     <>
@@ -55,27 +65,33 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <p className="px-4 py-16">{dict.empty}</p>
       )}
       <ContinueReadingRail locale={locale} dict={dict} stories={cards} />
-      <DualSignalRail
-        locale={locale}
-        dict={dict}
-        trending={trendingCards}
-        mostRead={mostReadCards}
-        trendingLive={trending.live}
-        mostReadLive={read.live}
-      />
+      <Reveal>
+        <DualSignalRail
+          locale={locale}
+          dict={dict}
+          trending={trendingCards}
+          mostRead={mostReadCards}
+          trendingLive={trending.live}
+          mostReadLive={read.live}
+        />
+      </Reveal>
+      <Reveal>
+        <EditorsPicks locale={locale} dict={dict} stories={editors} />
+      </Reveal>
       {sectionCats.map((cat) => {
         const stories = cards.filter((c) => c.categorySlug === cat.slug).slice(0, 6)
         return (
-          <CategorySection
-            key={cat.id}
-            locale={locale}
-            dict={dict}
-            category={cat}
-            stories={stories}
-          />
+          <Reveal key={cat.id}>
+            <CategorySection locale={locale} dict={dict} category={cat} stories={stories} />
+          </Reveal>
         )
       })}
-      <OpinionStack locale={locale} dict={dict} stories={opinion} />
+      <Reveal>
+        <OpinionStack locale={locale} dict={dict} stories={opinion} />
+      </Reveal>
+      <Reveal>
+        <VisualStrip locale={locale} dict={dict} stories={visual} />
+      </Reveal>
     </>
   )
 }

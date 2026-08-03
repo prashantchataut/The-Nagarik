@@ -57,6 +57,12 @@ export const dictionaries = {
     seeAll: 'सबै हेर्नुहोस्',
     today: 'आज',
     continueReading: 'पढाइ जारी',
+    editorsPicks: 'सम्पादकको छनोट',
+    nextStory: 'अर्को समाचार',
+    availableIn: 'उपलब्ध भाषा',
+    theme: 'थिम',
+    hours24: '२४ घण्टा',
+    onThisPage: 'विषयसूची',
   },
   en: {
     siteName: 'The Nagarik',
@@ -104,6 +110,12 @@ export const dictionaries = {
     seeAll: 'See all',
     continueReading: 'Continue reading',
     today: 'Today',
+    editorsPicks: "Editors' picks",
+    nextStory: 'Next story',
+    availableIn: 'Also available',
+    theme: 'Theme',
+    hours24: '24 hours',
+    onThisPage: 'On this page',
   },
 } as const
 

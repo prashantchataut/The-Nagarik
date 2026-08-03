@@ -37,6 +37,7 @@ export function UpdateStrip({
       <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-4 py-2.5 md:flex-row md:items-center md:gap-6 md:px-6">
         <p className="shrink-0 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-accent">
           {dict.latestUpdates}
+          <span className="ml-2 font-normal tracking-normal text-stone normal-case">· {dict.hours24}</span>
         </p>
         <div className="min-w-0 flex-1">
           <Link
@@ -132,11 +133,26 @@ export function LeadAndRail({
               const sHref = `/${locale}/${story.categorySlug}/${story.slug}`
               return (
                 <li key={story.id} className="border-b border-line last:border-b-0">
-                  <Link href={sHref} className="group block py-3.5">
-                    <p className="font-[family-name:var(--font-display)] text-[1.05rem] leading-snug tracking-[-0.02em] text-ink group-hover:text-accent">
-                      {story.title}
-                    </p>
-                    <p className="mt-1.5 text-xs text-stone">{relativeTime(story.publishedAt, locale)}</p>
+                  <Link href={sHref} className="group grid grid-cols-[4.5rem_1fr] gap-3 py-3">
+                    <span className="relative aspect-[4/3] overflow-hidden bg-line">
+                      {story.hero ? (
+                        <Image
+                          src={story.hero.url}
+                          alt={story.hero.alt}
+                          fill
+                          sizes="72px"
+                          className="object-cover"
+                        />
+                      ) : null}
+                    </span>
+                    <span>
+                      <span className="font-[family-name:var(--font-display)] text-[0.98rem] leading-snug tracking-[-0.02em] text-ink group-hover:text-accent">
+                        {story.title}
+                      </span>
+                      <span className="mt-1.5 block text-xs text-stone">
+                        {relativeTime(story.publishedAt, locale)}
+                      </span>
+                    </span>
                   </Link>
                 </li>
               )
@@ -376,6 +392,102 @@ export function StoryRail({
         {stories.map((s) => (
           <StoryLink key={s.id} locale={locale} story={s} dict={dict} />
         ))}
+      </div>
+    </section>
+  )
+}
+
+export function EditorsPicks({
+  locale,
+  dict,
+  stories,
+}: {
+  locale: AppLocale
+  dict: Dictionary
+  stories: StoryCard[]
+}) {
+  if (!stories.length) return null
+  return (
+    <section className="border-b border-line">
+      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.03em]">
+          {dict.editorsPicks}
+        </h2>
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          {stories.map((story) => {
+            const href = `/${locale}/${story.categorySlug}/${story.slug}`
+            return (
+              <article key={story.id} className="border-t border-line pt-4">
+                <Link href={href} className="relative mb-3 block aspect-[16/10] overflow-hidden">
+                  {story.hero ? (
+                    <Image
+                      src={story.hero.url}
+                      alt={story.hero.alt}
+                      fill
+                      sizes="(max-width:768px) 100vw, 33vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-line" />
+                  )}
+                </Link>
+                <h3 className="font-[family-name:var(--font-display)] text-lg leading-snug tracking-[-0.02em]">
+                  <Link href={href}>{story.title}</Link>
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm text-stone">{story.deck}</p>
+              </article>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function VisualStrip({
+  locale,
+  dict,
+  stories,
+}: {
+  locale: AppLocale
+  dict: Dictionary
+  stories: StoryCard[]
+}) {
+  if (stories.length < 2) return null
+  return (
+    <section className="border-b border-line">
+      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.03em]">{dict.visual}</h2>
+        <div className="mt-5 grid gap-3 md:grid-cols-3 md:gap-4">
+          {stories.slice(0, 3).map((story, i) => {
+            const href = `/${locale}/${story.categorySlug}/${story.slug}`
+            return (
+              <Link
+                key={story.id}
+                href={href}
+                className={`group relative overflow-hidden ${
+                  i === 0 ? 'min-h-[240px] md:col-span-2 md:row-span-2 md:min-h-[440px]' : 'min-h-[200px]'
+                }`}
+              >
+                {story.hero ? (
+                  <Image
+                    src={story.hero.url}
+                    alt={story.hero.alt}
+                    fill
+                    sizes={i === 0 ? '(max-width:768px) 100vw, 66vw' : '(max-width:768px) 100vw, 33vw'}
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                  />
+                ) : null}
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/15 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
+                  <p className="font-[family-name:var(--font-display)] text-lg leading-snug text-paper md:text-xl">
+                    {story.title}
+                  </p>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
       </div>
     </section>
   )
