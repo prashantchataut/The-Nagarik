@@ -30,7 +30,7 @@ export default async function LocaleLayout({
         otherLocaleHref={`/${otherLocale}`}
       />
       <main>{children}</main>
-      <SiteFooter locale={locale} dict={dict} />
+      <SiteFooter locale={locale} dict={dict} categories={categories} />
       <ConsentBanner dict={dict} />
     </div>
   )

@@ -12,6 +12,7 @@ import {
   ArticleEngagement,
   ReadingProgress,
   ShareCopyButton,
+  TextSizeControls,
 } from '@/components/ReaderClient'
 import { StoryRail } from '@/components/Story'
 import { getContent, siteUrl } from '@/lib/content'
@@ -125,6 +126,7 @@ export default async function ArticlePage({
               </span>
             ) : null}
             <ShareCopyButton dict={dict} />
+            <TextSizeControls dict={dict} />
           </div>
         </header>
 
@@ -145,7 +147,10 @@ export default async function ArticlePage({
           </figure>
         ) : null}
 
-        <div className="mx-auto max-w-[65ch] space-y-5 pb-16 text-lg leading-[1.75]">
+        <div
+          className="mx-auto max-w-[65ch] space-y-5 pb-16 text-lg leading-[1.75]"
+          style={{ fontSize: 'calc(1.125rem * var(--article-type-scale, 1))' }}
+        >
           {body.map((block, i) => {
             switch (block.type) {
               case 'paragraph':

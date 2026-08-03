@@ -22,8 +22,8 @@ Updated as work ships. Next prompt should take the top **Next slice**.
 
 ## Next slice (recommended)
 
-1. ~~Commit + push local Payload/CMS work to `main`~~ (done: `cd82ada`)
-2. Provision Neon; set `DATABASE_URL` + `BLOB_READ_WRITE_TOKEN` on Vercel
+1. ~~Civic-dense reader redesign (Track A)~~ — masthead, lead+rail, category rows, article type size (see [READER_UX_PLAN.md](./READER_UX_PLAN.md))
+2. Provision Neon; set `DATABASE_URL` + `BLOB_READ_WRITE_TOKEN` on Vercel (Track B)
 3. Open `/cms`, create first admin; run seed; flip `CONTENT_SOURCE=payload`
 4. Generate Payload migrations; keep `PAYLOAD_DB_PUSH=false` in production
 

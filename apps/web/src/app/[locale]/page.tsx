@@ -1,10 +1,9 @@
 import {
+  CategorySection,
   DualSignalRail,
-  LatestList,
-  LeadHero,
+  LeadAndRail,
   OpinionStack,
-  ProvinceFeature,
-  VisualStrip,
+  UpdateStrip,
 } from '@/components/Story'
 import { getContent } from '@/lib/content'
 import { getEngagementSnapshot } from '@/lib/engagement'
@@ -20,21 +19,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const locale = raw as AppLocale
   const dict = getDictionary(locale)
   const content = getContent()
+  const categories = await content.listCategories()
   const articles = await content.listPublishedArticles({ locale })
   const cards = await Promise.all(articles.map((a) => content.toStoryCard(a, locale)))
   const lead = cards[0]
-  const rest = cards.slice(1)
+  const side = cards.slice(1, 7)
+  const updatePool = cards.slice(0, 6)
 
   const snap = await getEngagementSnapshot()
   const trending = detectTrending(
     articles.map((a) => ({ id: a.id, publishedAt: a.publishedAt })),
     snap.trendingSamples,
-    { limit: 4 },
+    { limit: 5 },
   )
   const read = mostRead(
     articles.map((a) => ({ id: a.id, publishedAt: a.publishedAt })),
     snap.dwellStats,
-    { limit: 4 },
+    { limit: 5 },
   )
 
   const byId = new Map(cards.map((c) => [c.id, c]))
@@ -42,13 +43,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const mostReadCards = read.items.map((i) => byId.get(i.id)).filter(Boolean) as typeof cards
 
   const opinion = cards.filter((c) => c.categorySlug === 'bichar').slice(0, 3)
-  const province = cards.find((c) => c.categorySlug === 'pradesh')
-  const visual = cards.filter((c) => c.hero).slice(0, 3)
+  const sectionCats = categories.filter((c) => c.slug !== 'bichar').slice(0, 4)
 
   return (
     <>
-      {lead ? <LeadHero locale={locale} story={lead} dict={dict} /> : <p className="px-4 py-24">{dict.empty}</p>}
-      <LatestList locale={locale} stories={rest.slice(0, 5)} dict={dict} />
+      <UpdateStrip locale={locale} dict={dict} stories={updatePool} />
+      {lead ? (
+        <LeadAndRail locale={locale} dict={dict} lead={lead} side={side} />
+      ) : (
+        <p className="px-4 py-16">{dict.empty}</p>
+      )}
       <DualSignalRail
         locale={locale}
         dict={dict}
@@ -57,9 +61,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         trendingLive={trending.live}
         mostReadLive={read.live}
       />
-      <ProvinceFeature locale={locale} dict={dict} story={province} />
+      {sectionCats.map((cat) => {
+        const stories = cards.filter((c) => c.categorySlug === cat.slug).slice(0, 6)
+        return (
+          <CategorySection
+            key={cat.id}
+            locale={locale}
+            dict={dict}
+            category={cat}
+            stories={stories}
+          />
+        )
+      })}
       <OpinionStack locale={locale} dict={dict} stories={opinion} />
-      <VisualStrip locale={locale} dict={dict} stories={visual} />
     </>
   )
 }

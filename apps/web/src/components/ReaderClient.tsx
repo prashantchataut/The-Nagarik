@@ -20,6 +20,33 @@ export function ShareCopyButton({ dict }: { dict: Dictionary }) {
   )
 }
 
+export function TextSizeControls({ dict }: { dict: Dictionary }) {
+  const [size, setSize] = useState<'sm' | 'md' | 'lg'>('md')
+
+  useEffect(() => {
+    const root = document.documentElement
+    const map = { sm: '0.95', md: '1', lg: '1.12' } as const
+    root.style.setProperty('--article-type-scale', map[size])
+  }, [size])
+
+  const btn =
+    'rounded-[var(--radius-control)] border border-line px-2.5 py-1 text-xs hover:border-accent data-[active=true]:border-accent data-[active=true]:bg-accent data-[active=true]:text-accent-fg'
+
+  return (
+    <div className="inline-flex items-center gap-1" role="group" aria-label={dict.textSize}>
+      <button type="button" className={btn} data-active={size === 'sm'} onClick={() => setSize('sm')}>
+        {dict.textSmall}
+      </button>
+      <button type="button" className={btn} data-active={size === 'md'} onClick={() => setSize('md')}>
+        {dict.textMedium}
+      </button>
+      <button type="button" className={btn} data-active={size === 'lg'} onClick={() => setSize('lg')}>
+        {dict.textLarge}
+      </button>
+    </div>
+  )
+}
+
 export function ReadingProgress() {
   return (
     <div

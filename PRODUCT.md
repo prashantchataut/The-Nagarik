@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Primary: Nepali readers checking civic, political, and provincial news on mobile and desktop, often on flaky connections, wanting a calm trusted read rather than a dense portal warehouse.
+Primary: Nepali readers checking civic, political, and provincial news on mobile and desktop, often on flaky connections, wanting a trusted portal dense enough to scan quickly without becoming a warehouse of noise.
 
 Secondary: English readers (diaspora and locals) who need selective human-reviewed English coverage of the same civic beat.
 
@@ -22,7 +22,7 @@ Success means: readers finish stories; editors publish without dual-CMS chaos; r
 
 ## Positioning
 
-Civic ink paper for the federal republic: original news only, Nepali at `/` and English at `/en`, reading craft first, algorithms that label cold-start instead of faking live signals. Not an aggregator. Not a Reels-forward mega-portal.
+Civic ink paper for the federal republic: original news only, Nepali at `/` and English at `/en`, Online Khabar-class IA with Civic Ink materials, algorithms that label cold-start instead of faking live signals. Not an aggregator. Not a Reels-forward mega-portal.
 
 ## Operating Context
 

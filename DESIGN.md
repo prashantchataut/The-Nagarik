@@ -4,7 +4,7 @@
 
 ## World
 
-**Civic Ink / Valley Mist** — a cool civic paper after rain: mist stone ground, deep ink type, one alpine-teal accent. Photo journalism as the only hero plane. High design variance, low motion, low–medium density.
+**Civic Ink / Valley Mist** — a cool civic paper after rain: mist stone ground, deep ink type, one alpine-teal accent. Photo journalism as the only hero plane. Portal IA with calm materials (not a red warehouse).
 
 ## Color
 
@@ -20,29 +20,39 @@ Strategy: Restrained (neutrals + one accent).
 | `--accent` | `#0F6E6A` | `#3DB8B0` |
 | `--accent-fg` | `#F4F6F9` | `#0A1A19` |
 
-No portal red, no AI purple, no cream-terracotta craft palette. Never pure `#000` / `#FFF`.
+No OnlineKhabar portal red, no AI purple, no cream-terracotta craft palette. Never pure `#000` / `#FFF`.
 
 ## Typography
 
-- Display / Nepali headlines: `Noto Serif Devanagari` (justified for Devanagari news display; not Fraunces/Instrument)
+- Display / Nepali headlines: `Noto Serif Devanagari`
 - UI / English / body UI chrome: `Manrope`
 - Mono (desk, metadata sparingly): `IBM Plex Mono` only in ops desk, not marketing chrome
 
-Body measure ~65ch. Devanagari line-height ≥ 1.7. Italic display with descenders needs `leading-[1.1]` + padding reserve.
+Body measure ~65ch. Devanagari line-height ≥ 1.7.
 
 ## Shape
 
-Corner radius: soft 12px for interactive controls; 0 for editorial photo edges / hairlines. One system: buttons 12px, inputs 12px, no mixed pill+sharp without rule.
+Corner radius: soft 12px for interactive controls; 0 for editorial photo edges / hairlines.
 
 ## Motion
 
-`MOTION_INTENSITY: 3` — opacity/transform reveals only; honor `prefers-reduced-motion`. No marquees in Phase 1. No scroll hijack.
+`MOTION_INTENSITY: 3` — opacity/transform reveals only; honor `prefers-reduced-motion`. No marquees. No scroll hijack.
 
 ## Layout dials
 
-`DESIGN_VARIANCE: 8` · `VISUAL_DENSITY: 3`
+`DESIGN_VARIANCE: 6` · `VISUAL_DENSITY: 6`
 
-Homepage first viewport: brand masthead · one lead headline · one dek (≤20 words) · language + primary CTA · one full-bleed image. No cards in hero. No trust strip in hero. Max one eyebrow per three sections.
+**Civic-dense hybrid** (Online Khabar IA lessons, Civic Ink materials):
+
+- Utility strip (date, search, language) above brand
+- Brand row + full category nav (second sticky band on desktop)
+- Breaking / ताजा अपडेट strip under nav
+- Homepage first block: lead + side latest rail (not full-viewport art hero)
+- Category section rows with divide-y lists + optional thumb
+- Dual trending / most-read rail stays compact
+- Article: share + type size + related list
+
+Learn from OnlineKhabar / Ratopati / Kantipur: density, update cadence, section rows. Do not copy: portal red, ad racks, fake comment counts, Reels/horoscope as equal rails.
 
 ## Components
 
@@ -50,4 +60,4 @@ Cards only for interactive groupings. Prefer divide-y / whitespace. Icons: Phosp
 
 ## Reading surface
 
-Article column max-width ~720px; dark mode uses lifted paper (`--paper-elevated`), not true black. Progress indicator allowed; sticky toolbar optional and must not dominate on mobile.
+Article column max-width ~720px; dark mode uses lifted paper (`--paper-elevated`), not true black. Progress indicator allowed; article toolbar must stay thin on mobile.

@@ -6,6 +6,15 @@ import { List, MagnifyingGlass, X } from '@phosphor-icons/react'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
 import type { Category } from '@thenagarik/content'
 
+function todayLabel(locale: AppLocale): string {
+  return new Date().toLocaleDateString(locale === 'ne' ? 'ne-NP' : 'en-GB', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
 export function SiteHeader({
   locale,
   dict,
@@ -18,32 +27,60 @@ export function SiteHeader({
   otherLocaleHref: string
 }) {
   const [open, setOpen] = useState(false)
-  const navItems = [
-    ...categories.slice(0, 5).map((c) => ({
-      href: `/${locale}/${c.slug}`,
-      label: locale === 'en' ? c.nameEn : c.nameNe,
-    })),
-    { href: `/${locale}/latest`, label: dict.latest },
-    { href: `/${locale}/search`, label: dict.search },
-  ]
+  const sections = categories.map((c) => ({
+    href: `/${locale}/${c.slug}`,
+    label: locale === 'en' ? c.nameEn : c.nameNe,
+  }))
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur-md">
+      {/* Utility strip — Online Khabar lesson: tools above brand */}
+      <div className="hidden border-b border-line/70 bg-paper-elevated/90 text-xs text-stone md:block">
+        <div className="mx-auto flex h-9 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
+          <p className="truncate">{todayLabel(locale)}</p>
+          <div className="flex items-center gap-4">
+            <Link href={`/${locale}/search`} className="inline-flex items-center gap-1.5 hover:text-ink">
+              <MagnifyingGlass size={14} weight="regular" />
+              {dict.search}
+            </Link>
+            <Link href={otherLocaleHref} className="hover:text-ink">
+              {dict.language}
+            </Link>
+            <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="hover:text-ink">
+              RSS
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Brand row */}
+      <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 md:h-16 md:px-6">
         <Link
           href={`/${locale}`}
-          className="shrink-0 font-[family-name:var(--font-display)] text-[1.35rem] tracking-[-0.03em] text-ink md:text-[1.6rem]"
+          className="shrink-0 font-[family-name:var(--font-display)] text-[1.45rem] tracking-[-0.03em] text-ink md:text-[1.85rem]"
         >
           {dict.siteName}
         </Link>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-end gap-5 text-[0.92rem] text-stone lg:flex" aria-label="Primary">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="whitespace-nowrap transition-colors hover:text-ink">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <form action={`/${locale}/search`} method="get" className="hidden max-w-md flex-1 lg:block">
+          <label className="sr-only" htmlFor="masthead-search">
+            {dict.search}
+          </label>
+          <div className="relative">
+            <MagnifyingGlass
+              size={16}
+              weight="regular"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone"
+            />
+            <input
+              id="masthead-search"
+              name="q"
+              type="search"
+              placeholder={dict.searchPlaceholder}
+              className="w-full rounded-[var(--radius-control)] border border-line bg-paper-elevated py-2 pl-9 pr-3 text-sm text-ink placeholder:text-stone focus:border-accent"
+            />
+          </div>
+        </form>
 
         <div className="flex items-center gap-2">
           <Link
@@ -55,7 +92,7 @@ export function SiteHeader({
           </Link>
           <Link
             href={otherLocaleHref}
-            className="hidden rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent sm:inline-flex"
+            className="hidden rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent sm:inline-flex lg:hidden"
           >
             {dict.language}
           </Link>
@@ -72,10 +109,47 @@ export function SiteHeader({
         </div>
       </div>
 
+      {/* Category nav — second band */}
+      <nav
+        className="hidden border-t border-line/80 lg:block"
+        aria-label={dict.categories}
+      >
+        <div className="mx-auto flex max-w-[1400px] items-center gap-1 overflow-x-auto px-4 md:px-6">
+          <Link
+            href={`/${locale}`}
+            className="whitespace-nowrap px-3 py-2.5 text-sm font-medium text-ink hover:text-accent"
+          >
+            {dict.home}
+          </Link>
+          {sections.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="whitespace-nowrap px-3 py-2.5 text-sm text-stone hover:text-ink"
+            >
+              {item.label}
+            </Link>
+          ))}
+          <Link
+            href={`/${locale}/latest`}
+            className="whitespace-nowrap px-3 py-2.5 text-sm text-stone hover:text-ink"
+          >
+            {dict.latest}
+          </Link>
+        </div>
+      </nav>
+
       {open ? (
         <div id="mobile-nav" className="border-t border-line bg-paper px-4 py-4 lg:hidden">
           <nav className="flex flex-col gap-1" aria-label="Mobile">
-            {navItems.map((item) => (
+            <Link
+              href={`/${locale}`}
+              className="rounded-[var(--radius-control)] px-3 py-3 text-base text-ink hover:bg-paper-elevated"
+              onClick={() => setOpen(false)}
+            >
+              {dict.home}
+            </Link>
+            {sections.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -85,6 +159,13 @@ export function SiteHeader({
                 {item.label}
               </Link>
             ))}
+            <Link
+              href={`/${locale}/latest`}
+              className="rounded-[var(--radius-control)] px-3 py-3 text-base text-ink hover:bg-paper-elevated"
+              onClick={() => setOpen(false)}
+            >
+              {dict.latest}
+            </Link>
             <Link
               href={otherLocaleHref}
               className="rounded-[var(--radius-control)] px-3 py-3 text-base text-ink hover:bg-paper-elevated sm:hidden"
@@ -99,15 +180,35 @@ export function SiteHeader({
   )
 }
 
-export function SiteFooter({ locale, dict }: { locale: AppLocale; dict: Dictionary }) {
+export function SiteFooter({
+  locale,
+  dict,
+  categories = [],
+}: {
+  locale: AppLocale
+  dict: Dictionary
+  categories?: Category[]
+}) {
   return (
-    <footer className="mt-20 border-t border-line">
-      <div className="mx-auto grid max-w-[1400px] gap-8 px-4 py-12 md:grid-cols-[1.2fr_1fr_1fr] md:px-6">
-        <div>
+    <footer className="mt-12 border-t border-line bg-paper-elevated/50">
+      <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-12 md:grid-cols-12 md:px-6">
+        <div className="md:col-span-4">
           <p className="font-[family-name:var(--font-display)] text-2xl text-ink">{dict.siteName}</p>
           <p className="mt-3 max-w-[36ch] text-sm leading-relaxed text-stone">{dict.tagline}</p>
         </div>
-        <div className="flex flex-col gap-3 text-sm">
+        <div className="md:col-span-4">
+          <p className="text-sm font-medium text-ink">{dict.categories}</p>
+          <ul className="mt-3 grid grid-cols-2 gap-2 text-sm text-stone">
+            {categories.map((c) => (
+              <li key={c.id}>
+                <Link href={`/${locale}/${c.slug}`} className="hover:text-accent">
+                  {locale === 'en' ? c.nameEn : c.nameNe}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex flex-col gap-3 text-sm md:col-span-4">
           <Link href={`/${locale}/latest`} className="hover:text-accent">
             {dict.latest}
           </Link>
@@ -117,8 +218,6 @@ export function SiteFooter({ locale, dict }: { locale: AppLocale; dict: Dictiona
           <Link href={`/${locale}/about`} className="hover:text-accent">
             {dict.about}
           </Link>
-        </div>
-        <div className="flex flex-col gap-3 text-sm">
           <Link href={`/${locale}/trust`} className="hover:text-accent">
             {dict.trust}
           </Link>
