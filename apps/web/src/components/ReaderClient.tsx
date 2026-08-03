@@ -57,27 +57,62 @@ export function ReadingProgress() {
   )
 }
 
-export function ArticleEngagement({ storyId }: { storyId: string }) {
+export function ArticleEngagement({
+  storyId,
+  categorySlug,
+  slug,
+  title,
+}: {
+  storyId: string
+  categorySlug: string
+  slug: string
+  title: string
+}) {
   return (
     <script
       dangerouslySetInnerHTML={{
         __html: `
 (function(){
   try {
-    var consent = document.cookie.split('; ').find(function(r){return r.indexOf('tn_consent_analytics=')===0});
-    if (!consent || consent.split('=')[1] !== '1') return;
-    var start = Date.now();
-    fetch('/api/events', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({type:'impression', storyId:${JSON.stringify(storyId)}, consent:true})});
+    var storyId = ${JSON.stringify(storyId)};
+    var categorySlug = ${JSON.stringify(categorySlug)};
+    var slug = ${JSON.stringify(slug)};
+    var title = ${JSON.stringify(title)};
+    var KEY = 'tn_reading_progress_v1';
+    var saveProgress = function(p){
+      try {
+        var list = [];
+        try { list = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { list = []; }
+        if (!Array.isArray(list)) list = [];
+        list = list.filter(function(x){ return x && x.storyId !== storyId; });
+        list.unshift({
+          storyId: storyId,
+          progress: Math.max(0, Math.min(1, p)),
+          updatedAt: new Date().toISOString(),
+          categorySlug: categorySlug,
+          slug: slug,
+          title: title
+        });
+        localStorage.setItem(KEY, JSON.stringify(list.slice(0, 40)));
+      } catch (e) {}
+    };
     var onScroll = function(){
       var el = document.documentElement;
       var max = el.scrollHeight - el.clientHeight;
       var p = max > 0 ? el.scrollTop / max : 0;
       document.documentElement.style.setProperty('--read-progress', String(p));
+      saveProgress(p);
     };
     window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+
+    var consent = document.cookie.split('; ').find(function(r){return r.indexOf('tn_consent_analytics=')===0});
+    if (!consent || consent.split('=')[1] !== '1') return;
+    var start = Date.now();
+    fetch('/api/events', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({type:'impression', storyId:storyId, consent:true})});
     window.addEventListener('pagehide', function(){
       var dwellMs = Date.now() - start;
-      navigator.sendBeacon('/api/events', new Blob([JSON.stringify({type:'dwell', storyId:${JSON.stringify(storyId)}, dwellMs:dwellMs, consent:true})], {type:'application/json'}));
+      navigator.sendBeacon('/api/events', new Blob([JSON.stringify({type:'dwell', storyId:storyId, dwellMs:dwellMs, consent:true})], {type:'application/json'}));
     });
   } catch (e) {}
 })();

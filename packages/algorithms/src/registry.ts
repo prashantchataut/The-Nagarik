@@ -97,7 +97,9 @@ export const CAPABILITIES: CapabilityDef[] = [
   cap('discover.package_cluster', 'Story packages', 'discovery', 'production', 'Related by packageId/category', {
     surface: 'article',
   }),
-  cap('discover.continue_reading', 'Continue reading', 'discovery', 'planned', 'Needs reading-progress store'),
+  cap('discover.continue_reading', 'Continue reading', 'discovery', 'production', 'Device-local reading progress store', {
+    surface: 'home',
+  }),
   cap('discover.editors_picks', 'Editors picks', 'discovery', 'shadow', 'editorialPriority ≥ 7'),
   cap('discover.province_rail', 'Province rail', 'discovery', 'production', 'Filter by province field', {
     surface: 'pradesh',

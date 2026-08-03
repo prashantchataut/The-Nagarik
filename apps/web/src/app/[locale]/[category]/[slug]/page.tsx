@@ -99,7 +99,12 @@ export default async function ArticlePage({
   return (
     <>
       <ReadingProgress />
-      <ArticleEngagement storyId={article.id} />
+      <ArticleEngagement
+        storyId={article.id}
+        categorySlug={category}
+        slug={slug}
+        title={title}
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <article className="mx-auto max-w-[1400px] px-4 md:px-6">

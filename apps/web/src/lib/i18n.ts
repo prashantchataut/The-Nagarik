@@ -56,6 +56,7 @@ export const dictionaries = {
     textLarge: 'ठूलो',
     seeAll: 'सबै हेर्नुहोस्',
     today: 'आज',
+    continueReading: 'पढाइ जारी',
   },
   en: {
     siteName: 'The Nagarik',
@@ -101,6 +102,7 @@ export const dictionaries = {
     textMedium: 'M',
     textLarge: 'L',
     seeAll: 'See all',
+    continueReading: 'Continue reading',
     today: 'Today',
   },
 } as const

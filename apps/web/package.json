@@ -12,7 +12,9 @@
     "payload": "payload",
     "generate:types": "payload generate:types --config ./src/payload/payload.config.ts",
     "generate:importmap": "payload generate:importmap --config ./src/payload/payload.config.ts",
-    "seed": "tsx --env-file=../../.env src/scripts/seed.ts"
+    "seed": "tsx --env-file=../../.env.local --env-file=../../.env src/scripts/seed.ts",
+    "migrate": "payload migrate --config ./src/payload/payload.config.ts",
+    "migrate:create": "payload migrate:create --config ./src/payload/payload.config.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.85.1",

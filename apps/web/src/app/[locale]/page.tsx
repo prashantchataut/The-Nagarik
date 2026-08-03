@@ -5,6 +5,7 @@ import {
   OpinionStack,
   UpdateStrip,
 } from '@/components/Story'
+import { ContinueReadingRail } from '@/components/ContinueReading'
 import { getContent } from '@/lib/content'
 import { getEngagementSnapshot } from '@/lib/engagement'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
@@ -53,6 +54,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       ) : (
         <p className="px-4 py-16">{dict.empty}</p>
       )}
+      <ContinueReadingRail locale={locale} dict={dict} stories={cards} />
       <DualSignalRail
         locale={locale}
         dict={dict}
