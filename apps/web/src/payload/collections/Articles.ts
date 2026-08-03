@@ -1,0 +1,199 @@
+import type { CollectionConfig } from 'payload'
+import {
+  adminRoles,
+  contributorRoles,
+  hasAnyRole,
+  publisherRoles,
+  publishedOrStaff,
+  withRoles,
+} from '../access/rbac'
+import { enforceArticlePublish } from '../hooks/publish-validate'
+import { revalidatePublishedArticle } from '../hooks/revalidate'
+
+export const Articles: CollectionConfig = {
+  slug: 'articles',
+  admin: {
+    useAsTitle: 'titleNe',
+    defaultColumns: ['titleNe', 'status', 'englishStatus', 'publishedAt', 'category'],
+    group: 'Content',
+  },
+  versions: {
+    drafts: {
+      autosave: false,
+    },
+  },
+  access: {
+    read: publishedOrStaff,
+    create: withRoles(contributorRoles),
+    update: withRoles(contributorRoles),
+    delete: withRoles(adminRoles),
+    readVersions: withRoles(contributorRoles),
+  },
+  hooks: {
+    beforeChange: [enforceArticlePublish],
+    afterChange: [revalidatePublishedArticle],
+  },
+  fields: [
+    {
+      name: 'titleNe',
+      type: 'text',
+      required: true,
+      maxLength: 120,
+      label: 'Title (Nepali)',
+    },
+    {
+      name: 'titleEn',
+      type: 'text',
+      maxLength: 120,
+      label: 'Title (English)',
+    },
+    {
+      name: 'slug',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'deckNe',
+      type: 'textarea',
+      required: true,
+      label: 'Deck (Nepali)',
+    },
+    {
+      name: 'deckEn',
+      type: 'textarea',
+      label: 'Deck (English)',
+    },
+    {
+      name: 'status',
+      type: 'select',
+      required: true,
+      defaultValue: 'draft',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'In review', value: 'in_review' },
+        { label: 'Scheduled', value: 'scheduled' },
+        { label: 'Published', value: 'published' },
+        { label: 'Retracted', value: 'retracted' },
+      ],
+      access: {
+        // Contributors may set draft/in_review; publishing roles set published/scheduled.
+        update: ({ req }) =>
+          hasAnyRole(req.user, publisherRoles) || hasAnyRole(req.user, contributorRoles),
+      },
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'englishStatus',
+      type: 'select',
+      required: true,
+      defaultValue: 'none',
+      options: [
+        { label: 'None', value: 'none' },
+        { label: 'Draft', value: 'draft' },
+        { label: 'In review', value: 'in_review' },
+        { label: 'Published', value: 'published' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Public /en pages require englishStatus = published.',
+      },
+    },
+    {
+      name: 'category',
+      type: 'relationship',
+      relationTo: 'categories',
+      required: true,
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'authors',
+      type: 'relationship',
+      relationTo: 'authors',
+      hasMany: true,
+      required: true,
+    },
+    {
+      name: 'tags',
+      type: 'relationship',
+      relationTo: 'tags',
+      hasMany: true,
+    },
+    {
+      name: 'province',
+      type: 'text',
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'hero',
+      type: 'upload',
+      relationTo: 'media',
+    },
+    {
+      name: 'isBreaking',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'editorialPriority',
+      type: 'number',
+      min: 0,
+      max: 10,
+      defaultValue: 0,
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'attribution',
+      type: 'select',
+      required: true,
+      defaultValue: 'original',
+      options: [{ label: 'Original', value: 'original' }],
+      admin: {
+        position: 'sidebar',
+        description: 'Original journalism only. No wire/aggregator paths.',
+      },
+    },
+    {
+      name: 'bodyNe',
+      type: 'json',
+      required: true,
+      label: 'Body (Nepali blocks)',
+      admin: {
+        description:
+          'JSON array of blocks: paragraph | heading2 | heading3 | pullQuote | list | image.',
+      },
+    },
+    {
+      name: 'bodyEn',
+      type: 'json',
+      label: 'Body (English blocks)',
+    },
+    {
+      name: 'corrections',
+      type: 'array',
+      fields: [
+        { name: 'at', type: 'date', required: true },
+        { name: 'noteNe', type: 'textarea', required: true },
+        { name: 'noteEn', type: 'textarea' },
+      ],
+    },
+    {
+      name: 'publishedAt',
+      type: 'date',
+      admin: { position: 'sidebar', date: { pickerAppearance: 'dayAndTime' } },
+    },
+    { name: 'seoTitleNe', type: 'text', label: 'SEO title (Nepali)' },
+    { name: 'seoTitleEn', type: 'text', label: 'SEO title (English)' },
+    {
+      name: 'packageId',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description: 'Optional package/series id for related stories.',
+      },
+    },
+  ],
+}

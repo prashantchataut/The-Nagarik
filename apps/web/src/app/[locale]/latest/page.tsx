@@ -17,7 +17,7 @@ export default async function LatestPage({ params }: { params: Promise<{ locale:
       <h1 className="font-[family-name:var(--font-display)] text-4xl">{dict.latest}</h1>
       <div className="mt-8">
         {cards.map((s) => (
-          <StoryLink key={s.id} locale={locale} story={s} />
+          <StoryLink key={s.id} locale={locale} story={s} dict={dict} />
         ))}
       </div>
     </div>

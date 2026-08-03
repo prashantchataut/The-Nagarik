@@ -1,6 +1,6 @@
 import type { Article, Author, Category } from './types'
 
-/** DEV_ONLY — never ship when LAUNCH_STATUS=live or ALLOW_DEV_FIXTURES=false */
+/** DEV_ONLY - never ship when LAUNCH_STATUS=live or ALLOW_DEV_FIXTURES=false */
 export const DEV_FIXTURE_MARK = 'DEV_ONLY' as const
 
 const now = new Date()
@@ -44,8 +44,8 @@ export const fixtureArticles: Article[] = [
     englishStatus: 'published',
     titleNe: 'संघीय बजेट बहस संसदमा सुरु',
     titleEn: 'Federal budget debate opens in parliament',
-    deckNe: 'विपक्षी दलहरूले प्राथमिकतामाथि प्रश्न उठाए भने सत्तापक्षले विकास खर्चको रक्षा गरे।',
-    deckEn: 'Opposition questions priorities while the government defends development spending.',
+    deckNe: 'विपक्षीले प्राथमिकतामाथि प्रश्न उठाए, सत्तापक्षले विकास खर्चको रक्षा गरे।',
+    deckEn: 'Opposition questions priorities as the government defends development spending.',
     bodyNe: [
       {
         type: 'paragraph',
@@ -98,7 +98,7 @@ export const fixtureArticles: Article[] = [
     province: undefined,
     hero: {
       id: 'media-1',
-      url: 'https://picsum.photos/seed/nagarik-budget/1600/900',
+      url: '/media/hero-budget.jpg',
       alt: 'Parliament chamber during budget session',
       credit: 'DEV_ONLY fixture',
       width: 1600,
@@ -135,7 +135,7 @@ export const fixtureArticles: Article[] = [
     province: 'bagmati',
     hero: {
       id: 'media-2',
-      url: 'https://picsum.photos/seed/nagarik-monsoon/1600/900',
+      url: '/media/province-monsoon.jpg',
       alt: 'Riverbank settlement under monsoon cloud cover',
       credit: 'DEV_ONLY fixture',
       width: 1600,
@@ -182,7 +182,7 @@ export const fixtureArticles: Article[] = [
     tagSlugs: ['remittance', 'gulf'],
     hero: {
       id: 'media-3',
-      url: 'https://picsum.photos/seed/nagarik-remit/1600/900',
+      url: '/media/diaspora-remit.jpg',
       alt: 'Queue at a remittance counter',
       credit: 'DEV_ONLY fixture',
       width: 1600,
@@ -244,7 +244,7 @@ export const fixtureArticles: Article[] = [
     tagSlugs: ['football'],
     hero: {
       id: 'media-5',
-      url: 'https://picsum.photos/seed/nagarik-sport/1600/900',
+      url: '/media/sports-qualifier.jpg',
       alt: 'Football players celebrating on the pitch',
       credit: 'DEV_ONLY fixture',
       width: 1600,

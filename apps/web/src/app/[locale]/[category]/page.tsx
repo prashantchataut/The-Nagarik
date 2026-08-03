@@ -31,7 +31,7 @@ export default async function CategoryPage({
         {locale === 'en' ? category.descriptionEn : category.descriptionNe}
       </p>
       <div className="mt-10">
-        {cards.length ? cards.map((s) => <StoryLink key={s.id} locale={locale} story={s} />) : <p>{dict.empty}</p>}
+        {cards.length ? cards.map((s) => <StoryLink key={s.id} locale={locale} story={s} dict={dict} />) : <p>{dict.empty}</p>}
       </div>
     </div>
   )

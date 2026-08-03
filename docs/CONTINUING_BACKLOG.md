@@ -8,6 +8,7 @@ Updated as work ships. Next prompt should take the top **Next slice**.
 - pnpm monorepo: `apps/web`, `packages/{content,algorithms,ui}`
 - Nepali-first locale routing (`/` → `/ne`, `/en`)
 - Reader MVP: home, category, article reading UX, latest, search, about, trust
+- Frontend redesign: full-bleed asymmetric hero, dated latest list, dual trending/most-read, province feature, opinion stack, visual mosaic; local editorial imagery; mobile nav
 - Content façade + DEV_ONLY fixtures (no production seed path when live+fixtures off)
 - Unified English gate (`englishStatus === published`)
 - SEO: metadata, JSON-LD, sitemap, RSS (ne/en)
@@ -15,16 +16,16 @@ Updated as work ships. Next prompt should take the top **Next slice**.
 - `@thenagarik/algorithms`: ranking, trending, search BM25, recommend, moderation, notify
 - Algorithm desk at `/admin/algorithms` with 232 capabilities (production/shadow/planned honesty)
 - Revalidate + cron auth with `timingSafeEqual`
-- Payload contracts, collections shapes, publish gates, CMS setup at `/admin/cms`
-- Payload Local API adapter skeleton in `@thenagarik/content`
-- Nagarik Watch gap report + P0 patches applied on Watch (cron timing-safe, EN gate, Sentry honesty, comments auth)
+- Payload 3.85 embedded: collections, `/cms` admin, Blob plugin (alt+credit required), publish→Bearer revalidate, `CONTENT_SOURCE=payload` Local API client
+- Seed script: `pnpm --filter @thenagarik/web seed`
+- **Production on Vercel:** https://the-nagarik.vercel.app (GitHub linked, `rootDirectory=apps/web`, currently `CONTENT_SOURCE=facade`)
 
 ## Next slice (recommended)
 
-1. Connect Neon + install Payload packages; mount real admin at `/admin/cms` using `apps/web/src/payload/collections.ts`
-2. Implement `CONTENT_SOURCE=payload` client wiring in `apps/web/src/lib/content.ts`
-3. Media upload to Vercel Blob with alt+credit hard-required before publish
-4. Wire publish `afterChange` → `/api/revalidate`
+1. Commit + push local Payload/CMS work to `main` so Git deploys match the live CLI build
+2. Provision Neon; set `DATABASE_URL` + `BLOB_READ_WRITE_TOKEN` on Vercel
+3. Open `/cms`, create first admin; run seed; flip `CONTENT_SOURCE=payload`
+4. Generate Payload migrations; keep `PAYLOAD_DB_PUSH=false` in production
 
 ## Then
 

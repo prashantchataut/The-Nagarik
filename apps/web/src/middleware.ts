@@ -9,6 +9,7 @@ export function middleware(request: NextRequest) {
 
   if (
     pathname.startsWith('/admin') ||
+    pathname.startsWith('/cms') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/rss') ||

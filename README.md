@@ -4,9 +4,10 @@ Nepali-first bilingual news portal. See [PRODUCT.md](./PRODUCT.md), [DESIGN.md](
 
 ## Stack
 
-- Next.js 15 (App Router) + Payload CMS 3 (embedded `/admin`)
+- Next.js 15 (App Router) + Payload CMS 3 (embedded `/cms`)
 - Neon Postgres + Vercel Blob
 - pnpm monorepo: `apps/web`, `packages/{algorithms,content,ui}`
+- Production: https://the-nagarik.vercel.app
 
 ## Develop
 
@@ -17,7 +18,9 @@ pnpm dev
 ```
 
 Reader: http://localhost:3000  
-Admin (Phase 2): http://localhost:3000/admin
+CMS: http://localhost:3000/cms
+Ops: http://localhost:3000/admin
+Production: https://the-nagarik.vercel.app
 
 ## Phases
 

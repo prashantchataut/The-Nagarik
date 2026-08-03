@@ -9,3 +9,5 @@ dist
 *.log
 .DS_Store
 payload-types.ts
+*.tsbuildinfo
+apps/web/.vercel

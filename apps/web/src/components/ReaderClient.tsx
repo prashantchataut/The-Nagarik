@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Dictionary } from '@/lib/i18n'
 
 export function ShareCopyButton({ dict }: { dict: Dictionary }) {
@@ -31,10 +31,6 @@ export function ReadingProgress() {
 }
 
 export function ArticleEngagement({ storyId }: { storyId: string }) {
-  // Consent-gated beacon: only fires after explicit analytics consent cookie.
-  if (typeof document !== 'undefined') {
-    // no-op placeholder for SSR
-  }
   return (
     <script
       dangerouslySetInnerHTML={{
@@ -64,38 +60,40 @@ export function ArticleEngagement({ storyId }: { storyId: string }) {
   )
 }
 
-export function ConsentBanner({ locale }: { locale: string }) {
-  const [hidden, setHidden] = useState(false)
+export function ConsentBanner({ dict }: { dict: Dictionary }) {
+  const [hidden, setHidden] = useState(true)
+
+  useEffect(() => {
+    const existing = document.cookie.split('; ').find((r) => r.startsWith('tn_consent_analytics='))
+    setHidden(Boolean(existing))
+  }, [])
+
   if (hidden) return null
-  const isEn = locale === 'en'
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper-elevated p-4 shadow-[0_-8px_30px_rgba(18,20,26,0.08)]">
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper-elevated p-4 shadow-[0_-12px_40px_rgba(18,20,26,0.08)]">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <p className="max-w-2xl text-sm text-stone">
-          {isEn
-            ? 'We use first-party analytics only after you opt in. No invented rankings without consented events.'
-            : 'तपाईंले अनुमति दिएपछि मात्र पहिलो-पक्ष विश्लेषण चल्छ। सहमति बिना र्याङ्किङ बनाइँदैन।'}
-        </p>
+        <p className="max-w-2xl text-sm text-stone">{dict.consentBody}</p>
         <div className="flex gap-2">
           <button
             type="button"
-            className="rounded-[var(--radius-control)] border border-line px-3 py-2 text-sm"
+            className="rounded-[var(--radius-control)] border border-line px-3 py-2 text-sm active:scale-[0.98]"
             onClick={() => {
               document.cookie = 'tn_consent_analytics=0; path=/; max-age=31536000; samesite=lax'
               setHidden(true)
             }}
           >
-            {isEn ? 'Reject' : 'अस्वीकार'}
+            {dict.consentReject}
           </button>
           <button
             type="button"
-            className="rounded-[var(--radius-control)] bg-accent px-3 py-2 text-sm text-accent-fg"
+            className="rounded-[var(--radius-control)] bg-accent px-3 py-2 text-sm text-accent-fg active:scale-[0.98]"
             onClick={() => {
               document.cookie = 'tn_consent_analytics=1; path=/; max-age=31536000; samesite=lax'
               setHidden(true)
             }}
           >
-            {isEn ? 'Accept analytics' : 'स्वीकार'}
+            {dict.consentAccept}
           </button>
         </div>
       </div>

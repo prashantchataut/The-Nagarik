@@ -31,7 +31,7 @@ export default async function LocaleLayout({
       />
       <main>{children}</main>
       <SiteFooter locale={locale} dict={dict} />
-      <ConsentBanner locale={locale} />
+      <ConsentBanner dict={dict} />
     </div>
   )
 }

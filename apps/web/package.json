@@ -8,16 +8,28 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "test": "node --import tsx --test src/**/*.test.ts",
+    "payload": "payload",
+    "generate:types": "payload generate:types --config ./src/payload/payload.config.ts",
+    "generate:importmap": "payload generate:importmap --config ./src/payload/payload.config.ts",
+    "seed": "tsx --env-file=../../.env src/scripts/seed.ts"
   },
   "dependencies": {
+    "@payloadcms/db-postgres": "3.85.1",
+    "@payloadcms/next": "3.85.1",
+    "@payloadcms/richtext-lexical": "3.85.1",
+    "@payloadcms/storage-vercel-blob": "3.85.1",
+    "@payloadcms/ui": "3.85.1",
     "@phosphor-icons/react": "^2.1.7",
     "@thenagarik/algorithms": "workspace:*",
     "@thenagarik/content": "workspace:*",
     "@thenagarik/ui": "workspace:*",
-    "next": "15.5.18",
+    "graphql": "^16.14.2",
+    "next": "15.4.11",
+    "payload": "3.85.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "sharp": "^0.34.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -26,7 +38,7 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "eslint": "^9.22.0",
-    "eslint-config-next": "15.5.18",
+    "eslint-config-next": "15.4.11",
     "tailwindcss": "^4.0.14",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
