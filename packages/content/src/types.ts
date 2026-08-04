@@ -95,4 +95,5 @@ export type StoryCard = {
   authorNames: string[]
   readTimeMinutes: number
   hasEnglish: boolean
+  province?: string
 }

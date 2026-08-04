@@ -21,6 +21,7 @@ export type ContentFacade = {
   getArticleBySlug: (categorySlug: string, slug: string) => Promise<Article | null>
   toStoryCard: (article: Article, locale: Locale) => Promise<StoryCard>
   getRelated: (article: Article, locale: Locale, limit?: number) => Promise<StoryCard[]>
+  getPackagePeers: (article: Article, locale: Locale, limit?: number) => Promise<StoryCard[]>
 }
 
 function publishedOnly(articles: Article[]): Article[] {
@@ -63,6 +64,7 @@ export function createFacadeContent(options: {
       authorNames,
       readTimeMinutes: estimateReadTimeMinutes(body, locale),
       hasEnglish: articleHasEnglish(article),
+      province: article.province,
     }
   }
 
@@ -99,7 +101,16 @@ export function createFacadeContent(options: {
     async getRelated(article, locale, limit = 5) {
       const pool = publishedOnly(articles)
         .filter((a) => a.id !== article.id && visibleForLocale(a, locale))
-        .filter((a) => a.categoryId === article.categoryId || a.packageId === article.packageId)
+        .filter((a) => a.categoryId === article.categoryId)
+        .slice(0, limit)
+      return Promise.all(pool.map((a) => toStoryCard(a, locale)))
+    },
+    async getPackagePeers(article, locale, limit = 6) {
+      if (!article.packageId) return []
+      const pool = publishedOnly(articles)
+        .filter((a) => a.id !== article.id && visibleForLocale(a, locale))
+        .filter((a) => a.packageId === article.packageId)
+        .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
         .slice(0, limit)
       return Promise.all(pool.map((a) => toStoryCard(a, locale)))
     },

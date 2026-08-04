@@ -65,6 +65,11 @@ export default async function SearchPage({
       </form>
 
       <div className="mt-8">
+        {q.trim() ? (
+          <p className="mb-4 text-sm text-stone">
+            {dict.searchResults}: {results.length}
+          </p>
+        ) : null}
         {q && !results.length ? <p className="text-stone">{dict.empty}</p> : null}
         {!q ? (
           <p className="text-sm text-stone">

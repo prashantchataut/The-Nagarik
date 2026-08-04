@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Category, StoryCard } from '@thenagarik/content'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
+import { provinceLabel } from '@/lib/provinces'
 
 export function relativeTime(iso: string | undefined, locale: AppLocale): string {
   if (!iso) return ''
@@ -488,6 +489,52 @@ export function VisualStrip({
             )
           })}
         </div>
+      </div>
+    </section>
+  )
+}
+
+export function ProvinceRail({
+  locale,
+  dict,
+  stories,
+}: {
+  locale: AppLocale
+  dict: Dictionary
+  stories: StoryCard[]
+}) {
+  if (!stories.length) return null
+  return (
+    <section className="border-b border-line bg-paper-elevated/50">
+      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
+        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3">
+          <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.03em]">
+            <Link href={`/${locale}/pradesh`}>{dict.provinces}</Link>
+          </h2>
+          <Link href={`/${locale}/pradesh`} className="text-xs text-accent hover:underline">
+            {dict.seeAll}
+          </Link>
+        </div>
+        <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {stories.slice(0, 4).map((story) => {
+            const href = `/${locale}/${story.categorySlug}/${story.slug}`
+            const badge = provinceLabel(story.province, locale)
+            return (
+              <li key={story.id} className="border-t border-line pt-4">
+                {badge ? (
+                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-accent">
+                    {badge}
+                  </p>
+                ) : null}
+                <h3 className="mt-2 font-[family-name:var(--font-display)] text-lg leading-snug tracking-[-0.02em]">
+                  <Link href={href}>{story.title}</Link>
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm text-stone">{story.deck}</p>
+                <p className="mt-3 text-xs text-stone">{relativeTime(story.publishedAt, locale)}</p>
+              </li>
+            )
+          })}
+        </ul>
       </div>
     </section>
   )

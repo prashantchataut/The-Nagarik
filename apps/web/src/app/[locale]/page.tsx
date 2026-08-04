@@ -3,6 +3,7 @@ import {
   DualSignalRail,
   EditorsPicks,
   LeadAndRail,
+  ProvinceRail,
   OpinionStack,
   UpdateStrip,
   VisualStrip,
@@ -54,6 +55,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     })
     .slice(0, 3)
   const visual = cards.filter((c) => c.hero).slice(0, 3)
+  const province = cards.filter((c) => c.province || c.categorySlug === 'pradesh').slice(0, 4)
   const sectionCats = categories.filter((c) => c.slug !== 'bichar').slice(0, 5)
 
   return (
@@ -77,6 +79,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </Reveal>
       <Reveal>
         <EditorsPicks locale={locale} dict={dict} stories={editors} />
+      </Reveal>
+      <Reveal>
+        <ProvinceRail locale={locale} dict={dict} stories={province} />
       </Reveal>
       {sectionCats.map((cat) => {
         const stories = cards.filter((c) => c.categorySlug === cat.slug).slice(0, 6)

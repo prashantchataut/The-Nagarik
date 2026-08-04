@@ -66,25 +66,23 @@ export function ContinueReadingRail({
         <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.02em]">
           {dict.continueReading}
         </h2>
-        <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {items.map((story) => (
-            <li key={story.id}>
+            <li key={story.id} className="border-t border-line pt-4">
               <Link
                 href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                className="block border border-line bg-paper p-3 transition-colors hover:border-accent"
+                className="group block"
               >
-                <p className="font-[family-name:var(--font-display)] text-[0.98rem] leading-snug">
+                <p className="font-[family-name:var(--font-display)] text-[0.98rem] leading-snug group-hover:text-accent">
                   {story.title}
                 </p>
                 <div className="mt-3 h-1 overflow-hidden bg-line">
                   <div
-                    className="h-full bg-accent"
+                    className="h-full bg-accent transition-[width] duration-300"
                     style={{ width: `${Math.round(story.progress * 100)}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-stone">
-                  {Math.round(story.progress * 100)}%
-                </p>
+                <p className="mt-2 text-xs text-stone">{Math.round(story.progress * 100)}%</p>
               </Link>
             </li>
           ))}

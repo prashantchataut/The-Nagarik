@@ -33,6 +33,7 @@ export function createPayloadContent(client: {
       authorNames,
       readTimeMinutes: estimateReadTimeMinutes(body, locale),
       hasEnglish: articleHasEnglish(article),
+      province: article.province,
     }
   }
 
@@ -63,7 +64,17 @@ export function createPayloadContent(client: {
       const pool = (await client.listPublishedArticles())
         .filter((a) => a.id !== article.id && a.status === 'published')
         .filter((a) => (locale === 'en' ? articleHasEnglish(a) : true))
-        .filter((a) => a.categoryId === article.categoryId || a.packageId === article.packageId)
+        .filter((a) => a.categoryId === article.categoryId)
+        .slice(0, limit)
+      return Promise.all(pool.map((a) => toStoryCard(a, locale)))
+    },
+    async getPackagePeers(article, locale, limit = 6) {
+      if (!article.packageId) return []
+      const pool = (await client.listPublishedArticles())
+        .filter((a) => a.id !== article.id && a.status === 'published')
+        .filter((a) => (locale === 'en' ? articleHasEnglish(a) : true))
+        .filter((a) => a.packageId === article.packageId)
+        .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
         .slice(0, limit)
       return Promise.all(pool.map((a) => toStoryCard(a, locale)))
     },

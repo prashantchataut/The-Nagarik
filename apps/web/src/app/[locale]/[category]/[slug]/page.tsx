@@ -87,6 +87,7 @@ export default async function ArticlePage({
   const body = localizeBody(article, locale)
   const card = await content.toStoryCard(article, locale)
   const related = await content.getRelated(article, locale, 6)
+  const packagePeers = await content.getPackagePeers(article, locale, 4)
   const authors = (
     await Promise.all(article.authorIds.map((id) => content.getAuthorById(id)))
   ).filter(Boolean)
@@ -378,6 +379,10 @@ export default async function ArticlePage({
             </div>
           </section>
         </Reveal>
+      ) : null}
+
+      {packagePeers.length ? (
+        <StoryRail title={dict.storyPackage} locale={locale} stories={packagePeers} dict={dict} />
       ) : null}
 
       <StoryRail title={dict.related} locale={locale} stories={restRelated} dict={dict} />
