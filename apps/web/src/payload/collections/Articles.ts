@@ -10,6 +10,16 @@ import {
 import { enforceArticlePublish } from '../hooks/publish-validate'
 import { revalidatePublishedArticle } from '../hooks/revalidate'
 
+function toSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 96)
+}
+
 export const Articles: CollectionConfig = {
   slug: 'articles',
   admin: {
@@ -53,6 +63,20 @@ export const Articles: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
+      hooks: {
+        beforeValidate: [
+          ({ value, siblingData }) => {
+            const source = String(value ?? siblingData?.titleEn ?? '')
+            const next = toSlug(source)
+            if (!next) throw new Error('Slug is required.')
+            return next
+          },
+        ],
+      },
+      validate: (value: unknown) => {
+        const slug = String(value ?? '')
+        return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || 'Slug must be lowercase with hyphens only.'
+      },
       admin: { position: 'sidebar' },
     },
     {
@@ -123,7 +147,16 @@ export const Articles: CollectionConfig = {
     },
     {
       name: 'province',
-      type: 'text',
+      type: 'select',
+      options: [
+        { label: 'Bagmati', value: 'bagmati' },
+        { label: 'Madhesh', value: 'madhesh' },
+        { label: 'Koshi', value: 'koshi' },
+        { label: 'Gandaki', value: 'gandaki' },
+        { label: 'Lumbini', value: 'lumbini' },
+        { label: 'Karnali', value: 'karnali' },
+        { label: 'Sudurpashchim', value: 'sudurpashchim' },
+      ],
       admin: { position: 'sidebar' },
     },
     {

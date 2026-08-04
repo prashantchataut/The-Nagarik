@@ -156,6 +156,12 @@ export default async function ArticlePage({
           </h1>
           <p className="mt-4 text-lg leading-relaxed text-stone">{deck}</p>
           <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone">
+            <span className="inline-flex items-center gap-2">
+              <span className="font-medium text-ink">{dict.siteName}</span>
+              <span aria-hidden className="text-line">
+                /
+              </span>
+            </span>
             <span>
               {authors
                 .map((a) => (locale === 'en' && a!.nameEn ? a!.nameEn : a!.nameNe))

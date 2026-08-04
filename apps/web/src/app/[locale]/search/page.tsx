@@ -46,6 +46,7 @@ export default async function SearchPage({
   const byId = new Map(articles.map((a) => [a.id, a]))
   const cards = await Promise.all(articles.map((a) => content.toStoryCard(a, locale)))
   const cardById = new Map(cards.map((c) => [c.id, c]))
+  const topCats = categories.slice(0, 5)
 
   return (
     <div className="mx-auto max-w-[900px] px-4 py-8 md:px-6 md:py-10">
@@ -63,6 +64,19 @@ export default async function SearchPage({
           placeholder={dict.searchPlaceholder}
         />
       </form>
+      {!q ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {topCats.map((cat) => (
+            <Link
+              key={cat.id}
+              href={`/${locale}/${cat.slug}`}
+              className="rounded-[var(--radius-control)] border border-line px-2.5 py-1 text-xs text-stone hover:border-accent hover:text-ink"
+            >
+              {locale === 'en' ? cat.nameEn : cat.nameNe}
+            </Link>
+          ))}
+        </div>
+      ) : null}
 
       <div className="mt-8">
         {q.trim() ? (
@@ -99,6 +113,11 @@ export default async function SearchPage({
                       {r.doc.title}
                     </span>
                     <span className="mt-2 block line-clamp-2 text-sm text-stone">{r.doc.deck}</span>
+                    <span className="mt-2 block text-xs text-stone">
+                      {r.doc.author}
+                      <span className="mx-2 text-line">/</span>
+                      {card.readTimeMinutes} {dict.minutesRead}
+                    </span>
                   </span>
                 </Link>
               </li>

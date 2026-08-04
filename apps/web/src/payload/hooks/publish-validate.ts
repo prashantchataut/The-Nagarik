@@ -55,6 +55,15 @@ function relationshipIds(value: unknown): string[] {
     .filter(Boolean)
 }
 
+function relationshipId(value: unknown): string {
+  if (!value) return ''
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (typeof value === 'object' && value !== null && 'id' in value) {
+    return String((value as { id: string | number }).id)
+  }
+  return ''
+}
+
 function heroMeta(value: unknown): { alt?: string; credit?: string } | null {
   if (!value || typeof value !== 'object') return null
   const media = value as { alt?: string; credit?: string }
@@ -73,13 +82,13 @@ export const enforceMediaCredit: CollectionBeforeValidateHook = ({ data }) => {
   return data
 }
 
-/** Gate publish transitions: authors, EN title, body shape, hero credit. */
+/** Gate publish transitions: authors, scheduling, body shape, hero credit. */
 export const enforceArticlePublish: CollectionBeforeChangeHook = ({ data, operation, originalDoc }) => {
   if (!data) return data
   const merged = { ...(originalDoc ?? {}), ...data } as Record<string, unknown>
   const status = String(merged.status ?? 'draft')
 
-  if (status === 'published' || data.status === 'published') {
+  if (status === 'published' || status === 'scheduled' || data.status === 'published' || data.status === 'scheduled') {
     const bodyError = validateBodyBlocks(merged.bodyNe, 'bodyNe')
     if (bodyError) throw new Error(bodyError)
 
@@ -94,6 +103,10 @@ export const enforceArticlePublish: CollectionBeforeChangeHook = ({ data, operat
       status,
       englishStatus: String(merged.englishStatus ?? 'none'),
       authorIds: relationshipIds(merged.authors),
+      categoryId: relationshipId(merged.category),
+      titleNe: typeof merged.titleNe === 'string' ? merged.titleNe : undefined,
+      deckNe: typeof merged.deckNe === 'string' ? merged.deckNe : undefined,
+      publishedAt: typeof merged.publishedAt === 'string' ? merged.publishedAt : undefined,
       hero: heroMeta(merged.hero),
       titleEn: typeof merged.titleEn === 'string' ? merged.titleEn : undefined,
       bodyEn: Array.isArray(merged.bodyEn) ? merged.bodyEn : undefined,

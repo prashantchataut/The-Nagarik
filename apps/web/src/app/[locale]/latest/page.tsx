@@ -38,10 +38,13 @@ export default async function LatestPage({ params }: { params: Promise<{ locale:
             {dict.hours24}
           </h2>
           <div className="mt-2">
-            {recent.map((s) => (
+            {recent.map((s, i) => (
               <div key={s.id} className="relative">
                 <span className="pointer-events-none absolute left-0 top-4 hidden text-[0.65rem] text-stone sm:block sm:w-16">
                   {relativeTime(s.publishedAt, locale)}
+                </span>
+                <span className="pointer-events-none absolute left-0 top-4 text-[0.72rem] font-semibold text-accent sm:hidden">
+                  {i + 1}.
                 </span>
                 <div className="sm:pl-20">
                   <StoryLink locale={locale} story={s} dict={dict} />

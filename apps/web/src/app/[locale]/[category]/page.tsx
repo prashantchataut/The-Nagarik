@@ -24,6 +24,8 @@ export default async function CategoryPage({
   const articles = await content.listPublishedArticles({ categorySlug, locale })
   const cards = await Promise.all(articles.map((a) => content.toStoryCard(a, locale)))
   const [feature, ...rest] = cards
+  const rail = rest.slice(0, 4)
+  const list = rest.slice(4)
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
@@ -75,8 +77,27 @@ export default async function CategoryPage({
         </Reveal>
       ) : null}
 
+      {rail.length ? (
+        <section className="mt-5 border-b border-line pb-5">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-stone">{dict.latest}</h3>
+          <ul className="mt-2 grid gap-3 md:grid-cols-2">
+            {rail.map((s, i) => (
+              <li key={s.id} className="border-t border-line pt-3">
+                <Link
+                  href={`/${locale}/${s.categorySlug}/${s.slug}`}
+                  className="font-[family-name:var(--font-display)] text-lg leading-snug tracking-[-0.02em] hover:text-accent"
+                >
+                  <span className="mr-2 text-sm text-accent">{i + 1}.</span>
+                  {s.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <div className="mt-2">
-        {rest.map((s) => (
+        {list.map((s) => (
           <StoryLink key={s.id} locale={locale} story={s} dict={dict} />
         ))}
       </div>

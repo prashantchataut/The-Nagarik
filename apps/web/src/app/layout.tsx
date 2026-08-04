@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Manrope, Noto_Serif_Devanagari } from 'next/font/google'
 import './globals.css'
+import { PwaRegister } from '@/components/PwaRegister'
 
 const sans = Manrope({
   subsets: ['latin'],
@@ -21,6 +22,12 @@ export const metadata: Metadata = {
     template: '%s | The Nagarik',
   },
   description: 'Nepali-first civic news for Nepal.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'The Nagarik',
+    statusBarStyle: 'default',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -34,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           } as React.CSSProperties
         }
       >
+        <PwaRegister />
         {children}
       </body>
     </html>
