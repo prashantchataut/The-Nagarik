@@ -20,7 +20,7 @@ export function relativeTime(iso: string | undefined, locale: AppLocale): string
   return `${Math.round(hours / 24)}d ago`
 }
 
-/** Compact strip under nav — OK “ताजा अपडेट” lesson without marquee spam. */
+/** Compact strip under nav — OK “ताजा अपडेट” lesson without a mid-page theme flip. */
 export function UpdateStrip({
   locale,
   dict,
@@ -34,26 +34,28 @@ export function UpdateStrip({
   const lead = stories[0]
   const rest = stories.slice(1, 5)
   return (
-    <div className="border-b border-line bg-paper-elevated/80">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-4 py-2.5 md:flex-row md:items-center md:gap-6 md:px-6">
-        <p className="shrink-0 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-accent">
+    <div className="border-b border-line bg-paper-elevated">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-4 py-2.5 md:flex-row md:items-center md:gap-0 md:px-6">
+        <p className="shrink-0 border border-accent/30 bg-accent/10 px-2.5 py-1 text-[0.7rem] font-semibold text-accent md:mr-4">
           {dict.latestUpdates}
-          <span className="ml-2 font-normal tracking-normal text-stone normal-case">· {dict.hours24}</span>
         </p>
         <div className="min-w-0 flex-1">
           <Link
             href={`/${locale}/${lead.categorySlug}/${lead.slug}`}
-            className="block truncate text-sm font-medium text-ink hover:text-accent"
+            className="block truncate text-sm font-semibold text-ink hover:text-accent"
           >
             {lead.isBreaking ? (
-              <span className="mr-2 text-accent">{dict.breaking}</span>
+              <span className="mr-2 bg-accent px-1.5 py-0.5 text-[0.62rem] font-semibold text-accent-fg">
+                {dict.breaking}
+              </span>
             ) : null}
             {lead.title}
           </Link>
         </div>
-        <ul className="hidden gap-4 text-xs text-stone lg:flex">
-          {rest.map((s) => (
-            <li key={s.id} className="max-w-[14rem] truncate">
+        <ul className="hidden gap-5 text-xs text-stone lg:flex">
+          {rest.map((s, i) => (
+            <li key={s.id} className="max-w-[13rem] truncate">
+              <span className="mr-1.5 font-medium text-accent">{i + 2}</span>
               <Link href={`/${locale}/${s.categorySlug}/${s.slug}`} className="hover:text-ink">
                 {s.title}
               </Link>
@@ -65,7 +67,7 @@ export function UpdateStrip({
   )
 }
 
-/** Lead + side latest rail — portal home, not full-viewport gallery hero. */
+/** Lead + side latest rail — photo-forward portal block, not a marketing hero. */
 export function LeadAndRail({
   locale,
   dict,
@@ -78,51 +80,49 @@ export function LeadAndRail({
   side: StoryCard[]
 }) {
   const href = `/${locale}/${lead.categorySlug}/${lead.slug}`
+  const railPrimary = side.slice(0, 4)
+  const railSecondary = side.slice(4, 8)
   return (
     <section className="border-b border-line">
       <div className="mx-auto grid max-w-[1400px] gap-0 lg:grid-cols-12">
-        <article className="border-b border-line px-4 py-6 md:px-6 md:py-8 lg:col-span-8 lg:border-b-0 lg:border-r">
-          {lead.isBreaking ? (
-            <p className="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-accent">
-              {dict.breaking}
+        <article className="border-b border-line px-4 py-4 md:px-6 md:py-5 lg:col-span-8 lg:border-b-0 lg:border-r">
+          <Link href={href} className="relative block aspect-[16/9] overflow-hidden md:aspect-[2/1]">
+            {lead.hero ? (
+              <Image
+                src={lead.hero.url}
+                alt={lead.hero.alt}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 66vw"
+                className="object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-line" />
+            )}
+          </Link>
+          <div className="pt-4 md:pt-5">
+            {lead.isBreaking ? (
+              <p className="mb-2 text-[0.72rem] font-semibold text-accent">{dict.breaking}</p>
+            ) : null}
+            <h1 className="font-[family-name:var(--font-display)] text-[1.75rem] leading-[1.22] tracking-[-0.03em] text-ink md:text-[2.15rem] lg:text-[2.45rem]">
+              <Link href={href}>{lead.title}</Link>
+            </h1>
+            <p className="mt-2.5 max-w-[54ch] text-[0.95rem] leading-relaxed text-stone md:text-[1.02rem]">
+              {lead.deck}
             </p>
-          ) : null}
-          <div className="grid gap-5 md:grid-cols-[1.1fr_0.9fr] md:items-start md:gap-8">
-            <div>
-              <h1 className="font-[family-name:var(--font-display)] text-[1.75rem] leading-[1.22] tracking-[-0.03em] text-ink md:text-[2.15rem] lg:text-[2.45rem]">
-                <Link href={href}>{lead.title}</Link>
-              </h1>
-              <p className="mt-3 max-w-[48ch] text-[0.95rem] leading-relaxed text-stone md:text-base">
-                {lead.deck}
-              </p>
-              <p className="mt-4 text-xs text-stone">
-                {lead.authorNames[0]}
-                <span className="mx-2 text-line">/</span>
-                {relativeTime(lead.publishedAt, locale)}
-                <span className="mx-2 text-line">/</span>
-                {lead.readTimeMinutes} {dict.minutesRead}
-              </p>
-            </div>
-            <Link href={href} className="relative aspect-[16/10] overflow-hidden md:aspect-[4/3]">
-              {lead.hero ? (
-                <Image
-                  src={lead.hero.url}
-                  alt={lead.hero.alt}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 40vw"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-line" />
-              )}
-            </Link>
+            <p className="mt-3.5 text-xs text-stone">
+              {lead.authorNames[0]}
+              <span className="mx-2 text-line">/</span>
+              {relativeTime(lead.publishedAt, locale)}
+              <span className="mx-2 text-line">/</span>
+              {lead.readTimeMinutes} {dict.minutesRead}
+            </p>
           </div>
         </article>
 
-        <aside className="px-4 py-5 md:px-6 lg:col-span-4 lg:py-8">
-          <div className="flex items-baseline justify-between gap-3 border-b border-line pb-3">
-            <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.02em]">
+        <aside className="px-4 py-4 md:px-6 lg:col-span-4 lg:py-5">
+          <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2.5">
+            <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[-0.02em] md:text-xl">
               {dict.latest}
             </h2>
             <Link href={`/${locale}/latest`} className="text-xs text-accent hover:underline">
@@ -130,27 +130,17 @@ export function LeadAndRail({
             </Link>
           </div>
           <ul>
-            {side.map((story) => {
+            {railPrimary.map((story, i) => {
               const sHref = `/${locale}/${story.categorySlug}/${story.slug}`
               return (
-                <li key={story.id} className="border-b border-line last:border-b-0">
-                  <Link href={sHref} className="group grid grid-cols-[4.5rem_1fr] gap-3 py-3">
-                    <span className="relative aspect-[4/3] overflow-hidden bg-line">
-                      {story.hero ? (
-                        <Image
-                          src={story.hero.url}
-                          alt={story.hero.alt}
-                          fill
-                          sizes="72px"
-                          className="object-cover"
-                        />
-                      ) : null}
-                    </span>
+                <li key={story.id} className="border-b border-line">
+                  <Link href={sHref} className="group grid grid-cols-[1.35rem_1fr] gap-2 py-3">
+                    <span className="pt-0.5 text-sm font-semibold tabular-nums text-accent">{i + 1}</span>
                     <span>
                       <span className="font-[family-name:var(--font-display)] text-[0.98rem] leading-snug tracking-[-0.02em] text-ink group-hover:text-accent">
                         {story.title}
                       </span>
-                      <span className="mt-1.5 block text-xs text-stone">
+                      <span className="mt-1 block text-xs text-stone">
                         {relativeTime(story.publishedAt, locale)}
                       </span>
                     </span>
@@ -159,6 +149,20 @@ export function LeadAndRail({
               )
             })}
           </ul>
+          {railSecondary.length ? (
+            <ul className="mt-1 border-t border-line pt-1">
+              {railSecondary.map((story) => (
+                <li key={story.id} className="border-b border-line last:border-b-0">
+                  <Link
+                    href={`/${locale}/${story.categorySlug}/${story.slug}`}
+                    className="block py-2.5 text-[0.9rem] leading-snug text-ink hover:text-accent"
+                  >
+                    {story.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </aside>
       </div>
     </section>
@@ -170,22 +174,73 @@ export function CategorySection({
   dict,
   category,
   stories,
+  variant = 'feature',
 }: {
   locale: AppLocale
   dict: Dictionary
   category: Category
   stories: StoryCard[]
+  variant?: 'feature' | 'dense'
 }) {
   if (!stories.length) return null
   const title = locale === 'en' ? category.nameEn : category.nameNe
   const [feature, ...rest] = stories
   const featureHref = `/${locale}/${feature.categorySlug}/${feature.slug}`
 
+  if (variant === 'dense') {
+    return (
+      <section className="border-b border-line bg-paper-elevated/40">
+        <div className="mx-auto max-w-[1400px] px-4 py-7 md:px-6 md:py-8">
+          <div className="flex items-baseline justify-between gap-4 border-b border-line pb-2.5">
+            <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.03em] md:text-[1.65rem]">
+              <Link href={`/${locale}/${category.slug}`}>{title}</Link>
+            </h2>
+            <Link href={`/${locale}/${category.slug}`} className="text-xs text-accent hover:underline">
+              {dict.seeAll}
+            </Link>
+          </div>
+          <ul className="mt-2 grid gap-x-8 md:grid-cols-2">
+            {stories.slice(0, 6).map((story) => {
+              const href = `/${locale}/${story.categorySlug}/${story.slug}`
+              return (
+                <li key={story.id} className="border-b border-line">
+                  <Link href={href} className="grid grid-cols-[5.5rem_1fr] gap-3 py-3.5 md:grid-cols-[6.5rem_1fr]">
+                    {story.hero ? (
+                      <span className="relative aspect-[4/3] overflow-hidden">
+                        <Image
+                          src={story.hero.url}
+                          alt={story.hero.alt}
+                          fill
+                          sizes="104px"
+                          className="object-cover"
+                        />
+                      </span>
+                    ) : (
+                      <span className="bg-line/60" />
+                    )}
+                    <span>
+                      <span className="font-[family-name:var(--font-display)] text-[1.02rem] leading-snug tracking-[-0.02em] text-ink">
+                        {story.title}
+                      </span>
+                      <span className="mt-1.5 block text-xs text-stone">
+                        {relativeTime(story.publishedAt, locale)}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="border-b border-line">
-      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
-        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3">
-          <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.03em] md:text-[1.75rem]">
+      <div className="mx-auto max-w-[1400px] px-4 py-7 md:px-6 md:py-9">
+        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-2.5">
+          <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.03em] md:text-[1.65rem]">
             <Link href={`/${locale}/${category.slug}`}>{title}</Link>
           </h2>
           <Link href={`/${locale}/${category.slug}`} className="text-xs text-accent hover:underline">
@@ -195,7 +250,7 @@ export function CategorySection({
 
         <div className="mt-5 grid gap-6 lg:grid-cols-12 lg:gap-10">
           <article className="lg:col-span-5">
-            <Link href={featureHref} className="relative mb-4 block aspect-[16/10] overflow-hidden">
+            <Link href={featureHref} className="relative mb-3.5 block aspect-[16/10] overflow-hidden">
               {feature.hero ? (
                 <Image
                   src={feature.hero.url}
@@ -212,6 +267,11 @@ export function CategorySection({
               <Link href={featureHref}>{feature.title}</Link>
             </h3>
             <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-stone">{feature.deck}</p>
+            <p className="mt-3 text-xs text-stone">
+              {feature.authorNames[0]}
+              <span className="mx-2 text-line">/</span>
+              {feature.readTimeMinutes} {dict.minutesRead}
+            </p>
           </article>
 
           <ul className="lg:col-span-7">
@@ -219,21 +279,12 @@ export function CategorySection({
               const href = `/${locale}/${story.categorySlug}/${story.slug}`
               return (
                 <li key={story.id} className="border-b border-line last:border-b-0">
-                  <Link href={href} className="grid gap-3 py-3.5 sm:grid-cols-[5.5rem_1fr] sm:items-start">
-                    {story.hero ? (
-                      <span className="relative hidden aspect-[4/3] overflow-hidden sm:block">
-                        <Image src={story.hero.url} alt={story.hero.alt} fill sizes="88px" className="object-cover" />
-                      </span>
-                    ) : (
-                      <span className="hidden sm:block" />
-                    )}
-                    <span>
-                      <span className="font-[family-name:var(--font-display)] text-[1.05rem] leading-snug tracking-[-0.02em] text-ink">
-                        {story.title}
-                      </span>
-                      <span className="mt-1 block text-xs text-stone">
-                        {relativeTime(story.publishedAt, locale)}
-                      </span>
+                  <Link href={href} className="block py-3.5">
+                    <span className="font-[family-name:var(--font-display)] text-[1.05rem] leading-snug tracking-[-0.02em] text-ink">
+                      {story.title}
+                    </span>
+                    <span className="mt-1 block text-xs text-stone">
+                      {relativeTime(story.publishedAt, locale)}
                     </span>
                   </Link>
                 </li>
@@ -263,18 +314,18 @@ export function DualSignalRail({
 }) {
   if (!trending.length && !mostRead.length) return null
   return (
-    <section className="border-b border-line bg-paper-elevated/60">
-      <div className="mx-auto grid max-w-[1400px] gap-8 px-4 py-8 md:px-6 lg:grid-cols-2 lg:gap-12 lg:py-10">
+    <section className="border-b border-line">
+      <div className="mx-auto grid max-w-[1400px] gap-8 px-4 py-6 md:px-6 lg:grid-cols-2 lg:gap-12 lg:py-7">
         <div>
-          <h2 className="font-[family-name:var(--font-display)] text-xl md:text-2xl">{dict.trending}</h2>
-          {!trendingLive ? <p className="mt-1.5 text-xs text-stone">{dict.coldStart}</p> : null}
-          <ol className="mt-4">
+          <h2 className="font-[family-name:var(--font-display)] text-lg md:text-xl">{dict.trending}</h2>
+          {!trendingLive ? <p className="mt-1 text-xs text-stone">{dict.coldStart}</p> : null}
+          <ol className="mt-3">
             {trending.map((story, i) => (
-              <li key={story.id} className="grid grid-cols-[1.75rem_1fr] gap-2 border-b border-line py-3 last:border-b-0">
-                <span className="text-sm font-medium text-accent">{i + 1}</span>
+              <li key={story.id} className="grid grid-cols-[1.5rem_1fr] gap-2 border-b border-line py-2.5 last:border-b-0">
+                <span className="text-sm font-medium tabular-nums text-accent">{i + 1}</span>
                 <Link
                   href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                  className="text-[0.98rem] leading-snug hover:text-accent"
+                  className="text-[0.95rem] leading-snug hover:text-accent"
                 >
                   {story.title}
                 </Link>
@@ -283,15 +334,15 @@ export function DualSignalRail({
           </ol>
         </div>
         <div>
-          <h2 className="font-[family-name:var(--font-display)] text-xl md:text-2xl">{dict.mostRead}</h2>
-          {!mostReadLive ? <p className="mt-1.5 text-xs text-stone">{dict.coldStart}</p> : null}
-          <ol className="mt-4">
+          <h2 className="font-[family-name:var(--font-display)] text-lg md:text-xl">{dict.mostRead}</h2>
+          {!mostReadLive ? <p className="mt-1 text-xs text-stone">{dict.coldStart}</p> : null}
+          <ol className="mt-3">
             {mostRead.map((story, i) => (
-              <li key={story.id} className="grid grid-cols-[1.75rem_1fr] gap-2 border-b border-line py-3 last:border-b-0">
-                <span className="text-sm font-medium text-stone">{i + 1}</span>
+              <li key={story.id} className="grid grid-cols-[1.5rem_1fr] gap-2 border-b border-line py-2.5 last:border-b-0">
+                <span className="text-sm font-medium tabular-nums text-stone">{i + 1}</span>
                 <Link
                   href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                  className="text-[0.98rem] leading-snug hover:text-accent"
+                  className="text-[0.95rem] leading-snug hover:text-accent"
                 >
                   {story.title}
                 </Link>
@@ -299,6 +350,40 @@ export function DualSignalRail({
             ))}
           </ol>
         </div>
+      </div>
+    </section>
+  )
+}
+
+export function NewswireRail({
+  locale,
+  dict,
+  stories,
+}: {
+  locale: AppLocale
+  dict: Dictionary
+  stories: StoryCard[]
+}) {
+  if (!stories.length) return null
+  return (
+    <section className="border-b border-line">
+      <div className="mx-auto max-w-[1400px] px-4 py-7 md:px-6 md:py-8">
+        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3">
+          <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.02em]">{dict.newswire}</h2>
+          <Link href={`/${locale}/latest`} className="text-xs text-accent hover:underline">
+            {dict.seeAll}
+          </Link>
+        </div>
+        <ul className="mt-3 grid gap-x-6 md:grid-cols-2 lg:grid-cols-3">
+          {stories.slice(0, 12).map((story) => (
+            <li key={story.id} className="border-b border-line py-2.5">
+              <Link href={`/${locale}/${story.categorySlug}/${story.slug}`} className="group grid grid-cols-[4.8rem_1fr] gap-2">
+                <time className="text-[0.68rem] text-stone">{relativeTime(story.publishedAt, locale)}</time>
+                <span className="text-[0.95rem] leading-snug text-ink group-hover:text-accent">{story.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )
@@ -314,23 +399,34 @@ export function OpinionStack({
   stories: StoryCard[]
 }) {
   if (!stories.length) return null
+  const [lead, ...rest] = stories
   return (
     <section className="border-b border-line">
-      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.03em]">
+      <div className="mx-auto max-w-[1400px] px-4 py-7 md:px-6 md:py-9">
+        <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.03em] md:text-2xl">
           {dict.opinion}
         </h2>
-        <div className="mt-5 grid gap-6 md:grid-cols-3">
-          {stories.map((story) => (
-            <blockquote key={story.id} className="border-t border-line pt-4">
-              <p className="font-[family-name:var(--font-display)] text-lg leading-snug tracking-[-0.02em]">
-                <Link href={`/${locale}/${story.categorySlug}/${story.slug}`} className="hover:text-accent">
-                  {story.title}
-                </Link>
-              </p>
-              <footer className="mt-3 text-xs text-stone">{story.authorNames.join(', ')}</footer>
-            </blockquote>
-          ))}
+        <div className="mt-5 grid gap-8 md:grid-cols-12 md:gap-10">
+          <blockquote className="border-t border-line pt-4 md:col-span-7">
+            <p className="font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-[1.55rem]">
+              <Link href={`/${locale}/${lead.categorySlug}/${lead.slug}`} className="hover:text-accent">
+                {lead.title}
+              </Link>
+            </p>
+            <footer className="mt-3 text-xs text-stone">{lead.authorNames.join(', ')}</footer>
+          </blockquote>
+          <ul className="md:col-span-5">
+            {rest.map((story) => (
+              <li key={story.id} className="border-t border-line py-3.5">
+                <p className="font-[family-name:var(--font-display)] text-[1.05rem] leading-snug tracking-[-0.02em]">
+                  <Link href={`/${locale}/${story.categorySlug}/${story.slug}`} className="hover:text-accent">
+                    {story.title}
+                  </Link>
+                </p>
+                <p className="mt-2 text-xs text-stone">{story.authorNames.join(', ')}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
@@ -408,37 +504,47 @@ export function EditorsPicks({
   stories: StoryCard[]
 }) {
   if (!stories.length) return null
+  const [feature, ...rest] = stories
+  const featureHref = `/${locale}/${feature.categorySlug}/${feature.slug}`
   return (
-    <section className="border-b border-line">
-      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.03em]">
+    <section>
+      <div className="px-4 py-7 md:px-6 md:py-9">
+        <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.03em] md:text-2xl">
           {dict.editorsPicks}
         </h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {stories.map((story) => {
-            const href = `/${locale}/${story.categorySlug}/${story.slug}`
-            return (
-              <article key={story.id} className="border-t border-line pt-4">
-                <Link href={href} className="relative mb-3 block aspect-[16/10] overflow-hidden">
-                  {story.hero ? (
-                    <Image
-                      src={story.hero.url}
-                      alt={story.hero.alt}
-                      fill
-                      sizes="(max-width:768px) 100vw, 33vw"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-line" />
-                  )}
-                </Link>
-                <h3 className="font-[family-name:var(--font-display)] text-lg leading-snug tracking-[-0.02em]">
-                  <Link href={href}>{story.title}</Link>
-                </h3>
-                <p className="mt-2 line-clamp-2 text-sm text-stone">{story.deck}</p>
-              </article>
-            )
-          })}
+        <div className="mt-5 grid gap-6 md:grid-cols-5 md:gap-8">
+          <article className="md:col-span-3">
+            <Link href={featureHref} className="relative mb-3 block aspect-[16/10] overflow-hidden">
+              {feature.hero ? (
+                <Image
+                  src={feature.hero.url}
+                  alt={feature.hero.alt}
+                  fill
+                  sizes="(max-width:768px) 100vw, 40vw"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-line" />
+              )}
+            </Link>
+            <h3 className="font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-[1.35rem]">
+              <Link href={featureHref}>{feature.title}</Link>
+            </h3>
+            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-stone">{feature.deck}</p>
+          </article>
+          <ul className="md:col-span-2">
+            {rest.map((story) => {
+              const href = `/${locale}/${story.categorySlug}/${story.slug}`
+              return (
+                <li key={story.id} className="border-t border-line py-4 first:border-t-0 first:pt-0">
+                  <h3 className="font-[family-name:var(--font-display)] text-[1.05rem] leading-snug tracking-[-0.02em]">
+                    <Link href={href}>{story.title}</Link>
+                  </h3>
+                  <p className="mt-1.5 line-clamp-2 text-sm text-stone">{story.deck}</p>
+                </li>
+              )
+            })}
+          </ul>
         </div>
       </div>
     </section>
@@ -505,32 +611,31 @@ export function ProvinceRail({
 }) {
   if (!stories.length) return null
   return (
-    <section className="border-b border-line bg-paper-elevated/50">
-      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
-        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3">
-          <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.03em]">
+    <section>
+      <div className="px-4 py-7 md:px-6 md:py-9">
+        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-2.5">
+          <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.03em] md:text-2xl">
             <Link href={`/${locale}/pradesh`}>{dict.provinces}</Link>
           </h2>
           <Link href={`/${locale}/pradesh`} className="text-xs text-accent hover:underline">
             {dict.seeAll}
           </Link>
         </div>
-        <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stories.slice(0, 4).map((story) => {
+        <ul>
+          {stories.slice(0, 5).map((story) => {
             const href = `/${locale}/${story.categorySlug}/${story.slug}`
             const badge = provinceLabel(story.province, locale)
             return (
-              <li key={story.id} className="border-t border-line pt-4">
-                {badge ? (
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-accent">
-                    {badge}
-                  </p>
-                ) : null}
-                <h3 className="mt-2 font-[family-name:var(--font-display)] text-lg leading-snug tracking-[-0.02em]">
-                  <Link href={href}>{story.title}</Link>
-                </h3>
-                <p className="mt-2 line-clamp-2 text-sm text-stone">{story.deck}</p>
-                <p className="mt-3 text-xs text-stone">{relativeTime(story.publishedAt, locale)}</p>
+              <li key={story.id} className="border-b border-line last:border-b-0">
+                <Link href={href} className="block py-3.5 hover:text-accent">
+                  {badge ? <p className="mb-1 text-[0.7rem] font-medium text-accent">{badge}</p> : null}
+                  <span className="font-[family-name:var(--font-display)] text-[1.05rem] leading-snug tracking-[-0.02em] text-ink">
+                    {story.title}
+                  </span>
+                  <span className="mt-1.5 block text-xs text-stone">
+                    {relativeTime(story.publishedAt, locale)}
+                  </span>
+                </Link>
               </li>
             )
           })}

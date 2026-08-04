@@ -22,10 +22,19 @@ export function MobileBottomNav({ locale, dict }: { locale: AppLocale; dict: Dic
       match: (p: string) => p.startsWith(`/${locale}/search`),
     },
     {
-      href: `/${locale}/samachar`,
-      label: dict.categories,
+      href: `/${locale}/utilities`,
+      label: dict.utilities,
       icon: SquaresFour,
       match: (p: string) =>
+        p.startsWith(`/${locale}/utilities`) ||
+        p.startsWith(`/${locale}/pradesh`) ||
+        p.startsWith(`/${locale}/rajniti`) ||
+        p.startsWith(`/${locale}/samachar`) ||
+        p.startsWith(`/${locale}/arth`) ||
+        p.startsWith(`/${locale}/khel`) ||
+        p.startsWith(`/${locale}/bishwa`) ||
+        p.startsWith(`/${locale}/bichar`) ||
+        p.startsWith(`/${locale}/pravas`) ||
         !p.startsWith(`/${locale}/latest`) &&
         !p.startsWith(`/${locale}/search`) &&
         !p.startsWith(`/${locale}/about`) &&

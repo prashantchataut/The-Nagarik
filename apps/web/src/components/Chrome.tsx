@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { List, MagnifyingGlass, X } from '@phosphor-icons/react'
+import { usePathname } from 'next/navigation'
+import { CalendarBlank, List, MagnifyingGlass, TextAa, X } from '@phosphor-icons/react'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
 import type { Category } from '@thenagarik/content'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -28,10 +29,12 @@ export function SiteHeader({
   otherLocaleHref: string
 }) {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname() ?? ''
   const sections = categories.map((c) => ({
     href: `/${locale}/${c.slug}`,
     label: locale === 'en' ? c.nameEn : c.nameNe,
   }))
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur-md">
@@ -44,6 +47,12 @@ export function SiteHeader({
             <Link href={`/${locale}/search`} className="inline-flex items-center gap-1.5 hover:text-ink">
               <MagnifyingGlass size={14} weight="regular" />
               {dict.search}
+            </Link>
+            <Link href={`/${locale}/trust`} className="hover:text-ink">
+              {dict.trust}
+            </Link>
+            <Link href={`/${locale}/utilities`} className="hover:text-ink">
+              {dict.utilities}
             </Link>
             <Link href={otherLocaleHref} className="hover:text-ink">
               {dict.language}
@@ -85,6 +94,13 @@ export function SiteHeader({
         </form>
 
         <div className="flex items-center gap-2">
+          <Link
+            href={`/${locale}/utilities/nepali-patro`}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-accent px-2.5 py-1.5 text-xs font-medium text-accent-fg sm:px-3 sm:text-sm"
+          >
+            <CalendarBlank size={16} weight="fill" />
+            <span className="hidden xs:inline sm:inline">{dict.nepaliPatro}</span>
+          </Link>
           <div className="md:hidden">
             <ThemeToggle dict={dict} />
           </div>
@@ -114,33 +130,63 @@ export function SiteHeader({
         </div>
       </div>
 
-      {/* Category nav — second band */}
+      {/* Category nav — OK lesson: sections left, utility chips right */}
       <nav
         className="hidden border-t border-line/80 lg:block"
         aria-label={dict.categories}
       >
-        <div className="mx-auto flex max-w-[1400px] items-center gap-1 overflow-x-auto px-4 md:px-6">
-          <Link
-            href={`/${locale}`}
-            className="whitespace-nowrap px-3 py-2.5 text-sm font-medium text-ink hover:text-accent"
-          >
-            {dict.home}
-          </Link>
-          {sections.map((item) => (
+        <div className="mx-auto flex max-w-[1400px] items-center gap-2 overflow-x-auto px-4 md:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-1">
             <Link
-              key={item.href}
-              href={item.href}
-              className="whitespace-nowrap px-3 py-2.5 text-sm text-stone hover:text-ink"
+              href={`/${locale}`}
+              className={`whitespace-nowrap px-3 py-2.5 text-sm font-medium hover:text-accent ${
+                isActive(`/${locale}`) ? 'text-ink' : 'text-stone'
+              }`}
             >
-              {item.label}
+              {dict.home}
             </Link>
-          ))}
-          <Link
-            href={`/${locale}/latest`}
-            className="whitespace-nowrap px-3 py-2.5 text-sm text-stone hover:text-ink"
-          >
-            {dict.latest}
-          </Link>
+            {sections.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`whitespace-nowrap rounded-[10px] px-3 py-2.5 text-sm hover:text-ink ${
+                  isActive(item.href) ? 'bg-paper-elevated text-ink' : 'text-stone'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link
+              href={`/${locale}/latest`}
+              className={`whitespace-nowrap px-3 py-2.5 text-sm hover:text-ink ${
+                isActive(`/${locale}/latest`) ? 'text-ink' : 'text-stone'
+              }`}
+            >
+              {dict.latest}
+            </Link>
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2 py-1.5">
+            <Link
+              href={`/${locale}/utilities/nepali-patro`}
+              className="inline-flex items-center gap-1.5 rounded-[10px] bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg"
+            >
+              <CalendarBlank size={14} weight="fill" />
+              {dict.nepaliPatro}
+            </Link>
+            <Link
+              href={`/${locale}/utilities/preeti-unicode`}
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-line px-3 py-1.5 text-xs text-ink hover:border-accent"
+            >
+              <TextAa size={14} />
+              {dict.preetiTranslator}
+            </Link>
+            <Link
+              href={otherLocaleHref}
+              className="rounded-[10px] border border-line px-2.5 py-1.5 text-xs font-semibold text-ink hover:border-accent"
+            >
+              {locale === 'ne' ? 'EN' : 'NE'}
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -149,7 +195,9 @@ export function SiteHeader({
           <nav className="flex flex-col gap-1" aria-label="Mobile">
             <Link
               href={`/${locale}`}
-              className="rounded-[var(--radius-control)] px-3 py-3 text-base text-ink hover:bg-paper-elevated"
+              className={`rounded-[var(--radius-control)] px-3 py-3 text-base hover:bg-paper-elevated ${
+                isActive(`/${locale}`) ? 'bg-paper-elevated text-ink' : 'text-ink'
+              }`}
               onClick={() => setOpen(false)}
             >
               {dict.home}
@@ -158,7 +206,9 @@ export function SiteHeader({
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-[var(--radius-control)] px-3 py-3 text-base text-ink hover:bg-paper-elevated"
+                className={`rounded-[var(--radius-control)] px-3 py-3 text-base hover:bg-paper-elevated ${
+                  isActive(item.href) ? 'bg-paper-elevated text-ink' : 'text-ink'
+                }`}
                 onClick={() => setOpen(false)}
               >
                 {item.label}
@@ -166,7 +216,9 @@ export function SiteHeader({
             ))}
             <Link
               href={`/${locale}/latest`}
-              className="rounded-[var(--radius-control)] px-3 py-3 text-base text-ink hover:bg-paper-elevated"
+              className={`rounded-[var(--radius-control)] px-3 py-3 text-base hover:bg-paper-elevated ${
+                isActive(`/${locale}/latest`) ? 'bg-paper-elevated text-ink' : 'text-ink'
+              }`}
               onClick={() => setOpen(false)}
             >
               {dict.latest}
@@ -177,6 +229,15 @@ export function SiteHeader({
               onClick={() => setOpen(false)}
             >
               {dict.language}
+            </Link>
+            <Link
+              href={`/${locale}/utilities`}
+              className={`rounded-[var(--radius-control)] px-3 py-3 text-base hover:bg-paper-elevated ${
+                isActive(`/${locale}/utilities`) ? 'bg-paper-elevated text-ink' : 'text-ink'
+              }`}
+              onClick={() => setOpen(false)}
+            >
+              {dict.utilities}
             </Link>
           </nav>
         </div>
@@ -225,6 +286,9 @@ export function SiteFooter({
           </Link>
           <Link href={`/${locale}/trust`} className="hover:text-accent">
             {dict.trust}
+          </Link>
+          <Link href={`/${locale}/utilities`} className="hover:text-accent">
+            {dict.utilities}
           </Link>
           <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="hover:text-accent">
             RSS
