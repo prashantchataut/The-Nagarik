@@ -131,11 +131,14 @@ export function bsToAd(bs: BsDate): AdDate {
 }
 
 export function todayBs(now = new Date()): BsDate {
-  return adToBs({
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-    day: now.getDate(),
-  })
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kathmandu',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now)
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0)
+  return adToBs({ year: get('year'), month: get('month'), day: get('day') })
 }
 
 export function formatBs(bs: BsDate, locale: 'ne' | 'en' = 'ne'): string {

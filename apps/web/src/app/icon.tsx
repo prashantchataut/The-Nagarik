@@ -6,6 +6,7 @@ export const size = {
 }
 export const contentType = 'image/png'
 
+/** Latin mark only - Edge ImageResponse cannot reliably render Devanagari without a bundled font. */
 export default function Icon() {
   return new ImageResponse(
     (
@@ -16,17 +17,17 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#E8ECF1',
-          color: '#0F6E6A',
-          fontSize: 190,
+          background: '#0F6E6A',
+          color: '#F4F6F9',
+          fontSize: 280,
           fontWeight: 700,
-          border: '28px solid #0F6E6A',
-          fontFamily: 'Noto Serif Devanagari, serif',
+          letterSpacing: '-0.06em',
+          fontFamily: 'Georgia, Times New Roman, serif',
         }}
       >
-        न
+        N
       </div>
     ),
-    size,
+    { ...size },
   )
 }

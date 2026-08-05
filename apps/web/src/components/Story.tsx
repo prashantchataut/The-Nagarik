@@ -2,23 +2,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Category, StoryCard } from '@thenagarik/content'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
+import { relativeTime } from '@/lib/relative-time'
+import { RelativeTime } from '@/components/RelativeTime'
 import { provinceLabel } from '@/lib/provinces'
 
-export function relativeTime(iso: string | undefined, locale: AppLocale): string {
-  if (!iso) return ''
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.max(1, Math.round(diff / 60_000))
-  if (locale === 'ne') {
-    if (mins < 60) return `${mins} मिनेट अगाडि`
-    const hours = Math.round(mins / 60)
-    if (hours < 24) return `${hours} घण्टा अगाडि`
-    return `${Math.round(hours / 24)} दिन अगाडि`
-  }
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.round(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.round(hours / 24)}d ago`
-}
+export { relativeTime }
 
 /** Compact strip under nav — OK “ताजा अपडेट” lesson without a mid-page theme flip. */
 export function UpdateStrip({
@@ -67,7 +55,7 @@ export function UpdateStrip({
   )
 }
 
-/** Lead + side latest rail — photo-forward portal block, not a marketing hero. */
+/** Lead + side latest rail — photo-forward portal block with English brand lockup. */
 export function LeadAndRail({
   locale,
   dict,
@@ -84,6 +72,14 @@ export function LeadAndRail({
   const railSecondary = side.slice(4, 8)
   return (
     <section className="border-b border-line">
+      <div className="mx-auto max-w-[1400px] border-b border-line px-4 py-5 md:px-6 md:py-6">
+        <p className="font-[family-name:var(--font-sans)] text-[2rem] font-semibold tracking-[-0.04em] text-ink md:text-[2.75rem] lg:text-[3.25rem]">
+          The Nagarik
+        </p>
+        <p className="mt-1 max-w-[42ch] font-[family-name:var(--font-display)] text-base text-stone md:text-lg">
+          {locale === 'ne' ? 'द नागरिक. नेपालको नागरिक समाचार' : dict.tagline}
+        </p>
+      </div>
       <div className="mx-auto grid max-w-[1400px] gap-0 lg:grid-cols-12">
         <article className="border-b border-line px-4 py-4 md:px-6 md:py-5 lg:col-span-8 lg:border-b-0 lg:border-r">
           <Link href={href} className="relative block aspect-[16/9] overflow-hidden md:aspect-[2/1]">
@@ -113,7 +109,7 @@ export function LeadAndRail({
             <p className="mt-3.5 text-xs text-stone">
               {lead.authorNames[0]}
               <span className="mx-2 text-line">/</span>
-              {relativeTime(lead.publishedAt, locale)}
+              <RelativeTime iso={lead.publishedAt} locale={locale} />
               <span className="mx-2 text-line">/</span>
               {lead.readTimeMinutes} {dict.minutesRead}
             </p>
@@ -141,7 +137,7 @@ export function LeadAndRail({
                         {story.title}
                       </span>
                       <span className="mt-1 block text-xs text-stone">
-                        {relativeTime(story.publishedAt, locale)}
+                        <RelativeTime iso={story.publishedAt} locale={locale} />
                       </span>
                     </span>
                   </Link>
@@ -223,7 +219,7 @@ export function CategorySection({
                         {story.title}
                       </span>
                       <span className="mt-1.5 block text-xs text-stone">
-                        {relativeTime(story.publishedAt, locale)}
+                        <RelativeTime iso={story.publishedAt} locale={locale} />
                       </span>
                     </span>
                   </Link>
@@ -284,7 +280,7 @@ export function CategorySection({
                       {story.title}
                     </span>
                     <span className="mt-1 block text-xs text-stone">
-                      {relativeTime(story.publishedAt, locale)}
+                      <RelativeTime iso={story.publishedAt} locale={locale} />
                     </span>
                   </Link>
                 </li>
@@ -378,7 +374,7 @@ export function NewswireRail({
           {stories.slice(0, 12).map((story) => (
             <li key={story.id} className="border-b border-line py-2.5">
               <Link href={`/${locale}/${story.categorySlug}/${story.slug}`} className="group grid grid-cols-[4.8rem_1fr] gap-2">
-                <time className="text-[0.68rem] text-stone">{relativeTime(story.publishedAt, locale)}</time>
+                <RelativeTime iso={story.publishedAt} locale={locale} className="text-[0.68rem] text-stone" />
                 <span className="text-[0.95rem] leading-snug text-ink group-hover:text-accent">{story.title}</span>
               </Link>
             </li>
@@ -444,16 +440,16 @@ export function StoryLink({
 }) {
   const href = `/${locale}/${story.categorySlug}/${story.slug}`
   return (
-    <article className="grid gap-3 border-t border-line py-4 sm:grid-cols-[120px_1fr] sm:gap-4">
+    <article className="grid gap-3 border-t border-line py-3.5 sm:grid-cols-[100px_1fr] sm:gap-4">
       {story.hero ? (
-        <Link href={href} className="relative aspect-[4/3] overflow-hidden sm:aspect-square">
-          <Image src={story.hero.url} alt={story.hero.alt} fill sizes="120px" className="object-cover" />
+        <Link href={href} className="relative aspect-[4/3] overflow-hidden sm:aspect-[4/3]">
+          <Image src={story.hero.url} alt={story.hero.alt} fill sizes="100px" className="object-cover" />
         </Link>
       ) : (
         <div className="hidden sm:block" />
       )}
-      <div className="flex flex-col gap-1.5">
-        <h2 className="font-[family-name:var(--font-display)] text-lg leading-snug md:text-xl">
+      <div className="flex flex-col gap-1">
+        <h2 className="font-[family-name:var(--font-display)] text-[1.05rem] leading-snug md:text-lg">
           <Link href={href}>{story.title}</Link>
         </h2>
         <p className="line-clamp-2 max-w-[65ch] text-sm leading-relaxed text-stone">{story.deck}</p>
@@ -633,7 +629,7 @@ export function ProvinceRail({
                     {story.title}
                   </span>
                   <span className="mt-1.5 block text-xs text-stone">
-                    {relativeTime(story.publishedAt, locale)}
+                    <RelativeTime iso={story.publishedAt} locale={locale} />
                   </span>
                 </Link>
               </li>
@@ -688,7 +684,7 @@ export function LatestList({
               href={`/${locale}/${story.categorySlug}/${story.slug}`}
               className="grid gap-1 py-3.5 md:grid-cols-[6.5rem_1fr] md:items-baseline md:gap-6"
             >
-              <time className="text-xs text-stone">{relativeTime(story.publishedAt, locale)}</time>
+              <RelativeTime iso={story.publishedAt} locale={locale} className="text-xs text-stone" />
               <span className="font-[family-name:var(--font-display)] text-lg leading-snug">
                 {story.title}
               </span>

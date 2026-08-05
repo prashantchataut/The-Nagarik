@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { StoryLink } from '@/components/Story'
-import { Reveal } from '@/components/Reveal'
 import { getContent } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -28,9 +27,9 @@ export default async function CategoryPage({
   const list = rest.slice(4)
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6 md:py-10">
-      <header className="border-b border-line pb-5">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[-0.03em] md:text-4xl">
+    <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-6 md:py-8">
+      <header className="border-b border-line pb-4">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.02em] md:text-3xl">
           {locale === 'en' ? category.nameEn : category.nameNe}
         </h1>
         {(locale === 'en' ? category.descriptionEn : category.descriptionNe) ? (
@@ -43,51 +42,48 @@ export default async function CategoryPage({
       {!cards.length ? <p className="mt-10">{dict.empty}</p> : null}
 
       {feature ? (
-        <Reveal>
-          <article className="mt-8 grid gap-6 border-b border-line pb-8 lg:grid-cols-12 lg:gap-10">
-            <Link
-              href={`/${locale}/${feature.categorySlug}/${feature.slug}`}
-              className="relative aspect-[16/10] overflow-hidden lg:col-span-7 lg:aspect-auto lg:min-h-[360px]"
-            >
-              {feature.hero ? (
-                <Image
-                  src={feature.hero.url}
-                  alt={feature.hero.alt}
-                  fill
-                  priority
-                  sizes="(max-width:1024px) 100vw, 58vw"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-line" />
-              )}
-            </Link>
-            <div className="flex flex-col justify-center lg:col-span-5">
-              <h2 className="font-[family-name:var(--font-display)] text-2xl leading-snug tracking-[-0.03em] md:text-3xl">
-                <Link href={`/${locale}/${feature.categorySlug}/${feature.slug}`}>{feature.title}</Link>
-              </h2>
-              <p className="mt-3 max-w-[48ch] text-base leading-relaxed text-stone">{feature.deck}</p>
-              <p className="mt-4 text-xs text-stone">
-                {feature.authorNames.join(', ')}
-                <span className="mx-2 text-line">/</span>
-                {feature.readTimeMinutes} {dict.minutesRead}
-              </p>
-            </div>
-          </article>
-        </Reveal>
+        <article className="mt-6 grid gap-5 border-b border-line pb-6 lg:grid-cols-12 lg:gap-8">
+          <Link
+            href={`/${locale}/${feature.categorySlug}/${feature.slug}`}
+            className="relative aspect-[16/10] overflow-hidden lg:col-span-7 lg:aspect-auto lg:min-h-[320px]"
+          >
+            {feature.hero ? (
+              <Image
+                src={feature.hero.url}
+                alt={feature.hero.alt}
+                fill
+                priority
+                sizes="(max-width:1024px) 100vw, 58vw"
+                className="object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-line" />
+            )}
+          </Link>
+          <div className="flex flex-col justify-center lg:col-span-5">
+            <h2 className="font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-2xl">
+              <Link href={`/${locale}/${feature.categorySlug}/${feature.slug}`}>{feature.title}</Link>
+            </h2>
+            <p className="mt-2.5 max-w-[48ch] text-[0.95rem] leading-relaxed text-stone">{feature.deck}</p>
+            <p className="mt-3 text-xs text-stone">
+              {feature.authorNames.join(', ')}
+              <span className="mx-2 text-line">/</span>
+              {feature.readTimeMinutes} {dict.minutesRead}
+            </p>
+          </div>
+        </article>
       ) : null}
 
       {rail.length ? (
-        <section className="mt-5 border-b border-line pb-5">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-stone">{dict.latest}</h3>
-          <ul className="mt-2 grid gap-3 md:grid-cols-2">
-            {rail.map((s, i) => (
-              <li key={s.id} className="border-t border-line pt-3">
+        <section className="mt-4 border-b border-line pb-4">
+          <h3 className="text-sm font-medium text-stone">{dict.latest}</h3>
+          <ul className="mt-1 grid md:grid-cols-2 md:gap-x-8">
+            {rail.map((s) => (
+              <li key={s.id} className="border-t border-line">
                 <Link
                   href={`/${locale}/${s.categorySlug}/${s.slug}`}
-                  className="font-[family-name:var(--font-display)] text-lg leading-snug tracking-[-0.02em] hover:text-accent"
+                  className="block py-2.5 font-[family-name:var(--font-display)] text-[1.05rem] leading-snug hover:text-accent"
                 >
-                  <span className="mr-2 text-sm text-accent">{i + 1}.</span>
                   {s.title}
                 </Link>
               </li>
@@ -96,7 +92,7 @@ export default async function CategoryPage({
         </section>
       ) : null}
 
-      <div className="mt-2">
+      <div className="mt-1">
         {list.map((s) => (
           <StoryLink key={s.id} locale={locale} story={s} dict={dict} />
         ))}

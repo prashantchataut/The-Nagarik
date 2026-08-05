@@ -23,11 +23,7 @@ body {
   min-height: 100dvh;
   color: var(--ink);
   font-family: var(--font-sans);
-  background:
-    radial-gradient(1200px 600px at 12% -10%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 60%),
-    radial-gradient(900px 500px at 88% 8%, color-mix(in oklab, var(--stone) 14%, transparent), transparent 55%),
-    linear-gradient(180deg, var(--paper-elevated), var(--paper) 42%, var(--paper));
-  background-attachment: fixed;
+  background: var(--paper);
 }
 
 ::selection {

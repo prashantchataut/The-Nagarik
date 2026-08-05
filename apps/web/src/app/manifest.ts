@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'द नागरिक | The Nagarik',
+    name: 'The Nagarik',
     short_name: 'The Nagarik',
     description: 'Nepali-first civic news for Nepal.',
     start_url: '/ne',
@@ -13,13 +13,15 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       {
         src: '/icon',
-        sizes: '192x192',
-        type: 'image/png',
-      },
-      {
-        src: '/icon',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/apple-icon',
+        sizes: '180x180',
+        type: 'image/png',
+        purpose: 'any',
       },
     ],
   }

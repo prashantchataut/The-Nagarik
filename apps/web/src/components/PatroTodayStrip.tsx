@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { adToBs, formatBs } from '@/lib/bs-calendar'
 import { festivalsForBsDay, panchangForAd } from '@/lib/panchang'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
@@ -14,33 +17,40 @@ function ktmAdToday() {
   return { year: get('year'), month: get('month'), day: get('day') }
 }
 
-/** Compact civic utility strip: today's BS date, tithi, next festival cue. */
+/** Compact civic utility strip: today's BS date, tithi, festival cue. Client-only label after mount. */
 export function PatroTodayStrip({ locale, dict }: { locale: AppLocale; dict: Dictionary }) {
-  const ad = ktmAdToday()
-  const bs = adToBs(ad)
-  const panchang = panchangForAd(ad, locale)
-  const festivals = festivalsForBsDay(bs, ad)
-  const festivalLabel = festivals[0]
-    ? locale === 'ne'
-      ? festivals[0].nameNe
-      : festivals[0].nameEn
-    : null
+  const [ready, setReady] = useState(false)
+  const [line, setLine] = useState('')
+
+  useEffect(() => {
+    const ad = ktmAdToday()
+    const bs = adToBs(ad)
+    const panchang = panchangForAd(ad, locale)
+    const festivals = festivalsForBsDay(bs, ad)
+    const festivalLabel = festivals[0]
+      ? locale === 'ne'
+        ? festivals[0].nameNe
+        : festivals[0].nameEn
+      : null
+    const parts = [formatBs(bs, locale), panchang.tithiLabel]
+    if (festivalLabel) parts.push(festivalLabel)
+    setLine(parts.join(' / '))
+    setReady(true)
+  }, [locale])
 
   return (
     <div className="border-b border-line">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between md:px-6">
-        <p className="text-sm text-ink">
+        <p className="text-sm text-ink" suppressHydrationWarning>
           <span className="font-medium">{dict.today}</span>
-          <span className="mx-2 text-line">/</span>
-          <span>{formatBs(bs, locale)}</span>
-          <span className="mx-2 text-line">/</span>
-          <span className="text-stone">{panchang.tithiLabel}</span>
-          {festivalLabel ? (
+          {ready ? (
             <>
               <span className="mx-2 text-line">/</span>
-              <span className="text-accent">{festivalLabel}</span>
+              <span>{line}</span>
             </>
-          ) : null}
+          ) : (
+            <span className="ml-2 text-stone">…</span>
+          )}
         </p>
         <Link
           href={`/${locale}/utilities/nepali-patro`}

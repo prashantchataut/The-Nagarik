@@ -13,8 +13,8 @@ import {
   ArticleToolbar,
   ReadingProgress,
 } from '@/components/ReaderClient'
-import { Reveal } from '@/components/Reveal'
-import { StoryRail, relativeTime } from '@/components/Story'
+import { StoryRail } from '@/components/Story'
+import { RelativeTime } from '@/components/RelativeTime'
 import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -140,18 +140,16 @@ export default async function ArticlePage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <article>
-        <header className="mx-auto max-w-[720px] px-4 pt-8 pb-6 md:px-6 md:pt-10">
-          <p className="text-xs uppercase tracking-[0.1em] text-stone">
+        <header className="mx-auto max-w-[720px] px-4 pt-6 pb-5 md:px-6 md:pt-8">
+          <p className="text-sm text-stone">
             <Link href={`/${locale}/${category}`} className="hover:text-accent">
               {categoryLabel}
             </Link>
           </p>
           {article.isBreaking ? (
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-              {dict.breaking}
-            </p>
+            <p className="mt-2 text-[0.7rem] font-semibold text-accent">{dict.breaking}</p>
           ) : null}
-          <h1 className="mt-3 font-[family-name:var(--font-display)] text-[2rem] leading-[1.22] tracking-[-0.03em] md:text-[2.75rem]">
+          <h1 className="mt-2.5 font-[family-name:var(--font-display)] text-[1.85rem] leading-[1.22] tracking-[-0.02em] md:text-[2.4rem]">
             {title}
           </h1>
           <p className="mt-4 text-lg leading-relaxed text-stone">{deck}</p>
@@ -176,7 +174,7 @@ export default async function ArticlePage({
             <span aria-hidden className="text-line">
               /
             </span>
-            <time dateTime={article.publishedAt}>{relativeTime(article.publishedAt, locale)}</time>
+            <RelativeTime iso={article.publishedAt} locale={locale} />
             {article.updatedAt ? (
               <>
                 <span aria-hidden className="text-line">
@@ -184,7 +182,15 @@ export default async function ArticlePage({
                 </span>
                 <span>
                   {dict.updated}{' '}
-                  {new Date(article.updatedAt).toLocaleString(locale === 'ne' ? 'ne-NP' : 'en-GB')}
+                  {new Intl.DateTimeFormat('en-GB', {
+                    timeZone: 'Asia/Kathmandu',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                  }).format(new Date(article.updatedAt))}
                 </span>
               </>
             ) : null}
@@ -221,11 +227,9 @@ export default async function ArticlePage({
             {toc.length >= 2 ? (
               <nav
                 aria-label={dict.onThisPage}
-                className="mb-8 border border-line bg-paper-elevated/70 p-4 lg:hidden"
+                className="mb-8 border-y border-line py-4 lg:hidden"
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-stone">
-                  {dict.onThisPage}
-                </p>
+                <p className="text-sm font-medium text-stone">{dict.onThisPage}</p>
                 <ol className="mt-3 space-y-2 text-sm">
                   {toc.map((item) => (
                     <li key={item.id} className={item.level === 'heading3' ? 'pl-3' : ''}>
@@ -334,10 +338,8 @@ export default async function ArticlePage({
 
           {toc.length >= 2 ? (
             <aside className="hidden lg:block">
-              <div className="sticky top-[8.5rem]">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-stone">
-                  {dict.onThisPage}
-                </p>
+              <div className="sticky top-[7.5rem]">
+                <p className="text-sm font-medium text-stone">{dict.onThisPage}</p>
                 <ol className="mt-3 space-y-2.5 border-l border-line pl-3 text-sm text-stone">
                   {toc.map((item) => (
                     <li key={item.id} className={item.level === 'heading3' ? 'pl-2' : ''}>
@@ -354,37 +356,33 @@ export default async function ArticlePage({
       </article>
 
       {nextStory ? (
-        <Reveal>
-          <section className="border-y border-line bg-paper-elevated/60">
-            <div className="mx-auto max-w-[720px] px-4 py-8 md:px-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">
-                {dict.nextStory}
-              </p>
-              <Link
-                href={`/${locale}/${nextStory.categorySlug}/${nextStory.slug}`}
-                className="mt-3 grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-center"
-              >
-                <span className="relative aspect-[4/3] overflow-hidden bg-line">
-                  {nextStory.hero ? (
-                    <Image
-                      src={nextStory.hero.url}
-                      alt={nextStory.hero.alt}
-                      fill
-                      sizes="144px"
-                      className="object-cover"
-                    />
-                  ) : null}
+        <section className="border-y border-line">
+          <div className="mx-auto max-w-[720px] px-4 py-6 md:px-6">
+            <p className="text-sm font-medium text-accent">{dict.nextStory}</p>
+            <Link
+              href={`/${locale}/${nextStory.categorySlug}/${nextStory.slug}`}
+              className="mt-3 grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-center"
+            >
+              <span className="relative aspect-[4/3] overflow-hidden bg-line">
+                {nextStory.hero ? (
+                  <Image
+                    src={nextStory.hero.url}
+                    alt={nextStory.hero.alt}
+                    fill
+                    sizes="144px"
+                    className="object-cover"
+                  />
+                ) : null}
+              </span>
+              <span>
+                <span className="block font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-[1.35rem]">
+                  {nextStory.title}
                 </span>
-                <span>
-                  <span className="block font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-2xl">
-                    {nextStory.title}
-                  </span>
-                  <span className="mt-2 block line-clamp-2 text-sm text-stone">{nextStory.deck}</span>
-                </span>
-              </Link>
-            </div>
-          </section>
-        </Reveal>
+                <span className="mt-2 block line-clamp-2 text-sm text-stone">{nextStory.deck}</span>
+              </span>
+            </Link>
+          </div>
+        </section>
       ) : null}
 
       {packagePeers.length ? (

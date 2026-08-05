@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { StoryLink, relativeTime } from '@/components/Story'
+import { StoryLink } from '@/components/Story'
+import { RelativeTime } from '@/components/RelativeTime'
 import { getContent } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -20,31 +21,24 @@ export default async function LatestPage({ params }: { params: Promise<{ locale:
   const older = cards.filter((c) => !recent.includes(c))
 
   return (
-    <div className="mx-auto max-w-[900px] px-4 py-8 md:px-6 md:py-10">
-      <header className="border-b border-line pb-5">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[-0.03em] md:text-4xl">
+    <div className="mx-auto max-w-[900px] px-4 py-6 md:px-6 md:py-8">
+      <header className="border-b border-line pb-4">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.02em] md:text-3xl">
           {dict.latest}
         </h1>
         <p className="mt-2 text-sm text-stone">
-          {recent.length
-            ? `${dict.hours24}: ${recent.length}`
-            : dict.empty}
+          {recent.length ? `${dict.hours24}: ${recent.length}` : dict.empty}
         </p>
       </header>
 
       {recent.length ? (
-        <section className="mt-6">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">
-            {dict.hours24}
-          </h2>
-          <div className="mt-2">
-            {recent.map((s, i) => (
+        <section className="mt-5">
+          <h2 className="text-sm font-medium text-accent">{dict.hours24}</h2>
+          <div className="mt-1">
+            {recent.map((s) => (
               <div key={s.id} className="relative">
                 <span className="pointer-events-none absolute left-0 top-4 hidden text-[0.65rem] text-stone sm:block sm:w-16">
-                  {relativeTime(s.publishedAt, locale)}
-                </span>
-                <span className="pointer-events-none absolute left-0 top-4 text-[0.72rem] font-semibold text-accent sm:hidden">
-                  {i + 1}.
+                  <RelativeTime iso={s.publishedAt} locale={locale} />
                 </span>
                 <div className="sm:pl-20">
                   <StoryLink locale={locale} story={s} dict={dict} />
@@ -56,13 +50,9 @@ export default async function LatestPage({ params }: { params: Promise<{ locale:
       ) : null}
 
       {older.length ? (
-        <section className={recent.length ? 'mt-8' : 'mt-6'}>
-          {recent.length ? (
-            <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-stone">
-              {dict.latest}
-            </h2>
-          ) : null}
-          <div className={recent.length ? 'mt-2' : undefined}>
+        <section className={recent.length ? 'mt-6' : 'mt-5'}>
+          {recent.length ? <h2 className="text-sm font-medium text-stone">{dict.latest}</h2> : null}
+          <div className={recent.length ? 'mt-1' : undefined}>
             {older.map((s) => (
               <StoryLink key={s.id} locale={locale} story={s} dict={dict} />
             ))}

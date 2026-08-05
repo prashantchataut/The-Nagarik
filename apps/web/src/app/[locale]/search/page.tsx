@@ -106,10 +106,8 @@ export default async function SearchPage({
                     ) : null}
                   </span>
                   <span>
-                    <span className="text-xs uppercase tracking-[0.08em] text-stone">
-                      {r.doc.category}
-                    </span>
-                    <span className="mt-1 block font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em]">
+                    <span className="text-xs text-stone">{r.doc.category}</span>
+                    <span className="mt-1 block font-[family-name:var(--font-display)] text-lg leading-snug tracking-[-0.02em] md:text-xl">
                       {r.doc.title}
                     </span>
                     <span className="mt-2 block line-clamp-2 text-sm text-stone">{r.doc.deck}</span>

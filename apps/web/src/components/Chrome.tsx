@@ -3,19 +3,14 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { CalendarBlank, List, MagnifyingGlass, TextAa, X } from '@phosphor-icons/react'
+import { CalendarBlank, List, MagnifyingGlass, X } from '@phosphor-icons/react'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
 import type { Category } from '@thenagarik/content'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { ChromeDate } from '@/components/ChromeDate'
 
-function todayLabel(locale: AppLocale): string {
-  return new Date().toLocaleDateString(locale === 'ne' ? 'ne-NP' : 'en-GB', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
+const BRAND_EN = 'The Nagarik'
+const BRAND_NE = 'द नागरिक'
 
 export function SiteHeader({
   locale,
@@ -35,45 +30,43 @@ export function SiteHeader({
     label: locale === 'en' ? c.nameEn : c.nameNe,
   }))
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+  const isHome = pathname === `/${locale}` || pathname === `/${locale}/`
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur-md">
-      {/* Utility strip — Online Khabar lesson: tools above brand */}
-      <div className="hidden border-b border-line/70 bg-paper-elevated/90 text-xs text-stone md:block">
-        <div className="mx-auto flex h-9 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
-          <p className="truncate">{todayLabel(locale)}</p>
+    <header className="sticky top-0 z-40 border-b border-line bg-paper">
+      <div className="hidden border-b border-line text-xs text-stone md:block">
+        <div className="mx-auto flex h-8 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
+          <ChromeDate locale={locale} />
           <div className="flex items-center gap-4">
             <ThemeToggle dict={dict} />
-            <Link href={`/${locale}/search`} className="inline-flex items-center gap-1.5 hover:text-ink">
-              <MagnifyingGlass size={14} weight="regular" />
-              {dict.search}
+            <Link href={`/${locale}/utilities/nepali-patro`} className="hover:text-ink">
+              {dict.nepaliPatro}
             </Link>
             <Link href={`/${locale}/trust`} className="hover:text-ink">
               {dict.trust}
             </Link>
-            <Link href={`/${locale}/utilities`} className="hover:text-ink">
-              {dict.utilities}
-            </Link>
-            <Link href={otherLocaleHref} className="hover:text-ink">
-              {dict.language}
-            </Link>
-            <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="hover:text-ink">
-              RSS
+            <Link href={otherLocaleHref} className="font-medium hover:text-ink">
+              {locale === 'ne' ? 'EN' : 'NE'}
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Brand row */}
-      <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 md:h-16 md:px-6">
-        <Link
-          href={`/${locale}`}
-          className="shrink-0 font-[family-name:var(--font-display)] text-[1.45rem] tracking-[-0.03em] text-ink md:text-[1.85rem]"
-        >
-          {dict.siteName}
+      <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-2.5 md:px-6 md:py-3">
+        <Link href={`/${locale}`} className="group min-w-0 shrink-0">
+          <span className="block font-[family-name:var(--font-sans)] text-[1.25rem] font-semibold tracking-[-0.02em] text-ink md:text-[1.5rem]">
+            {BRAND_EN}
+          </span>
+          {locale === 'ne' ? (
+            <span className="mt-0.5 block font-[family-name:var(--font-display)] text-[0.75rem] leading-none text-stone md:text-[0.8rem]">
+              {BRAND_NE}
+            </span>
+          ) : (
+            <span className="mt-0.5 block text-[0.7rem] leading-none text-stone">{dict.tagline}</span>
+          )}
         </Link>
 
-        <form action={`/${locale}/search`} method="get" className="hidden max-w-md flex-1 lg:block">
+        <form action={`/${locale}/search`} method="get" className="hidden max-w-sm flex-1 lg:block">
           <label className="sr-only" htmlFor="masthead-search">
             {dict.search}
           </label>
@@ -88,38 +81,38 @@ export function SiteHeader({
               name="q"
               type="search"
               placeholder={dict.searchPlaceholder}
-              className="w-full rounded-[var(--radius-control)] border border-line bg-paper-elevated py-2 pl-9 pr-3 text-sm text-ink placeholder:text-stone focus:border-accent"
+              className="w-full border border-line bg-paper py-2 pl-9 pr-3 text-sm text-ink placeholder:text-stone focus:border-accent"
             />
           </div>
         </form>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Link
             href={`/${locale}/utilities/nepali-patro`}
-            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-accent px-2.5 py-1.5 text-xs font-medium text-accent-fg sm:px-3 sm:text-sm"
+            className="inline-flex h-9 items-center gap-1.5 border border-line px-2.5 text-sm text-ink hover:border-accent md:hidden"
+            aria-label={dict.nepaliPatro}
           >
-            <CalendarBlank size={16} weight="fill" />
-            <span className="hidden xs:inline sm:inline">{dict.nepaliPatro}</span>
+            <CalendarBlank size={18} weight="regular" className="text-accent" />
           </Link>
           <div className="md:hidden">
             <ThemeToggle dict={dict} />
           </div>
           <Link
             href={`/${locale}/search`}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-control)] text-ink lg:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center text-ink lg:hidden"
             aria-label={dict.search}
           >
             <MagnifyingGlass size={22} weight="regular" />
           </Link>
           <Link
             href={otherLocaleHref}
-            className="hidden rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent sm:inline-flex lg:hidden"
+            className="hidden border border-line px-3 py-1.5 text-sm font-medium text-ink hover:border-accent sm:inline-flex md:hidden"
           >
-            {dict.language}
+            {locale === 'ne' ? 'EN' : 'NE'}
           </Link>
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-control)] border border-line text-ink lg:hidden active:scale-[0.98]"
+            className="inline-flex h-9 w-9 items-center justify-center border border-line text-ink hover:border-accent lg:hidden"
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? dict.close : dict.menu}
@@ -130,74 +123,59 @@ export function SiteHeader({
         </div>
       </div>
 
-      {/* Category nav — OK lesson: sections left, utility chips right */}
-      <nav
-        className="hidden border-t border-line/80 lg:block"
-        aria-label={dict.categories}
-      >
-        <div className="mx-auto flex max-w-[1400px] items-center gap-2 overflow-x-auto px-4 md:px-6">
-          <div className="flex min-w-0 flex-1 items-center gap-1">
+      <nav className="hidden border-t border-line lg:block" aria-label={dict.categories}>
+        <div className="mx-auto flex h-10 max-w-[1400px] items-center gap-0.5 overflow-x-auto px-4 md:px-6">
+          <Link
+            href={`/${locale}`}
+            className={`relative whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors ${
+              isHome ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-accent' : 'text-stone hover:text-ink'
+            }`}
+          >
+            {dict.home}
+          </Link>
+          {sections.map((item) => (
             <Link
-              href={`/${locale}`}
-              className={`whitespace-nowrap px-3 py-2.5 text-sm font-medium hover:text-accent ${
-                isActive(`/${locale}`) ? 'text-ink' : 'text-stone'
+              key={item.href}
+              href={item.href}
+              className={`relative whitespace-nowrap px-3 py-2 text-sm transition-colors ${
+                isActive(item.href)
+                  ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-accent'
+                  : 'text-stone hover:text-ink'
               }`}
             >
-              {dict.home}
+              {item.label}
             </Link>
-            {sections.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`whitespace-nowrap rounded-[10px] px-3 py-2.5 text-sm hover:text-ink ${
-                  isActive(item.href) ? 'bg-paper-elevated text-ink' : 'text-stone'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <Link
-              href={`/${locale}/latest`}
-              className={`whitespace-nowrap px-3 py-2.5 text-sm hover:text-ink ${
-                isActive(`/${locale}/latest`) ? 'text-ink' : 'text-stone'
-              }`}
-            >
-              {dict.latest}
-            </Link>
-          </div>
-          <div className="ml-auto flex shrink-0 items-center gap-2 py-1.5">
-            <Link
-              href={`/${locale}/utilities/nepali-patro`}
-              className="inline-flex items-center gap-1.5 rounded-[10px] bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg"
-            >
-              <CalendarBlank size={14} weight="fill" />
-              {dict.nepaliPatro}
-            </Link>
-            <Link
-              href={`/${locale}/utilities/preeti-unicode`}
-              className="inline-flex items-center gap-1.5 rounded-[10px] border border-line px-3 py-1.5 text-xs text-ink hover:border-accent"
-            >
-              <TextAa size={14} />
-              {dict.preetiTranslator}
-            </Link>
-            <Link
-              href={otherLocaleHref}
-              className="rounded-[10px] border border-line px-2.5 py-1.5 text-xs font-semibold text-ink hover:border-accent"
-            >
-              {locale === 'ne' ? 'EN' : 'NE'}
-            </Link>
-          </div>
+          ))}
+          <Link
+            href={`/${locale}/latest`}
+            className={`relative whitespace-nowrap px-3 py-2 text-sm transition-colors ${
+              isActive(`/${locale}/latest`)
+                ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-accent'
+                : 'text-stone hover:text-ink'
+            }`}
+          >
+            {dict.latest}
+          </Link>
+          <span className="mx-2 h-4 w-px shrink-0 bg-line" aria-hidden />
+          <Link
+            href={`/${locale}/utilities`}
+            className={`relative whitespace-nowrap px-3 py-2 text-sm transition-colors ${
+              isActive(`/${locale}/utilities`)
+                ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-accent'
+                : 'text-stone hover:text-ink'
+            }`}
+          >
+            {dict.utilities}
+          </Link>
         </div>
       </nav>
 
       {open ? (
-        <div id="mobile-nav" className="border-t border-line bg-paper px-4 py-4 lg:hidden">
-          <nav className="flex flex-col gap-1" aria-label="Mobile">
+        <div id="mobile-nav" className="border-t border-line bg-paper px-4 py-3 lg:hidden">
+          <nav className="flex flex-col" aria-label="Mobile">
             <Link
               href={`/${locale}`}
-              className={`rounded-[var(--radius-control)] px-3 py-3 text-base hover:bg-paper-elevated ${
-                isActive(`/${locale}`) ? 'bg-paper-elevated text-ink' : 'text-ink'
-              }`}
+              className={`border-b border-line py-3 text-base ${isHome ? 'font-medium text-accent' : 'text-stone'}`}
               onClick={() => setOpen(false)}
             >
               {dict.home}
@@ -206,8 +184,8 @@ export function SiteHeader({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-[var(--radius-control)] px-3 py-3 text-base hover:bg-paper-elevated ${
-                  isActive(item.href) ? 'bg-paper-elevated text-ink' : 'text-ink'
+                className={`border-b border-line py-3 text-base ${
+                  isActive(item.href) ? 'font-medium text-accent' : 'text-stone'
                 }`}
                 onClick={() => setOpen(false)}
               >
@@ -216,28 +194,28 @@ export function SiteHeader({
             ))}
             <Link
               href={`/${locale}/latest`}
-              className={`rounded-[var(--radius-control)] px-3 py-3 text-base hover:bg-paper-elevated ${
-                isActive(`/${locale}/latest`) ? 'bg-paper-elevated text-ink' : 'text-ink'
+              className={`border-b border-line py-3 text-base ${
+                isActive(`/${locale}/latest`) ? 'font-medium text-accent' : 'text-stone'
               }`}
               onClick={() => setOpen(false)}
             >
               {dict.latest}
             </Link>
             <Link
-              href={otherLocaleHref}
-              className="rounded-[var(--radius-control)] px-3 py-3 text-base text-ink hover:bg-paper-elevated sm:hidden"
-              onClick={() => setOpen(false)}
-            >
-              {dict.language}
-            </Link>
-            <Link
               href={`/${locale}/utilities`}
-              className={`rounded-[var(--radius-control)] px-3 py-3 text-base hover:bg-paper-elevated ${
-                isActive(`/${locale}/utilities`) ? 'bg-paper-elevated text-ink' : 'text-ink'
+              className={`border-b border-line py-3 text-base ${
+                isActive(`/${locale}/utilities`) ? 'font-medium text-accent' : 'text-stone'
               }`}
               onClick={() => setOpen(false)}
             >
               {dict.utilities}
+            </Link>
+            <Link
+              href={otherLocaleHref}
+              className="py-3 text-base font-medium text-ink sm:hidden"
+              onClick={() => setOpen(false)}
+            >
+              {dict.language}
             </Link>
           </nav>
         </div>
@@ -256,43 +234,43 @@ export function SiteFooter({
   categories?: Category[]
 }) {
   return (
-    <footer className="mt-12 border-t border-line bg-paper-elevated/50">
-      <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-12 md:grid-cols-12 md:px-6">
-        <div className="md:col-span-4">
-          <p className="font-[family-name:var(--font-display)] text-2xl text-ink">{dict.siteName}</p>
-          <p className="mt-3 max-w-[36ch] text-sm leading-relaxed text-stone">{dict.tagline}</p>
-        </div>
-        <div className="md:col-span-4">
-          <p className="text-sm font-medium text-ink">{dict.categories}</p>
-          <ul className="mt-3 grid grid-cols-2 gap-2 text-sm text-stone">
-            {categories.map((c) => (
-              <li key={c.id}>
-                <Link href={`/${locale}/${c.slug}`} className="hover:text-accent">
-                  {locale === 'en' ? c.nameEn : c.nameNe}
-                </Link>
-              </li>
+    <footer className="mt-10 border-t border-line pb-24 lg:pb-0">
+      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="font-[family-name:var(--font-sans)] text-lg font-semibold tracking-[-0.02em] text-ink">
+              {BRAND_EN}
+            </p>
+            <p className="mt-0.5 font-[family-name:var(--font-display)] text-sm text-stone">{BRAND_NE}</p>
+            <p className="mt-2 max-w-[36ch] text-sm leading-relaxed text-stone">{dict.tagline}</p>
+          </div>
+          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-stone" aria-label={dict.categories}>
+            {categories.slice(0, 6).map((c) => (
+              <Link key={c.id} href={`/${locale}/${c.slug}`} className="hover:text-accent">
+                {locale === 'en' ? c.nameEn : c.nameNe}
+              </Link>
             ))}
-          </ul>
+          </nav>
         </div>
-        <div className="flex flex-col gap-3 text-sm md:col-span-4">
-          <Link href={`/${locale}/latest`} className="hover:text-accent">
-            {dict.latest}
-          </Link>
-          <Link href={`/${locale}/search`} className="hover:text-accent">
-            {dict.search}
-          </Link>
-          <Link href={`/${locale}/about`} className="hover:text-accent">
-            {dict.about}
-          </Link>
-          <Link href={`/${locale}/trust`} className="hover:text-accent">
-            {dict.trust}
-          </Link>
-          <Link href={`/${locale}/utilities`} className="hover:text-accent">
-            {dict.utilities}
-          </Link>
-          <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="hover:text-accent">
-            RSS
-          </Link>
+
+        <div className="mt-6 flex flex-col gap-3 border-t border-line pt-5 text-sm text-stone sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            <Link href={`/${locale}/about`} className="hover:text-accent">
+              {dict.about}
+            </Link>
+            <Link href={`/${locale}/trust`} className="hover:text-accent">
+              {dict.trust}
+            </Link>
+            <Link href={`/${locale}/utilities`} className="hover:text-accent">
+              {dict.utilities}
+            </Link>
+            <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="hover:text-accent">
+              RSS
+            </Link>
+          </div>
+          <p className="text-xs" suppressHydrationWarning>
+            © {new Date().getFullYear()} The Nagarik
+          </p>
         </div>
       </div>
     </footer>

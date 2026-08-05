@@ -18,7 +18,7 @@ const display = Noto_Serif_Devanagari({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'द नागरिक | The Nagarik',
+    default: 'The Nagarik | द नागरिक',
     template: '%s | The Nagarik',
   },
   description: 'Nepali-first civic news for Nepal.',
@@ -27,6 +27,10 @@ export const metadata: Metadata = {
     capable: true,
     title: 'The Nagarik',
     statusBarStyle: 'default',
+  },
+  icons: {
+    icon: [{ url: '/icon', type: 'image/png', sizes: '512x512' }],
+    apple: [{ url: '/apple-icon', type: 'image/png', sizes: '180x180' }],
   },
 }
 

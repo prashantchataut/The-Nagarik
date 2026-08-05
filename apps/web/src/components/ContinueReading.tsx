@@ -61,28 +61,20 @@ export function ContinueReadingRail({
   if (!items.length) return null
 
   return (
-    <section className="border-b border-line bg-paper-elevated/40">
-      <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-6">
-        <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[-0.02em]">
-          {dict.continueReading}
-        </h2>
-        <ul className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <section className="border-b border-line">
+      <div className="mx-auto max-w-[1400px] px-4 py-5 md:px-6 md:py-6">
+        <h2 className="font-[family-name:var(--font-display)] text-lg">{dict.continueReading}</h2>
+        <ul className="mt-3 grid gap-0 md:grid-cols-2 lg:grid-cols-4">
           {items.map((story) => (
-            <li key={story.id} className="border-t border-line pt-4">
-              <Link
-                href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                className="group block"
-              >
-                <p className="font-[family-name:var(--font-display)] text-[0.98rem] leading-snug group-hover:text-accent">
+            <li key={story.id} className="border-t border-line py-3 md:border-r md:border-t-0 md:px-4 md:first:pl-0 md:last:border-r-0 md:last:pr-0 lg:py-0 lg:pt-3">
+              <Link href={`/${locale}/${story.categorySlug}/${story.slug}`} className="block hover:text-accent">
+                <p className="font-[family-name:var(--font-display)] text-[0.98rem] leading-snug text-ink">
                   {story.title}
                 </p>
-                <div className="mt-3 h-1 overflow-hidden bg-line">
-                  <div
-                    className="h-full bg-accent transition-[width] duration-300"
-                    style={{ width: `${Math.round(story.progress * 100)}%` }}
-                  />
+                <div className="mt-2.5 h-px overflow-hidden bg-line">
+                  <div className="h-full bg-accent" style={{ width: `${Math.round(story.progress * 100)}%` }} />
                 </div>
-                <p className="mt-2 text-xs text-stone">{Math.round(story.progress * 100)}%</p>
+                <p className="mt-1.5 text-xs text-stone">{Math.round(story.progress * 100)}%</p>
               </Link>
             </li>
           ))}
