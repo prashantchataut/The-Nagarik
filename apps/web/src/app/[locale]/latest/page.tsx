@@ -21,11 +21,9 @@ export default async function LatestPage({ params }: { params: Promise<{ locale:
   const older = cards.filter((c) => !recent.includes(c))
 
   return (
-    <div className="mx-auto max-w-[900px] px-4 py-6 md:px-6 md:py-8">
-      <header className="border-b border-line pb-4">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.02em] md:text-3xl">
-          {dict.latest}
-        </h1>
+    <div className="mx-auto max-w-[1240px] px-4 py-6 md:px-6 md:py-8">
+      <header className="border-b-2 border-accent pb-4">
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] md:text-3xl">{dict.latest}</h1>
         <p className="mt-2 text-sm text-stone">
           {recent.length ? `${dict.hours24}: ${recent.length}` : dict.empty}
         </p>
@@ -33,7 +31,7 @@ export default async function LatestPage({ params }: { params: Promise<{ locale:
 
       {recent.length ? (
         <section className="mt-5">
-          <h2 className="text-sm font-medium text-accent">{dict.hours24}</h2>
+          <h2 className="text-sm font-semibold text-accent">{dict.hours24}</h2>
           <div className="mt-1">
             {recent.map((s) => (
               <div key={s.id} className="relative">
@@ -51,7 +49,7 @@ export default async function LatestPage({ params }: { params: Promise<{ locale:
 
       {older.length ? (
         <section className={recent.length ? 'mt-6' : 'mt-5'}>
-          {recent.length ? <h2 className="text-sm font-medium text-stone">{dict.latest}</h2> : null}
+          {recent.length ? <h2 className="text-sm font-semibold text-stone">{dict.latest}</h2> : null}
           <div className={recent.length ? 'mt-1' : undefined}>
             {older.map((s) => (
               <StoryLink key={s.id} locale={locale} story={s} dict={dict} />

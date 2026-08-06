@@ -95,7 +95,7 @@ export function PreetiConverter() {
       </div>
 
       {history.length ? (
-        <div className="rounded-[12px] border border-line bg-paper-elevated p-3">
+        <div className="border border-line bg-paper-elevated p-3">
           <p className="text-xs uppercase tracking-[0.1em] text-stone">Recent copies</p>
           <ul className="mt-2 space-y-2">
             {history.map((item) => (

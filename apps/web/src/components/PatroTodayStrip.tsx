@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { adToBs, formatBs } from '@/lib/bs-calendar'
 import { festivalsForBsDay, panchangForAd } from '@/lib/panchang'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
+import { patroHref } from '@/lib/site'
 
 function ktmAdToday() {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -17,10 +18,19 @@ function ktmAdToday() {
   return { year: get('year'), month: get('month'), day: get('day') }
 }
 
-/** Compact civic utility strip: today's BS date, tithi, festival cue. Client-only label after mount. */
-export function PatroTodayStrip({ locale, dict }: { locale: AppLocale; dict: Dictionary }) {
+/** Compact civic utility strip: today's BS date, tithi, festival cue. */
+export function PatroTodayStrip({
+  locale,
+  dict,
+  href,
+}: {
+  locale: AppLocale
+  dict: Dictionary
+  href?: string
+}) {
   const [ready, setReady] = useState(false)
   const [line, setLine] = useState('')
+  const link = href ?? patroHref(locale)
 
   useEffect(() => {
     const ad = ktmAdToday()
@@ -34,15 +44,17 @@ export function PatroTodayStrip({ locale, dict }: { locale: AppLocale; dict: Dic
       : null
     const parts = [formatBs(bs, locale), panchang.tithiLabel]
     if (festivalLabel) parts.push(festivalLabel)
-    setLine(parts.join(' / '))
+    setLine(parts.join(' · '))
     setReady(true)
   }, [locale])
 
   return (
-    <div className="border-b border-line">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between md:px-6">
+    <div className="border-b border-line bg-paper">
+      <div className="mx-auto flex max-w-[1240px] flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between md:px-6">
         <p className="text-sm text-ink" suppressHydrationWarning>
-          <span className="font-medium">{dict.today}</span>
+          <span className="rounded-[var(--radius-control)] bg-accent px-2 py-0.5 text-[0.7rem] font-semibold text-accent-fg">
+            {dict.today}
+          </span>
           {ready ? (
             <>
               <span className="mx-2 text-line">/</span>
@@ -52,10 +64,7 @@ export function PatroTodayStrip({ locale, dict }: { locale: AppLocale; dict: Dic
             <span className="ml-2 text-stone">…</span>
           )}
         </p>
-        <Link
-          href={`/${locale}/utilities/nepali-patro`}
-          className="shrink-0 text-xs font-medium text-accent hover:underline"
-        >
+        <Link href={link} className="shrink-0 text-xs font-medium text-accent hover:underline">
           {dict.nepaliPatro}
         </Link>
       </div>

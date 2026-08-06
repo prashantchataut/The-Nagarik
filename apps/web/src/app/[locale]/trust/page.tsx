@@ -17,7 +17,7 @@ export default async function TrustPage({ params }: { params: Promise<{ locale: 
 
   return (
     <div className="mx-auto max-w-[65ch] px-4 py-10 md:px-6 md:py-14">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[-0.03em] md:text-4xl">
+      <h1 className="border-b-2 border-accent pb-3 text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
         {dict.trust}
       </h1>
       <p className="mt-4 text-lg leading-relaxed text-stone">

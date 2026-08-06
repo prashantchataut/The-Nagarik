@@ -2,6 +2,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { StoryLink } from '@/components/Story'
+import { ThumbHeadline } from '@/components/news/ThumbHeadline'
+import { StoryByline } from '@/components/news/StoryByline'
 import { getContent } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -27,9 +29,9 @@ export default async function CategoryPage({
   const list = rest.slice(4)
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-6 md:py-8">
-      <header className="border-b border-line pb-4">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[-0.02em] md:text-3xl">
+    <div className="mx-auto max-w-[1240px] px-4 py-6 md:px-6 md:py-8">
+      <header className="border-b-2 border-accent pb-4">
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-accent md:text-3xl">
           {locale === 'en' ? category.nameEn : category.nameNe}
         </h1>
         {(locale === 'en' ? category.descriptionEn : category.descriptionNe) ? (
@@ -61,31 +63,28 @@ export default async function CategoryPage({
             )}
           </Link>
           <div className="flex flex-col justify-center lg:col-span-5">
-            <h2 className="font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-2xl">
+            <h2 className="text-xl font-semibold leading-snug tracking-[-0.02em] md:text-2xl">
               <Link href={`/${locale}/${feature.categorySlug}/${feature.slug}`}>{feature.title}</Link>
             </h2>
             <p className="mt-2.5 max-w-[48ch] text-[0.95rem] leading-relaxed text-stone">{feature.deck}</p>
-            <p className="mt-3 text-xs text-stone">
-              {feature.authorNames.join(', ')}
-              <span className="mx-2 text-line">/</span>
-              {feature.readTimeMinutes} {dict.minutesRead}
-            </p>
+            <div className="mt-3">
+              <StoryByline
+                locale={locale}
+                authors={feature.authorNames}
+                publishedAt={feature.publishedAt}
+              />
+            </div>
           </div>
         </article>
       ) : null}
 
       {rail.length ? (
         <section className="mt-4 border-b border-line pb-4">
-          <h3 className="text-sm font-medium text-stone">{dict.latest}</h3>
+          <h3 className="text-sm font-semibold text-accent">{dict.latest}</h3>
           <ul className="mt-1 grid md:grid-cols-2 md:gap-x-8">
             {rail.map((s) => (
               <li key={s.id} className="border-t border-line">
-                <Link
-                  href={`/${locale}/${s.categorySlug}/${s.slug}`}
-                  className="block py-2.5 font-[family-name:var(--font-display)] text-[1.05rem] leading-snug hover:text-accent"
-                >
-                  {s.title}
-                </Link>
+                <ThumbHeadline locale={locale} story={s} />
               </li>
             ))}
           </ul>

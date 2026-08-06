@@ -19,7 +19,10 @@ export default async function LocaleLayout({
   const dict = getDictionary(locale)
   const content = getContent()
   const categories = await content.listCategories()
-  const otherLocale = locale === 'ne' ? 'en' : 'ne'
+  const trendingTags =
+    locale === 'ne'
+      ? ['वर्षा', 'काठमाडौं', 'राजनीति', 'अर्थतन्त्र', 'राशिफल']
+      : ['Monsoon', 'Kathmandu', 'Politics', 'Economy', 'Horoscope']
 
   return (
     <div lang={locale}>
@@ -30,12 +33,7 @@ export default async function LocaleLayout({
         {dict.skipToContent}
       </a>
       <FixtureBanner dict={dict} show={content.usingDevFixtures} />
-      <SiteHeader
-        locale={locale}
-        dict={dict}
-        categories={categories}
-        otherLocaleHref={`/${otherLocale}`}
-      />
+      <SiteHeader locale={locale} dict={dict} categories={categories} trendingTags={trendingTags} />
       <main id="main" className="pb-20 lg:pb-0">
         {children}
       </main>

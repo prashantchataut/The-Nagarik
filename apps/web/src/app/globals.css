@@ -9,6 +9,7 @@
   --color-line: var(--line);
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
+  --color-holiday: var(--holiday);
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
   --radius-control: var(--radius-control);

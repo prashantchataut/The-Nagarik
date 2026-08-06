@@ -15,6 +15,8 @@ import {
 } from '@/components/ReaderClient'
 import { StoryRail } from '@/components/Story'
 import { RelativeTime } from '@/components/RelativeTime'
+import { CategoryTag } from '@/components/news/CategoryTag'
+import { AdSlot } from '@/components/news/AdSlot'
 import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -112,6 +114,10 @@ export default async function ArticlePage({
   const otherLocale: AppLocale = locale === 'ne' ? 'en' : 'ne'
   const bilingualHref = hasEn ? `/${otherLocale}/${category}/${slug}` : undefined
   const bilingualLabel = hasEn ? (otherLocale === 'en' ? 'English' : 'नेपाली') : undefined
+  const latestPool = await content.listPublishedArticles({ locale })
+  const latestCards = (
+    await Promise.all(latestPool.slice(0, 8).map((a) => content.toStoryCard(a, locale)))
+  ).filter((c) => c.id !== article.id).slice(0, 6)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -141,44 +147,42 @@ export default async function ArticlePage({
 
       <article>
         <header className="mx-auto max-w-[720px] px-4 pt-6 pb-5 md:px-6 md:pt-8">
-          <p className="text-sm text-stone">
-            <Link href={`/${locale}/${category}`} className="hover:text-accent">
-              {categoryLabel}
-            </Link>
-          </p>
-          {article.isBreaking ? (
-            <p className="mt-2 text-[0.7rem] font-semibold text-accent">{dict.breaking}</p>
-          ) : null}
-          <h1 className="mt-2.5 font-[family-name:var(--font-display)] text-[1.85rem] leading-[1.22] tracking-[-0.02em] md:text-[2.4rem]">
+          <div className="flex flex-wrap items-center gap-2">
+            <CategoryTag href={`/${locale}/${category}`}>{categoryLabel}</CategoryTag>
+            {article.isBreaking ? (
+              <span className="text-[0.7rem] font-semibold text-holiday">{dict.breaking}</span>
+            ) : null}
+          </div>
+          <h1 className="mt-3 text-[1.85rem] font-semibold leading-[1.22] tracking-[-0.02em] md:text-[2.4rem]">
             {title}
           </h1>
           <p className="mt-4 text-lg leading-relaxed text-stone">{deck}</p>
           <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone">
-            <span className="inline-flex items-center gap-2">
-              <span className="font-medium text-ink">{dict.siteName}</span>
-              <span aria-hidden className="text-line">
-                /
-              </span>
+            <span
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[0.7rem] font-semibold text-accent-fg"
+              aria-hidden
+            >
+              {dict.siteName.slice(0, 1)}
             </span>
-            <span>
+            <span className="font-medium text-ink">
               {authors
                 .map((a) => (locale === 'en' && a!.nameEn ? a!.nameEn : a!.nameNe))
-                .join(', ')}
+                .join(', ') || dict.siteName}
             </span>
             <span aria-hidden className="text-line">
-              /
+              ·
             </span>
             <span>
               {card.readTimeMinutes} {dict.minutesRead}
             </span>
             <span aria-hidden className="text-line">
-              /
+              ·
             </span>
             <RelativeTime iso={article.publishedAt} locale={locale} />
             {article.updatedAt ? (
               <>
                 <span aria-hidden className="text-line">
-                  /
+                  ·
                 </span>
                 <span>
                   {dict.updated}{' '}
@@ -222,7 +226,7 @@ export default async function ArticlePage({
           </figure>
         ) : null}
 
-        <div className="mx-auto grid max-w-[1400px] gap-10 px-4 pb-16 md:px-6 lg:grid-cols-[minmax(0,720px)_220px] lg:justify-center lg:gap-14">
+        <div className="mx-auto grid max-w-[1240px] gap-10 px-4 pb-16 md:px-6 lg:grid-cols-[minmax(0,720px)_280px] lg:justify-center lg:gap-10">
           <div>
             {toc.length >= 2 ? (
               <nav
@@ -336,22 +340,43 @@ export default async function ArticlePage({
             </p>
           </div>
 
-          {toc.length >= 2 ? (
-            <aside className="hidden lg:block">
-              <div className="sticky top-[7.5rem]">
-                <p className="text-sm font-medium text-stone">{dict.onThisPage}</p>
-                <ol className="mt-3 space-y-2.5 border-l border-line pl-3 text-sm text-stone">
-                  {toc.map((item) => (
-                    <li key={item.id} className={item.level === 'heading3' ? 'pl-2' : ''}>
-                      <a href={`#${item.id}`} className="hover:text-accent">
-                        {item.text}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </aside>
-          ) : null}
+          <aside className="hidden lg:block">
+            <div className="sticky top-16 space-y-6">
+              {toc.length >= 2 ? (
+                <div>
+                  <p className="text-sm font-semibold text-stone">{dict.onThisPage}</p>
+                  <ol className="mt-3 space-y-2.5 border-l border-line pl-3 text-sm text-stone">
+                    {toc.map((item) => (
+                      <li key={item.id} className={item.level === 'heading3' ? 'pl-2' : ''}>
+                        <a href={`#${item.id}`} className="hover:text-accent">
+                          {item.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
+              {latestCards.length ? (
+                <div>
+                  <p className="border-b-2 border-accent pb-2 text-sm font-semibold">{dict.latest}</p>
+                  <ul className="mt-2">
+                    {latestCards.map((s) => (
+                      <li key={s.id} className="border-b border-line py-2 last:border-b-0">
+                        <Link
+                          href={`/${locale}/${s.categorySlug}/${s.slug}`}
+                          className="flex gap-2 text-sm leading-snug hover:text-accent"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                          {s.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <AdSlot variant="sidebar" label={dict.advertisement} />
+            </div>
+          </aside>
         </div>
       </article>
 

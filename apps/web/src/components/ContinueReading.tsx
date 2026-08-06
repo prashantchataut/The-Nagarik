@@ -62,7 +62,7 @@ export function ContinueReadingRail({
 
   return (
     <section className="border-b border-line">
-      <div className="mx-auto max-w-[1400px] px-4 py-5 md:px-6 md:py-6">
+      <div className="mx-auto max-w-[1240px] px-4 py-5 md:px-6 md:py-6">
         <h2 className="font-[family-name:var(--font-display)] text-lg">{dict.continueReading}</h2>
         <ul className="mt-3 grid gap-0 md:grid-cols-2 lg:grid-cols-4">
           {items.map((story) => (

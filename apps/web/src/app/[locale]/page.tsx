@@ -24,8 +24,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const categories = await content.listCategories()
   const articles = await content.listPublishedArticles({ locale })
   const cards = await Promise.all(articles.map((a) => content.toStoryCard(a, locale)))
-  const lead = cards[0]
-  const side = cards.slice(1, 11)
+  const feed = cards.slice(0, 5)
   const updatePool = cards.slice(0, 5)
 
   const snap = await getEngagementSnapshot()
@@ -44,7 +43,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const trendingCards = trending.items.map((i) => byId.get(i.id)).filter(Boolean) as typeof cards
   const mostReadCards = read.items.map((i) => byId.get(i.id)).filter(Boolean) as typeof cards
 
-  const used = new Set<string>([...(lead ? [lead.id] : []), ...side.map((s) => s.id)])
+  const used = new Set<string>(feed.map((s) => s.id))
   const pickUnique = (pool: typeof cards, count: number) => {
     const out: typeof cards = []
     for (const item of pool) {
@@ -60,13 +59,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     const raw = articles.find((a) => a.id === c.id)
     return (raw?.editorialPriority ?? 0) >= 7
   })
-  const editors = pickUnique(editorsPool.length ? editorsPool : cards, 3)
+  const editors = pickUnique(editorsPool.length ? editorsPool : cards, 4)
   const province = pickUnique(
     cards.filter((c) => c.province || c.categorySlug === 'pradesh'),
     6,
   )
   const opinion = pickUnique(cards.filter((c) => c.categorySlug === 'bichar'), 3)
-  const visual = pickUnique(cards.filter((c) => c.hero), 3)
+  const visual = pickUnique(cards.filter((c) => c.hero), 4)
   const sectionCats = categories.filter((c) => c.slug !== 'bichar').slice(0, 4)
   const sectionData = sectionCats.map((cat) => ({
     cat,
@@ -80,12 +79,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
-      {lead ? (
+      {feed.length ? (
         <HomeCover
           locale={locale}
           dict={dict}
-          lead={lead}
-          side={side}
+          feed={feed}
           updates={updatePool}
           categoryLabel={categoryLabel}
         />

@@ -49,8 +49,8 @@ export default async function SearchPage({
   const topCats = categories.slice(0, 5)
 
   return (
-    <div className="mx-auto max-w-[900px] px-4 py-8 md:px-6 md:py-10">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl md:text-4xl">{dict.search}</h1>
+    <div className="mx-auto max-w-[1240px] px-4 py-8 md:px-6 md:py-10">
+      <h1 className="border-b-2 border-accent pb-3 text-3xl font-semibold md:text-4xl">{dict.search}</h1>
       <form className="mt-5" role="search">
         <label className="block text-sm text-stone" htmlFor="q">
           {dict.searchPlaceholder}

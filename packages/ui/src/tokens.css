@@ -1,42 +1,20 @@
 :root {
-  --ink: #12141a;
-  --paper: #e8ecf1;
-  --paper-elevated: #f4f6f9;
+  --ink: #111111;
+  --paper: #ffffff;
+  --paper-elevated: #f7f8fa;
   --stone: #5c6570;
-  --line: #c5ccd6;
+  --line: #e5e7eb;
   --accent: #0f6e6a;
-  --accent-fg: #f4f6f9;
-  --radius-control: 12px;
-  --font-display: 'Noto Serif Devanagari', 'Noto Serif', Georgia, serif;
-  --font-sans: 'Manrope', 'Segoe UI', sans-serif;
+  --accent-fg: #ffffff;
+  --holiday: #d10b15;
+  --radius-control: 4px;
+  --font-display: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
+  --font-sans: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink: #e8ecf1;
-    --paper: #16181f;
-    --paper-elevated: #1c1f28;
-    --stone: #9aa3ad;
-    --line: #2a2f3a;
-    --accent: #3db8b0;
-    --accent-fg: #0a1a19;
-    color-scheme: dark;
-  }
-}
-
-[data-theme='light'] {
-  --ink: #12141a;
-  --paper: #e8ecf1;
-  --paper-elevated: #f4f6f9;
-  --stone: #5c6570;
-  --line: #c5ccd6;
-  --accent: #0f6e6a;
-  --accent-fg: #f4f6f9;
-  color-scheme: light;
-}
-
+/* Dark only when explicitly chosen — light-first portal default */
 [data-theme='dark'] {
   --ink: #e8ecf1;
   --paper: #16181f;
@@ -45,5 +23,18 @@
   --line: #2a2f3a;
   --accent: #3db8b0;
   --accent-fg: #0a1a19;
+  --holiday: #ff6b6b;
   color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --ink: #111111;
+  --paper: #ffffff;
+  --paper-elevated: #f7f8fa;
+  --stone: #5c6570;
+  --line: #e5e7eb;
+  --accent: #0f6e6a;
+  --accent-fg: #ffffff;
+  --holiday: #d10b15;
+  color-scheme: light;
 }

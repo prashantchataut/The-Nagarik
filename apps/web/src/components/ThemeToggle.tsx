@@ -9,8 +9,7 @@ export function ThemeToggle({ dict }: { dict: Dictionary }) {
 
   useEffect(() => {
     const stored = window.localStorage.getItem('tn_theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const next = stored === 'light' || stored === 'dark' ? stored : prefersDark ? 'dark' : 'light'
+    const next = stored === 'dark' ? 'dark' : 'light'
     setTheme(next)
     document.documentElement.setAttribute('data-theme', next)
   }, [])

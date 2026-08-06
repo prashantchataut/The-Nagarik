@@ -2,28 +2,36 @@
 
 import { useEffect, useState } from 'react'
 import type { AppLocale } from '@/lib/i18n'
+import { BS_MONTHS_EN, BS_MONTHS_NE, WEEKDAYS_NE, todayBs } from '@/lib/bs-calendar'
 
-/** Stable Kathmandu date for chrome; Latin digits avoid Node/browser ne-NP mismatch. */
-export function ChromeDate({ locale }: { locale: AppLocale }) {
-  const [label, setLabel] = useState(() => formatKtmDate(locale))
+const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
+
+/** Kathmandu BS date for chrome. */
+export function ChromeDate({ locale, className = '' }: { locale: AppLocale; className?: string }) {
+  const [label, setLabel] = useState(() => formatBsChrome(locale))
 
   useEffect(() => {
-    setLabel(formatKtmDate(locale))
+    setLabel(formatBsChrome(locale))
   }, [locale])
 
   return (
-    <p className="truncate tabular-nums" suppressHydrationWarning>
+    <p className={`truncate tabular-nums ${className}`} suppressHydrationWarning>
       {label}
     </p>
   )
 }
 
-function formatKtmDate(locale: AppLocale): string {
-  return new Intl.DateTimeFormat(locale === 'ne' ? 'en-GB' : 'en-GB', {
+function formatBsChrome(locale: AppLocale): string {
+  const bs = todayBs()
+  const ad = new Date()
+  const weekday = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Kathmandu',
     weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date())
+  }).format(ad)
+  const wdIndex = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekday)
+  if (locale === 'ne') {
+    const dayName = WEEKDAYS_NE[wdIndex >= 0 ? wdIndex : 0]
+    return `${dayName}बार, ${bs.day} ${BS_MONTHS_NE[bs.month - 1]} ${bs.year}`
+  }
+  return `${WEEKDAYS_EN[wdIndex >= 0 ? wdIndex : 0]}, ${bs.day} ${BS_MONTHS_EN[bs.month - 1]} ${bs.year}`
 }

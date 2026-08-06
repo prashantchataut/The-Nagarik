@@ -4,8 +4,14 @@ import { isLocale } from './lib/i18n'
 
 const PUBLIC_FILE = /\.[^/]+$/
 
+function isCalendarHost(host: string): boolean {
+  const h = host.split(':')[0].toLowerCase()
+  return h.startsWith('calendar.') || h.startsWith('patro.')
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const host = request.headers.get('host') ?? ''
 
   if (
     pathname.startsWith('/admin') ||
@@ -16,6 +22,21 @@ export function middleware(request: NextRequest) {
     PUBLIC_FILE.test(pathname)
   ) {
     return NextResponse.next()
+  }
+
+  // Calendar / Patro subdomain → Nepali Patro product surface
+  if (isCalendarHost(host)) {
+    const url = request.nextUrl.clone()
+    const segment = pathname.split('/')[1]
+    const locale = isLocale(segment) ? segment : 'ne'
+    if (pathname === '/' || pathname === `/${locale}` || pathname === `/${locale}/`) {
+      url.pathname = `/${locale}/utilities/nepali-patro`
+      return NextResponse.rewrite(url)
+    }
+    if (!pathname.includes('/utilities/nepali-patro') && !isLocale(segment)) {
+      url.pathname = `/ne/utilities/nepali-patro`
+      return NextResponse.rewrite(url)
+    }
   }
 
   const segment = pathname.split('/')[1]

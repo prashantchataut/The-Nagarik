@@ -2,13 +2,20 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { House, MagnifyingGlass, Newspaper, SquaresFour } from '@phosphor-icons/react'
+import { CalendarBlank, House, MagnifyingGlass, Newspaper } from '@phosphor-icons/react'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
+import { patroHref } from '@/lib/site'
 
 export function MobileBottomNav({ locale, dict }: { locale: AppLocale; dict: Dictionary }) {
   const pathname = usePathname() ?? ''
+  const calendarUrl = patroHref(locale)
   const items = [
-    { href: `/${locale}`, label: dict.home, icon: House, match: (p: string) => p === `/${locale}` || p === `/${locale}/` },
+    {
+      href: `/${locale}`,
+      label: dict.home,
+      icon: House,
+      match: (p: string) => p === `/${locale}` || p === `/${locale}/`,
+    },
     {
       href: `/${locale}/latest`,
       label: dict.latest,
@@ -22,26 +29,11 @@ export function MobileBottomNav({ locale, dict }: { locale: AppLocale; dict: Dic
       match: (p: string) => p.startsWith(`/${locale}/search`),
     },
     {
-      href: `/${locale}/utilities`,
-      label: dict.utilities,
-      icon: SquaresFour,
+      href: calendarUrl,
+      label: dict.patroShort,
+      icon: CalendarBlank,
       match: (p: string) =>
-        p.startsWith(`/${locale}/utilities`) ||
-        p.startsWith(`/${locale}/pradesh`) ||
-        p.startsWith(`/${locale}/rajniti`) ||
-        p.startsWith(`/${locale}/samachar`) ||
-        p.startsWith(`/${locale}/arth`) ||
-        p.startsWith(`/${locale}/khel`) ||
-        p.startsWith(`/${locale}/bishwa`) ||
-        p.startsWith(`/${locale}/bichar`) ||
-        p.startsWith(`/${locale}/pravas`) ||
-        !p.startsWith(`/${locale}/latest`) &&
-        !p.startsWith(`/${locale}/search`) &&
-        !p.startsWith(`/${locale}/about`) &&
-        !p.startsWith(`/${locale}/trust`) &&
-        p.split('/').length >= 3 &&
-        p !== `/${locale}` &&
-        p !== `/${locale}/`,
+        p.startsWith(`/${locale}/utilities/nepali-patro`) || p.startsWith(`/${locale}/utilities`),
     },
   ]
 
@@ -50,7 +42,7 @@ export function MobileBottomNav({ locale, dict }: { locale: AppLocale; dict: Dic
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] lg:hidden"
       aria-label={dict.menu}
     >
-      <ul className="mx-auto grid max-w-[1400px] grid-cols-4">
+      <ul className="mx-auto grid max-w-[1240px] grid-cols-4">
         {items.map((item) => {
           const active = item.match(pathname)
           const Icon = item.icon
