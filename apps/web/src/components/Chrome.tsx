@@ -36,74 +36,105 @@ export function SiteHeader({
   const calendarUrl = patroHref(locale)
 
   useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 72)
+    const onScroll = () => setCompact(window.scrollY > 88)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [open])
+
+  const navLinkClass = (active: boolean) =>
+    `inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-control)] px-2.5 py-1.5 text-sm font-medium transition-colors md:px-3 ${
+      active
+        ? 'bg-paper text-accent shadow-sm'
+        : 'text-accent-fg/95 hover:bg-black/15 hover:text-accent-fg'
+    }`
+
   return (
     <header className="z-40 bg-paper">
-      {/* Utility + masthead — collapse on scroll */}
+      {/* Desktop utility — collapses on scroll */}
       <div
-        className={`border-b border-line transition-[max-height,opacity] duration-200 ${
-          compact ? 'pointer-events-none max-h-0 overflow-hidden opacity-0 md:max-h-0' : 'max-h-[200px] opacity-100'
-        }`}
+        className={`hidden border-b border-line bg-paper-elevated text-sm text-stone md:block ${
+          compact ? 'pointer-events-none max-h-0 overflow-hidden opacity-0' : 'max-h-10 opacity-100'
+        } transition-[max-height,opacity] duration-200`}
       >
-        <div className="hidden bg-paper-elevated text-xs text-stone md:block">
-          <div className="mx-auto flex h-8 max-w-[1240px] items-center justify-between gap-4 px-4 md:px-6">
-            <ChromeDate locale={locale} />
-            <div className="flex items-center gap-4">
-              <ThemeToggle dict={dict} />
-              <Link href={`/${locale}/utilities/preeti-unicode`} className="hover:text-ink">
-                {dict.preetiTranslator}
-              </Link>
-              <Link href={`/${locale}/trust`} className="hover:text-ink">
-                {dict.trust}
-              </Link>
-              <Link href={otherLocaleHref} className="font-medium hover:text-ink">
-                {locale === 'ne' ? 'EN' : 'NE'}
-              </Link>
-            </div>
+        <div className="mx-auto flex h-9 max-w-[1240px] items-center justify-between gap-4 px-4 md:px-6">
+          <ChromeDate locale={locale} className="font-medium text-ink" />
+          <div className="flex items-center gap-4">
+            <ThemeToggle dict={dict} />
+            <Link href={`/${locale}/utilities/preeti-unicode`} className="hover:text-accent">
+              {dict.preetiTranslator}
+            </Link>
+            <Link href={`/${locale}/trust`} className="hover:text-accent">
+              {dict.trust}
+            </Link>
+            <Link
+              href={otherLocaleHref}
+              className="rounded-[var(--radius-control)] border border-line bg-paper px-2 py-0.5 font-semibold text-ink hover:border-accent hover:text-accent"
+            >
+              {locale === 'ne' ? 'EN' : 'NE'}
+            </Link>
           </div>
         </div>
+      </div>
 
-        {/* Mobile teal brand bar */}
-        <div className="flex items-center justify-between gap-2 bg-accent px-3 py-2.5 text-accent-fg md:hidden">
+      {/* Mobile brand bar — always visible (does not collapse) */}
+      <div className="border-b border-accent md:hidden">
+        <div className="flex items-center justify-between gap-2 bg-accent px-2 py-2.5 text-accent-fg">
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-control)] hover:bg-black/15"
             aria-expanded={open}
-            aria-controls="mobile-nav"
+            aria-controls="mobile-nav-drawer"
             aria-label={open ? dict.close : dict.menu}
             onClick={() => setOpen((v) => !v)}
           >
-            {open ? <X size={22} weight="bold" /> : <List size={22} weight="bold" />}
+            {open ? <X size={24} weight="bold" /> : <List size={24} weight="bold" />}
           </button>
-          <Link href={`/${locale}`} className="min-w-0 text-center">
-            <span className="block text-xl font-semibold leading-none tracking-[-0.02em]">{BRAND_NE}</span>
-            <span className="mt-0.5 block text-[0.65rem] opacity-90">{BRAND_EN}</span>
+          <Link href={`/${locale}`} className="min-w-0 flex-1 text-center">
+            <span className="block text-[1.35rem] font-bold leading-none tracking-[-0.02em]">
+              {BRAND_NE}
+            </span>
+            <span className="mt-0.5 block text-[0.7rem] font-medium opacity-95">{BRAND_EN}</span>
           </Link>
           <Link
             href={`/${locale}/search`}
-            className="inline-flex h-9 w-9 items-center justify-center"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-control)] hover:bg-black/15"
             aria-label={dict.search}
           >
             <MagnifyingGlass size={22} weight="bold" />
           </Link>
         </div>
-        <div className="border-b border-accent/30 bg-accent/90 px-3 py-1 md:hidden">
-          <ChromeDate locale={locale} className="text-center text-[0.7rem] text-accent-fg" />
+        <div className="bg-accent/95 px-3 py-1.5">
+          <ChromeDate locale={locale} className="text-center text-xs font-medium text-accent-fg" />
         </div>
+      </div>
 
-        {/* Desktop masthead — Devanagari-first */}
-        <div className="mx-auto hidden max-w-[1240px] items-center gap-6 px-4 py-4 md:flex md:px-6">
+      {/* Desktop masthead — collapses on scroll */}
+      <div
+        className={`hidden border-b border-line md:block ${
+          compact ? 'pointer-events-none max-h-0 overflow-hidden opacity-0' : 'max-h-[140px] opacity-100'
+        } transition-[max-height,opacity] duration-200`}
+      >
+        <div className="mx-auto flex max-w-[1240px] items-center gap-6 px-4 py-4 md:px-6">
           <Link href={`/${locale}`} className="min-w-0 shrink-0">
-            <span className="block text-[2rem] font-semibold leading-none tracking-[-0.03em] text-ink lg:text-[2.35rem]">
+            <span className="block text-[2rem] font-bold leading-none tracking-[-0.03em] text-ink lg:text-[2.35rem]">
               {BRAND_NE}
             </span>
-            <span className="mt-1 block text-sm font-medium text-stone">{BRAND_EN}</span>
-            <span className="mt-0.5 block text-xs text-stone">{dict.tagline}</span>
+            <span className="mt-1 block text-sm font-semibold text-ink/80">{BRAND_EN}</span>
+            <span className="mt-0.5 block text-xs font-medium text-stone">{dict.tagline}</span>
           </Link>
           <div className="hidden min-w-0 flex-1 lg:block">
             <AdSlot variant="leaderboard" label="Leaderboard" className="h-[90px]" />
@@ -115,7 +146,7 @@ export function SiteHeader({
             <div className="relative">
               <MagnifyingGlass
                 size={16}
-                weight="regular"
+                weight="bold"
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone"
               />
               <input
@@ -123,62 +154,57 @@ export function SiteHeader({
                 name="q"
                 type="search"
                 placeholder={dict.searchPlaceholder}
-                className="w-full rounded-[var(--radius-control)] border border-line bg-paper py-2 pl-9 pr-3 text-sm text-ink placeholder:text-stone focus:border-accent"
+                className="w-full rounded-[var(--radius-control)] border border-line bg-paper py-2.5 pl-9 pr-3 text-sm text-ink placeholder:text-stone focus:border-accent"
               />
             </div>
           </form>
         </div>
       </div>
 
-      {/* Sticky teal category nav */}
+      {/* Sticky category nav — always present */}
       <nav
-        className={`sticky top-0 z-40 bg-accent text-accent-fg ${compact ? 'shadow-md' : ''}`}
+        className={`sticky top-0 z-40 border-b border-black/10 bg-accent text-accent-fg ${
+          compact ? 'shadow-md' : ''
+        }`}
         aria-label={dict.categories}
       >
-        <div className="mx-auto flex h-11 max-w-[1240px] items-center gap-0.5 overflow-x-auto px-2 md:h-12 md:px-4">
-          <Link
-            href={`/${locale}`}
-            className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-2 text-sm font-medium md:px-3 ${
-              isHome ? 'bg-black/15 underline decoration-2 underline-offset-4' : 'hover:bg-black/10'
-            }`}
+        <div className="mx-auto flex h-12 max-w-[1240px] items-center gap-1 overflow-x-auto px-2 md:px-4">
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] hover:bg-black/15 md:hidden"
+            aria-expanded={open}
+            aria-controls="mobile-nav-drawer"
+            aria-label={open ? dict.close : dict.menu}
+            onClick={() => setOpen((v) => !v)}
           >
+            {open ? <X size={20} weight="bold" /> : <List size={20} weight="bold" />}
+          </button>
+          <Link href={`/${locale}`} className={navLinkClass(isHome)}>
             <House size={16} weight="fill" className="hidden sm:inline" />
             {dict.home}
           </Link>
           {sections.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`hidden whitespace-nowrap px-2.5 py-2 text-sm md:inline-flex md:px-3 ${
-                isActive(item.href)
-                  ? 'bg-black/15 underline decoration-2 underline-offset-4'
-                  : 'hover:bg-black/10'
-              }`}
-            >
+            <Link key={item.href} href={item.href} className={navLinkClass(isActive(item.href))}>
               {item.label}
             </Link>
           ))}
           <Link
             href={`/${locale}/latest`}
-            className={`whitespace-nowrap px-2.5 py-2 text-sm md:px-3 ${
-              isActive(`/${locale}/latest`)
-                ? 'bg-black/15 underline decoration-2 underline-offset-4'
-                : 'hover:bg-black/10'
-            }`}
+            className={navLinkClass(isActive(`/${locale}/latest`))}
           >
             {dict.latest}
           </Link>
           <div className="ml-auto flex shrink-0 items-center gap-1.5 pl-2">
             <Link
               href={calendarUrl}
-              className="inline-flex items-center gap-1 rounded-[var(--radius-control)] bg-paper px-2.5 py-1 text-xs font-semibold text-accent hover:opacity-90 md:text-sm"
+              className="inline-flex items-center gap-1 rounded-[var(--radius-control)] bg-paper px-2.5 py-1.5 text-xs font-bold text-accent ring-1 ring-black/5 hover:bg-accent-muted md:text-sm"
             >
-              <CalendarBlank size={14} weight="bold" />
+              <CalendarBlank size={15} weight="bold" />
               {dict.patroShort}
             </Link>
             <Link
               href={`/${locale}/search`}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] hover:bg-black/10 xl:hidden"
+              className="hidden h-9 w-9 items-center justify-center rounded-[var(--radius-control)] hover:bg-black/15 md:inline-flex xl:hidden"
               aria-label={dict.search}
             >
               <MagnifyingGlass size={18} weight="bold" />
@@ -189,12 +215,12 @@ export function SiteHeader({
 
       {trendingTags.length ? (
         <div className="border-b border-line bg-paper-elevated">
-          <div className="mx-auto flex max-w-[1240px] gap-2 overflow-x-auto px-4 py-2 md:px-6">
+          <div className="mx-auto flex max-w-[1240px] gap-2 overflow-x-auto px-4 py-2.5 md:px-6">
             {trendingTags.map((tag) => (
               <Link
                 key={tag}
                 href={`/${locale}/search?q=${encodeURIComponent(tag)}`}
-                className="shrink-0 rounded-full bg-paper px-3 py-1 text-xs text-stone ring-1 ring-line hover:text-accent"
+                className="shrink-0 rounded-[var(--radius-control)] border border-line bg-paper px-3 py-1 text-xs font-medium text-ink hover:border-accent hover:text-accent"
               >
                 #{tag}
               </Link>
@@ -203,46 +229,89 @@ export function SiteHeader({
         </div>
       ) : null}
 
+      {/* Mobile drawer overlay */}
       {open ? (
-        <div id="mobile-nav" className="border-b border-line bg-paper px-4 py-3 lg:hidden">
-          <nav className="flex flex-col" aria-label="Mobile">
-            {sections.map((item) => (
+        <div className="fixed inset-0 z-50 md:hidden" id="mobile-nav-drawer">
+          <button
+            type="button"
+            className="absolute inset-0 bg-ink/45"
+            aria-label={dict.close}
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-line bg-paper shadow-xl">
+            <div className="flex items-center justify-between border-b border-line bg-accent px-4 py-3 text-accent-fg">
+              <span className="text-lg font-bold">{BRAND_NE}</span>
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] hover:bg-black/15"
+                aria-label={dict.close}
+                onClick={() => setOpen(false)}
+              >
+                <X size={22} weight="bold" />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto px-2 py-2" aria-label="Mobile">
               <Link
-                key={item.href}
-                href={item.href}
-                className={`border-b border-line py-3 text-base ${
-                  isActive(item.href) ? 'font-medium text-accent' : 'text-stone'
+                href={`/${locale}`}
+                className={`block rounded-[var(--radius-control)] px-3 py-3 text-base font-medium ${
+                  isHome ? 'bg-accent-muted text-accent' : 'text-ink hover:bg-paper-elevated'
                 }`}
                 onClick={() => setOpen(false)}
               >
-                {item.label}
+                {dict.home}
               </Link>
-            ))}
-            <Link
-              href={`/${locale}/utilities`}
-              className="border-b border-line py-3 text-base text-stone"
-              onClick={() => setOpen(false)}
-            >
-              {dict.utilities}
-            </Link>
-            <Link
-              href={calendarUrl}
-              className="border-b border-line py-3 text-base font-medium text-accent"
-              onClick={() => setOpen(false)}
-            >
-              {dict.nepaliPatro}
-            </Link>
-            <Link
-              href={otherLocaleHref}
-              className="py-3 text-base font-medium text-ink"
-              onClick={() => setOpen(false)}
-            >
-              {dict.language}
-            </Link>
-            <div className="py-3">
-              <ThemeToggle dict={dict} />
-            </div>
-          </nav>
+              {sections.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`block rounded-[var(--radius-control)] px-3 py-3 text-base font-medium ${
+                    isActive(item.href)
+                      ? 'bg-accent-muted text-accent'
+                      : 'text-ink hover:bg-paper-elevated'
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <Link
+                href={`/${locale}/latest`}
+                className={`block rounded-[var(--radius-control)] px-3 py-3 text-base font-medium ${
+                  isActive(`/${locale}/latest`)
+                    ? 'bg-accent-muted text-accent'
+                    : 'text-ink hover:bg-paper-elevated'
+                }`}
+                onClick={() => setOpen(false)}
+              >
+                {dict.latest}
+              </Link>
+              <div className="my-2 border-t border-line" />
+              <Link
+                href={`/${locale}/utilities`}
+                className="block rounded-[var(--radius-control)] px-3 py-3 text-base font-medium text-ink hover:bg-paper-elevated"
+                onClick={() => setOpen(false)}
+              >
+                {dict.utilities}
+              </Link>
+              <Link
+                href={calendarUrl}
+                className="block rounded-[var(--radius-control)] px-3 py-3 text-base font-bold text-accent hover:bg-accent-muted"
+                onClick={() => setOpen(false)}
+              >
+                {dict.nepaliPatro}
+              </Link>
+              <Link
+                href={otherLocaleHref}
+                className="block rounded-[var(--radius-control)] px-3 py-3 text-base font-semibold text-ink hover:bg-paper-elevated"
+                onClick={() => setOpen(false)}
+              >
+                {dict.language}
+              </Link>
+              <div className="px-3 py-3">
+                <ThemeToggle dict={dict} />
+              </div>
+            </nav>
+          </div>
         </div>
       ) : null}
     </header>
@@ -260,17 +329,17 @@ export function SiteFooter({
 }) {
   const calendarUrl = patroHref(locale)
   return (
-    <footer className="mt-10 border-t border-line bg-paper-elevated pb-24 lg:pb-0">
+    <footer className="mt-10 border-t-2 border-line bg-paper-elevated pb-24 lg:pb-0">
       <div className="mx-auto max-w-[1240px] px-4 py-10 md:px-6">
         <div className="grid gap-8 md:grid-cols-12">
           <div className="md:col-span-4">
-            <p className="text-2xl font-semibold tracking-[-0.02em] text-ink">{BRAND_NE}</p>
-            <p className="mt-0.5 text-sm font-medium text-stone">{BRAND_EN}</p>
+            <p className="text-2xl font-bold tracking-[-0.02em] text-ink">{BRAND_NE}</p>
+            <p className="mt-0.5 text-sm font-semibold text-ink/80">{BRAND_EN}</p>
             <p className="mt-2 max-w-[36ch] text-sm leading-relaxed text-stone">{dict.tagline}</p>
           </div>
           <nav className="md:col-span-4" aria-label={dict.categories}>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone">{dict.categories}</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-ink">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink">{dict.categories}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-ink">
               {categories.map((c) => (
                 <Link key={c.id} href={`/${locale}/${c.slug}`} className="hover:text-accent">
                   {locale === 'en' ? c.nameEn : c.nameNe}
@@ -279,28 +348,30 @@ export function SiteFooter({
             </div>
           </nav>
           <nav className="md:col-span-4" aria-label={dict.utilities}>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone">{dict.utilities}</p>
-            <div className="flex flex-col gap-2 text-sm">
-              <Link href={calendarUrl} className="hover:text-accent">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink">{dict.utilities}</p>
+            <div className="flex flex-col gap-2 text-sm font-medium">
+              <Link href={calendarUrl} className="text-ink hover:text-accent">
                 {dict.nepaliPatro}
               </Link>
-              <Link href={`/${locale}/utilities/preeti-unicode`} className="hover:text-accent">
+              <Link href={`/${locale}/utilities/preeti-unicode`} className="text-ink hover:text-accent">
                 {dict.preetiTranslator}
               </Link>
-              <Link href={`/${locale}/about`} className="hover:text-accent">
+              <Link href={`/${locale}/about`} className="text-ink hover:text-accent">
                 {dict.about}
               </Link>
-              <Link href={`/${locale}/trust`} className="hover:text-accent">
+              <Link href={`/${locale}/trust`} className="text-ink hover:text-accent">
                 {dict.trust}
               </Link>
-              <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="hover:text-accent">
+              <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="text-ink hover:text-accent">
                 RSS
               </Link>
             </div>
           </nav>
         </div>
-        <div className="mt-8 border-t border-line pt-5 text-xs text-stone">
-          <p suppressHydrationWarning>© {new Date().getFullYear()} {BRAND_EN} · {BRAND_NE}</p>
+        <div className="mt-8 border-t border-line pt-5 text-xs font-medium text-stone">
+          <p suppressHydrationWarning>
+            © {new Date().getFullYear()} {BRAND_EN} · {BRAND_NE}
+          </p>
         </div>
       </div>
     </footer>

@@ -39,7 +39,7 @@ export function MobileBottomNav({ locale, dict }: { locale: AppLocale; dict: Dic
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-line bg-paper pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(12,14,18,0.06)] lg:hidden"
       aria-label={dict.menu}
     >
       <ul className="mx-auto grid max-w-[1240px] grid-cols-4">
@@ -50,11 +50,17 @@ export function MobileBottomNav({ locale, dict }: { locale: AppLocale; dict: Dic
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-2 py-2.5 text-[0.7rem] ${
+                className={`flex flex-col items-center gap-1 px-1 py-2 text-[0.72rem] font-semibold ${
                   active ? 'text-accent' : 'text-stone'
                 }`}
               >
-                <Icon size={22} weight={active ? 'fill' : 'regular'} />
+                <span
+                  className={`inline-flex h-9 w-12 items-center justify-center rounded-[var(--radius-control)] ${
+                    active ? 'bg-accent-muted' : ''
+                  }`}
+                >
+                  <Icon size={22} weight={active ? 'fill' : 'bold'} />
+                </span>
                 {item.label}
               </Link>
             </li>

@@ -1,12 +1,13 @@
 :root {
-  --ink: #111111;
+  --ink: #0c0e12;
   --paper: #ffffff;
-  --paper-elevated: #f7f8fa;
-  --stone: #5c6570;
-  --line: #e5e7eb;
-  --accent: #0f6e6a;
+  --paper-elevated: #f3f5f7;
+  --stone: #3d4654;
+  --line: #c5ccd6;
+  --accent: #0b5a56;
   --accent-fg: #ffffff;
-  --holiday: #d10b15;
+  --accent-muted: #e6f3f2;
+  --holiday: #b80f18;
   --radius-control: 4px;
   --font-display: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
   --font-sans: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
@@ -16,25 +17,27 @@
 
 /* Dark only when explicitly chosen — light-first portal default */
 [data-theme='dark'] {
-  --ink: #e8ecf1;
-  --paper: #16181f;
-  --paper-elevated: #1c1f28;
-  --stone: #9aa3ad;
-  --line: #2a2f3a;
-  --accent: #3db8b0;
-  --accent-fg: #0a1a19;
-  --holiday: #ff6b6b;
+  --ink: #f0f3f7;
+  --paper: #12141a;
+  --paper-elevated: #1a1d26;
+  --stone: #b0b8c1;
+  --line: #3a4150;
+  --accent: #4ec9c0;
+  --accent-fg: #061413;
+  --accent-muted: #1a3331;
+  --holiday: #ff7a7a;
   color-scheme: dark;
 }
 
 [data-theme='light'] {
-  --ink: #111111;
+  --ink: #0c0e12;
   --paper: #ffffff;
-  --paper-elevated: #f7f8fa;
-  --stone: #5c6570;
-  --line: #e5e7eb;
-  --accent: #0f6e6a;
+  --paper-elevated: #f3f5f7;
+  --stone: #3d4654;
+  --line: #c5ccd6;
+  --accent: #0b5a56;
   --accent-fg: #ffffff;
-  --holiday: #d10b15;
+  --accent-muted: #e6f3f2;
+  --holiday: #b80f18;
   color-scheme: light;
 }

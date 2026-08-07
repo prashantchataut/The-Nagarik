@@ -1,13 +1,14 @@
 /** Design tokens for The Nagarik portal. Import via `@thenagarik/ui/tokens.css`. */
 export const portalTokens = {
   paper: '#ffffff',
-  paperElevated: '#f7f8fa',
-  ink: '#111111',
-  stone: '#5c6570',
-  line: '#e5e7eb',
-  accent: '#0f6e6a',
+  paperElevated: '#f3f5f7',
+  ink: '#0c0e12',
+  stone: '#3d4654',
+  line: '#c5ccd6',
+  accent: '#0b5a56',
   accentFg: '#ffffff',
-  holiday: '#d10b15',
+  accentMuted: '#e6f3f2',
+  holiday: '#b80f18',
   radiusControl: '4px',
 } as const
 

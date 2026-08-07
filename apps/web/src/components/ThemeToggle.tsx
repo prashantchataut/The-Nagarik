@@ -25,7 +25,7 @@ export function ThemeToggle({ dict }: { dict: Dictionary }) {
     <button
       type="button"
       onClick={toggle}
-      className="inline-flex items-center gap-1.5 hover:text-ink active:scale-[0.98]"
+      className="inline-flex items-center gap-1.5 font-medium text-ink hover:text-accent active:scale-[0.98]"
       aria-label={dict.theme}
     >
       {theme === 'dark' ? <Sun size={14} weight="regular" /> : <Moon size={14} weight="regular" />}
