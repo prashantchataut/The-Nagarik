@@ -29,6 +29,8 @@ export const ARTICLE_FIELDS = [
   'seoDescriptionNe',
   'seoDescriptionEn',
   'packageId',
+  'createdBy',
+  'submittedAt',
 ] as const
 
 export const MEDIA_PUBLISH_RULES = {

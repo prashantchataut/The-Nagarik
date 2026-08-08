@@ -35,6 +35,7 @@ export const ADMIN_PRIMARY_NAV: AdminNavItem[] = [
   { label: 'ड्यासबोर्ड', href: '/admin' },
   { label: 'समाचार', href: '/admin/articles', cmsHref: cmsCollectionUrl('articles') },
   { label: 'सम्पादकीय कतार', href: '/admin/queue' },
+  { label: 'पत्रकार डेस्क', href: '/journalist' },
   { label: 'नयाँ लेख', href: cmsArticleCreateUrl(), cmsHref: cmsArticleCreateUrl(), external: true },
 ]
 

@@ -58,7 +58,10 @@ export function StaffLoginForm({
           setError(body.message || 'Invalid email or password.')
           return
         }
-        const safeNext = nextPath.startsWith('/admin') ? nextPath : '/admin'
+        const safeNext =
+          nextPath.startsWith('/admin') || nextPath.startsWith('/journalist')
+            ? nextPath
+            : '/admin'
         router.replace(safeNext)
         router.refresh()
       } catch {

@@ -17,6 +17,7 @@ import { StoryRail } from '@/components/Story'
 import { RelativeTime } from '@/components/RelativeTime'
 import { CategoryTag } from '@/components/news/CategoryTag'
 import { AdSlot } from '@/components/news/AdSlot'
+import { renderInlineMarkup } from '@/components/journalist/inline-markup'
 import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -253,7 +254,7 @@ export default async function ArticlePage({
               {body.map((block, i) => {
                 switch (block.type) {
                   case 'paragraph':
-                    return <p key={i}>{block.text}</p>
+                    return <p key={i}>{renderInlineMarkup(block.text)}</p>
                   case 'heading2': {
                     const id = slugifyHeading(block.text, i)
                     return (
@@ -262,7 +263,7 @@ export default async function ArticlePage({
                         id={id}
                         className="scroll-mt-28 font-[family-name:var(--font-display)] pt-4 text-2xl tracking-[-0.02em]"
                       >
-                        {block.text}
+                        {renderInlineMarkup(block.text)}
                       </h2>
                     )
                   }
@@ -274,7 +275,7 @@ export default async function ArticlePage({
                         id={id}
                         className="scroll-mt-28 font-[family-name:var(--font-display)] pt-2 text-xl tracking-[-0.02em]"
                       >
-                        {block.text}
+                        {renderInlineMarkup(block.text)}
                       </h3>
                     )
                   }

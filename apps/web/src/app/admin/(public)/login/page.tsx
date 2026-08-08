@@ -20,7 +20,10 @@ export default async function AdminLoginPage({
 }) {
   const query = await searchParams
   const nextPath =
-    typeof query.next === 'string' && query.next.startsWith('/admin') ? query.next : '/admin'
+    typeof query.next === 'string' &&
+    (query.next.startsWith('/admin') || query.next.startsWith('/journalist'))
+      ? query.next
+      : '/admin'
 
   const session = await getStaffSession()
   if (session) redirect(nextPath)
@@ -35,6 +38,9 @@ export default async function AdminLoginPage({
       formTitle="Staff sign in"
       footer={
         <>
+          <Link href="/journalist" className="hover:text-accent hover:underline">
+            Journalist desk
+          </Link>
           <Link href="/cms" className="hover:text-accent hover:underline">
             Open Payload /cms
           </Link>

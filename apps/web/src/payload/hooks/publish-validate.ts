@@ -1,4 +1,5 @@
 import type { CollectionBeforeChangeHook, CollectionBeforeValidateHook } from 'payload'
+import { hasAnyRole, publisherRoles } from '../access/rbac'
 import { assertPublishable } from '../publish-gates'
 
 const ALLOWED_BLOCKS = new Set([
@@ -82,11 +83,40 @@ export const enforceMediaCredit: CollectionBeforeValidateHook = ({ data }) => {
   return data
 }
 
-/** Gate publish transitions: authors, scheduling, body shape, hero credit. */
-export const enforceArticlePublish: CollectionBeforeChangeHook = ({ data, operation, originalDoc }) => {
+const PUBLISHER_STATUSES = new Set(['published', 'scheduled', 'retracted'])
+const JOURNALIST_STATUSES = new Set(['draft', 'in_review'])
+
+/** Gate publish transitions: authors, scheduling, body shape, hero credit, role status. */
+export const enforceArticlePublish: CollectionBeforeChangeHook = ({
+  data,
+  operation,
+  originalDoc,
+  req,
+}) => {
   if (!data) return data
   const merged = { ...(originalDoc ?? {}), ...data } as Record<string, unknown>
   const status = String(merged.status ?? 'draft')
+  const prevStatus = originalDoc && typeof originalDoc === 'object' && 'status' in originalDoc
+    ? String((originalDoc as { status?: string }).status ?? 'draft')
+    : 'draft'
+
+  if (operation === 'create' && req.user?.id != null && data.createdBy == null) {
+    data.createdBy = req.user.id
+  }
+
+  if (data.status !== undefined) {
+    const next = String(data.status)
+    const canPublish = hasAnyRole(req.user, publisherRoles)
+    if (PUBLISHER_STATUSES.has(next) && !canPublish) {
+      throw new Error('Only publisher/admin can set published, scheduled, or retracted.')
+    }
+    if (!canPublish && !JOURNALIST_STATUSES.has(next)) {
+      throw new Error('Journalists may only set draft or in_review.')
+    }
+    if (next === 'in_review' && prevStatus !== 'in_review' && !data.submittedAt) {
+      data.submittedAt = new Date().toISOString()
+    }
+  }
 
   if (status === 'published' || status === 'scheduled' || data.status === 'published' || data.status === 'scheduled') {
     const bodyError = validateBodyBlocks(merged.bodyNe, 'bodyNe')

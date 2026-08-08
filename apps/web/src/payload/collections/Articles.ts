@@ -106,16 +106,41 @@ export const Articles: CollectionConfig = {
         { label: 'Retracted', value: 'retracted' },
       ],
       access: {
-        // Contributors may set draft/in_review; publishing roles set published/scheduled.
-        update: ({ req }) =>
-          hasAnyRole(req.user, publisherRoles) || hasAnyRole(req.user, contributorRoles),
+        update: ({ req }) => hasAnyRole(req.user, contributorRoles),
       },
       admin: {
         position: 'sidebar',
-        description: 'Only publisher/admin should move items to published or scheduled.',
+        description:
+          'Journalists: draft / in_review. Publisher/admin: scheduled / published / retracted (enforced in hooks).',
       },
       index: true,
-      // Listed in defaultColumns so status/englishStatus/breaking are filterable in /cms.
+    },
+    {
+      name: 'createdBy',
+      type: 'relationship',
+      relationTo: 'users',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Set automatically on create. Journalist desk filters by this.',
+      },
+      access: {
+        update: () => false,
+      },
+    },
+    {
+      name: 'submittedAt',
+      type: 'date',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Set when status first moves to in_review.',
+        date: { pickerAppearance: 'dayAndTime' },
+      },
+      access: {
+        update: ({ req }) => hasAnyRole(req.user, publisherRoles),
+      },
     },
     {
       name: 'englishStatus',
