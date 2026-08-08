@@ -27,8 +27,8 @@ Civic ink paper for the federal republic: original news only, Nepali at `/` and 
 ## Operating Context
 
 - Hosting: Vercel (Node Next.js origin)
-- CMS: Payload 3 embedded in the same Next.js app (`/admin`)
-- Database: Neon Postgres
+- CMS: Payload 3 embedded in the same Next.js app (`/cms`); ops desk at `/admin`
+- Database: Neon Postgres (local: embedded Postgres or Docker)
 - Media: Vercel Blob (alt + credit required)
 - Locales: `ne` default, `en` secondary; articles may be monolingual or bilingual
 - Algorithms: `@thenagarik/algorithms` with production | shadow | disabled | planned statuses
@@ -53,7 +53,7 @@ Open / later: live blogs, newsletter, push, membership, legal DoIB identity in p
 - Visual world: Civic Ink / Valley Mist (see DESIGN.md)
 - Voice: clear civic journalism; concrete verbs; no filler marketing slang
 - References to learn from (not copy): OnlineKhabar density lessons, Ratopati latest/popular, Kathmandu Post hierarchy, Kantipur packages
-- Sibling project Nagarik Watch is separate; do not copy UI, seed news, or catalog IDs
+- Sibling project Nagarik Watch is separate; reuse **desk IA / ops patterns** only — do not copy UI chrome, seed news, or catalog IDs (see `docs/ADMIN_DESK.md`)
 
 ## Evidence on Hand
 

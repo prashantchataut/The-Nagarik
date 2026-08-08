@@ -92,6 +92,7 @@ export default buildConfig({
       process.env.PAYLOAD_DB_PUSH !== undefined
         ? process.env.PAYLOAD_DB_PUSH === 'true'
         : process.env.NODE_ENV !== 'production',
+    migrationDir: path.resolve(dirname, 'migrations'),
   }),
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),

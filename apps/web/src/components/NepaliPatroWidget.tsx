@@ -23,14 +23,11 @@ import {
 } from '@/lib/panchang'
 import type { AppLocale } from '@/lib/i18n'
 import { BRAND_NE, newsHomeHref } from '@/lib/site'
+import { SAMPLE_BULLION, SAMPLE_USD_NPR } from '@/lib/market-rates'
 
 const WEEKDAYS_EN_SHORT = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as const
 
-const GOLD_FIXTURE = [
-  { labelNe: 'हलो सुन', labelEn: 'Fine gold', today: '२,१५,५००', yesterday: '२,१४,८००' },
-  { labelNe: 'तेजाबी सुन', labelEn: 'Tejabi gold', today: '२,१४,२००', yesterday: '२,१३,५००' },
-  { labelNe: 'चाँदी', labelEn: 'Silver', today: '३,२५०', yesterday: '३,२२०' },
-]
+const GOLD_FIXTURE = SAMPLE_BULLION
 
 function ktmParts(now = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -87,7 +84,7 @@ export function NepaliPatroWidget({
   })
   const [convertMsg, setConvertMsg] = useState('')
   const [forexAmount, setForexAmount] = useState('1')
-  const usdRate = 133.45
+  const usdRate = SAMPLE_USD_NPR
 
   useEffect(() => {
     const id = window.setInterval(() => setTick((n) => n + 1), 30_000)
@@ -360,6 +357,9 @@ export function NepaliPatroWidget({
           <h2 className="border-b border-line pb-2 text-sm font-semibold">
             {locale === 'ne' ? 'विदेशी मुद्रा' : 'Foreign exchange'}
           </h2>
+          <p className="mt-1 text-[0.65rem] text-stone">
+            {locale === 'ne' ? 'नमूना दर — लाइभ फिड चाँडै' : 'Sample rates — live feed soon'}
+          </p>
           <div className="mt-3 grid gap-2 text-sm">
             <label className="grid gap-1 text-xs text-stone">
               {locale === 'ne' ? 'रकम (USD)' : 'Amount (USD)'}

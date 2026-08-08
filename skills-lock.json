@@ -7,6 +7,12 @@
       "skillPath": "skills/content/article/SKILL.md",
       "computedHash": "a94f7be41617d59097081df5ecd8df9fd367499d0e900e9e88f360b3956095fd"
     },
+    "caveman": {
+      "source": "juliusbrussee/skills",
+      "sourceType": "github",
+      "skillPath": "skills/caveman/SKILL.md",
+      "computedHash": "b0e7741886c0c32270cedc1a2fc21c2879d90964d3ce00f24952de7064613404"
+    },
     "cms-migration": {
       "source": "payloadcms/skills",
       "sourceType": "github",
@@ -30,6 +36,12 @@
       "sourceType": "github",
       "skillPath": "skills/deploy-to-vercel/SKILL.md",
       "computedHash": "03e0eaaa9bf13ba1e7ffa387f5893de6f324c0868c627001f179395a8feaa7c9"
+    },
+    "deslopify": {
+      "source": "juliusbrussee/skills",
+      "sourceType": "github",
+      "skillPath": "skills/deslopify/SKILL.md",
+      "computedHash": "95bfcdc4ba87c22cb87868f998bc6dfc6a19cd30ef0653b3b544d39a8b3d531c"
     },
     "doc-coauthoring": {
       "source": "anthropics/skills",
@@ -55,11 +67,41 @@
       "skillPath": "skills/analytics/seo/google-search-console/SKILL.md",
       "computedHash": "69869587bff3a8cb988783f2aafe5a5ba64295364ab4e16312f053a023367b13"
     },
+    "grill-me": {
+      "source": "juliusbrussee/skills",
+      "sourceType": "github",
+      "skillPath": "skills/grill-me/SKILL.md",
+      "computedHash": "084fb183af7cd0000bdf8719601190d9f5113b19289da61a315e684f693717ee"
+    },
+    "interface-kit": {
+      "source": "juliusbrussee/skills",
+      "sourceType": "github",
+      "skillPath": "skills/interface-kit/SKILL.md",
+      "computedHash": "3990d2fa28800ba93aa32ebfbb2b7277e0bd368111b85363bfe943fd19bb3b3a"
+    },
+    "junior-to-senior": {
+      "source": "juliusbrussee/skills",
+      "sourceType": "github",
+      "skillPath": "skills/junior-to-senior/SKILL.md",
+      "computedHash": "5b41e5ad713680a3a0512f01e4e1db89f2ef6a9da44c77fec18a243fa77c58bf"
+    },
+    "last-20-percent": {
+      "source": "juliusbrussee/skills",
+      "sourceType": "github",
+      "skillPath": "skills/last-20-percent/SKILL.md",
+      "computedHash": "bfaee3869d5d401bef345651003d0b062bae1ea97e9c1ebd5f5026566fdd4c34"
+    },
     "localization-strategy": {
       "source": "kostja94/marketing-skills",
       "sourceType": "github",
       "skillPath": "skills/strategies/commercial/localization/SKILL.md",
       "computedHash": "baa7e2cac4048ccf702a39976de5ff3d44eb29f7dcd7893ce6ee57a3c1c115d4"
+    },
+    "loop-factory": {
+      "source": "juliusbrussee/skills",
+      "sourceType": "github",
+      "skillPath": "skills/loop-factory/SKILL.md",
+      "computedHash": "b54d4317d4c976d30dfcafb14d1d2f6f928f0fe33fb3273398c84399defcee6a"
     },
     "optimise-seo": {
       "source": "mblode/agent-skills",

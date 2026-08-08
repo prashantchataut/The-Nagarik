@@ -88,31 +88,51 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           categoryLabel={categoryLabel}
         />
       ) : (
-        <p className="px-4 py-16">{dict.empty}</p>
+        <div className="mx-auto max-w-[1240px] px-4 py-16 md:px-6">
+          <h1 className="text-2xl font-semibold">{dict.empty}</h1>
+          <p className="mt-3 max-w-[54ch] text-sm text-stone">
+            {locale === 'ne'
+              ? 'Payload मा प्रकाशित लेख छैन। /cms बाट लेख प्रकाशन गर्नुहोस् वा seed चलाउनुहोस्।'
+              : 'No published articles in Payload yet. Publish from /cms or run the seed script.'}
+          </p>
+          <p className="mt-4 text-sm">
+            <a href="/admin" className="font-semibold text-accent hover:underline">
+              /admin
+            </a>
+            {' · '}
+            <a href="/cms" className="font-semibold text-accent hover:underline">
+              /cms
+            </a>
+          </p>
+        </div>
       )}
-      <HomeSignals
-        locale={locale}
-        dict={dict}
-        trending={trendingCards}
-        mostRead={mostReadCards}
-        trendingLive={trending.live}
-        mostReadLive={read.live}
-      />
-      <ContinueReadingRail locale={locale} dict={dict} stories={cards} />
-      <HomeDesk locale={locale} dict={dict} editors={editors} province={province} />
-      {sectionData.map(({ cat, stories }) =>
-        stories.length ? (
-          <HomeCategoryBand
-            key={cat.id}
+      {feed.length ? (
+        <>
+          <HomeSignals
             locale={locale}
             dict={dict}
-            category={cat}
-            stories={stories}
+            trending={trendingCards}
+            mostRead={mostReadCards}
+            trendingLive={trending.live}
+            mostReadLive={read.live}
           />
-        ) : null,
-      )}
-      <HomeOpinion locale={locale} dict={dict} stories={opinion} />
-      <HomeVisual locale={locale} dict={dict} stories={visual} />
+          <ContinueReadingRail locale={locale} dict={dict} stories={cards} />
+          <HomeDesk locale={locale} dict={dict} editors={editors} province={province} />
+          {sectionData.map(({ cat, stories }) =>
+            stories.length ? (
+              <HomeCategoryBand
+                key={cat.id}
+                locale={locale}
+                dict={dict}
+                category={cat}
+                stories={stories}
+              />
+            ) : null,
+          )}
+          <HomeOpinion locale={locale} dict={dict} stories={opinion} />
+          <HomeVisual locale={locale} dict={dict} stories={visual} />
+        </>
+      ) : null}
     </>
   )
 }

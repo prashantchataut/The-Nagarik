@@ -24,8 +24,11 @@ export const Articles: CollectionConfig = {
   slug: 'articles',
   admin: {
     useAsTitle: 'titleNe',
-    defaultColumns: ['titleNe', 'status', 'englishStatus', 'publishedAt', 'category'],
+    defaultColumns: ['titleNe', 'status', 'englishStatus', 'isBreaking', 'publishedAt', 'category'],
+    listSearchableFields: ['titleNe', 'titleEn', 'slug', 'deckNe'],
     group: 'Content',
+    description:
+      'Publish checklist: Nepali title + deck, category, ≥1 author, hero alt+credit if media attached. English public pages need englishStatus=published.',
   },
   versions: {
     drafts: {
@@ -107,7 +110,12 @@ export const Articles: CollectionConfig = {
         update: ({ req }) =>
           hasAnyRole(req.user, publisherRoles) || hasAnyRole(req.user, contributorRoles),
       },
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        description: 'Only publisher/admin should move items to published or scheduled.',
+      },
+      index: true,
+      // Listed in defaultColumns so status/englishStatus/breaking are filterable in /cms.
     },
     {
       name: 'englishStatus',
@@ -120,6 +128,7 @@ export const Articles: CollectionConfig = {
         { label: 'In review', value: 'in_review' },
         { label: 'Published', value: 'published' },
       ],
+      index: true,
       admin: {
         position: 'sidebar',
         description: 'Public /en pages require englishStatus = published.',
@@ -131,6 +140,7 @@ export const Articles: CollectionConfig = {
       relationTo: 'categories',
       required: true,
       admin: { position: 'sidebar' },
+      index: true,
     },
     {
       name: 'authors',
@@ -168,6 +178,7 @@ export const Articles: CollectionConfig = {
       name: 'isBreaking',
       type: 'checkbox',
       defaultValue: false,
+      index: true,
       admin: { position: 'sidebar' },
     },
     {

@@ -1,68 +1,105 @@
 import Link from 'next/link'
+import {
+  AdminButton,
+  AdminCard,
+  AdminMetric,
+  CmsCanonicalBanner,
+} from '@/components/admin/primitives'
+import { getAdminDashboardSnapshot } from '@/lib/admin/dashboard'
+import { cmsArticleCreateUrl, cmsCollectionUrl } from '@/lib/admin/nav'
 
-export default function AdminHomePage() {
-  const hasDb = Boolean(process.env.DATABASE_URL?.trim())
-  const hasSecret = Boolean(process.env.PAYLOAD_SECRET && process.env.PAYLOAD_SECRET.length >= 32)
-  const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim())
-  const contentSource = process.env.CONTENT_SOURCE ?? 'facade'
-  const readyForCms = hasDb && hasSecret
+export const metadata = {
+  title: 'Dashboard · Newsroom',
+  robots: { index: false, follow: false },
+}
+
+export default async function AdminDashboardPage() {
+  const snap = await getAdminDashboardSnapshot()
+  const onPayload = snap.contentSource === 'payload' && !snap.usingDevFixtures
 
   return (
-    <div className="min-h-[100dvh] bg-paper text-ink">
-      <div className="mx-auto max-w-[720px] px-4 py-16">
-        <h1 className="font-[family-name:var(--font-display)] text-4xl">Newsroom admin</h1>
-        <p className="mt-4 text-stone">
-          Payload CMS is at <code>/cms</code>. Ops tools stay under <code>/admin</code>. Reader content
-          source: <code>{contentSource}</code>.
-        </p>
+    <div>
+      <p className="text-sm font-semibold text-accent">ड्यासबोर्ड</p>
+      <h1 className="mt-1 text-3xl font-bold tracking-[-0.03em]">Newsroom overview</h1>
+      <p className="mt-2 max-w-[54ch] text-sm text-stone">
+        Same desk shape as Nagarik Watch — dashboard + deep links — without a second article
+        editor. Publish in Payload.
+      </p>
 
-        <ul className="mt-8 space-y-3 text-sm">
-          <li>Database: {hasDb ? 'configured' : 'missing DATABASE_URL (Neon pooled)'}</li>
-          <li>Payload secret: {hasSecret ? 'configured' : 'missing/short PAYLOAD_SECRET'}</li>
-          <li>
-            Blob media:{' '}
-            {hasBlob ? 'configured' : 'missing BLOB_READ_WRITE_TOKEN (local disk fallback in dev)'}
-          </li>
-          <li>CMS ready: {readyForCms ? 'yes' : 'no - add Neon before publishing from /cms'}</li>
-        </ul>
+      <div className="mt-6">
+        <CmsCanonicalBanner onPayload={onPayload} />
+      </div>
 
-        <ol className="mt-10 list-decimal space-y-2 pl-5 text-sm text-stone">
-          <li>Create a Neon project; copy the pooled connection string.</li>
-          <li>
-            Set <code>DATABASE_URL</code> and <code>BLOB_READ_WRITE_TOKEN</code> in Vercel Production
-            (and locally in <code>.env.local</code>).
-          </li>
-          <li>
-            Open <code>/cms</code>, create the first admin user (bootstraps as admin).
-          </li>
-          <li>
-            Run <code>pnpm --filter @thenagarik/web seed</code>, then set{' '}
-            <code>CONTENT_SOURCE=payload</code>.
-          </li>
-          <li>
-            Production keeps <code>PAYLOAD_DB_PUSH=false</code>; use{' '}
-            <code>pnpm --filter @thenagarik/web migrate</code> after schema changes.
-          </li>
-        </ol>
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminMetric label="प्रकाशित" value={snap.publishedTotal} href="/admin/articles" tone="accent" />
+        <AdminMetric label="ब्रेकिङ" value={snap.breakingCount} href="/admin/articles" tone="danger" />
+        <AdminMetric label="विभाग" value={snap.categoryCount} href="/admin/categories" />
+        <AdminMetric label="लेखक" value={snap.authorCount} href="/admin/authors" />
+      </div>
 
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Link
-            href="/cms"
-            className="rounded-[var(--radius-control)] bg-accent px-4 py-2 text-accent-fg"
-          >
-            Open CMS
-          </Link>
-          <Link
-            href="/admin/algorithms"
-            className="rounded-[var(--radius-control)] border border-line px-4 py-2"
-          >
-            Algorithm desk
-          </Link>
-          <Link href="/ne" className="rounded-[var(--radius-control)] border border-line px-4 py-2">
-            Reader
+      <div className="mt-8 flex flex-wrap gap-3">
+        <AdminButton href={cmsArticleCreateUrl()}>नयाँ लेख (/cms)</AdminButton>
+        <AdminButton href={cmsCollectionUrl('articles')} variant="ghost">
+          Articles in CMS
+        </AdminButton>
+        <AdminButton href="/admin/launch" variant="ghost">
+          Launch check
+        </AdminButton>
+        <AdminButton href="/admin/algorithms" variant="ghost">
+          Algorithms
+        </AdminButton>
+      </div>
+
+      <section className="mt-12">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-xl font-semibold">Recent published</h2>
+          <Link href="/admin/articles" className="text-sm font-medium text-accent hover:underline">
+            All →
           </Link>
         </div>
-      </div>
+        <AdminCard className="mt-4 !p-0">
+          {snap.recent.length ? (
+            <ul className="divide-y divide-line">
+              {snap.recent.map((story) => (
+                <li key={story.id} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
+                  <div className="min-w-0">
+                    {story.isBreaking ? (
+                      <span className="mr-2 text-xs font-semibold text-holiday">ब्रेकिङ</span>
+                    ) : null}
+                    <Link
+                      href={`/ne/${story.categorySlug}/${story.slug}`}
+                      className="font-medium hover:text-accent"
+                    >
+                      {story.title}
+                    </Link>
+                    <p className="mt-0.5 text-xs text-stone">
+                      /{story.categorySlug}/{story.slug}
+                      {story.publishedAt
+                        ? ` · ${new Date(story.publishedAt).toLocaleString('en-NP')}`
+                        : ''}
+                    </p>
+                  </div>
+                  <Link
+                    href={cmsCollectionUrl('articles')}
+                    className="shrink-0 text-xs font-semibold text-accent hover:underline"
+                  >
+                    Edit in CMS
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-4 py-8 text-sm text-stone">
+              No published articles yet. Run seed or publish from{' '}
+              <Link href={cmsCollectionUrl('articles')} className="text-accent underline">
+                /cms
+              </Link>
+              .
+            </p>
+          )}
+        </AdminCard>
+        <p className="mt-3 text-xs text-stone">{snap.scheduledHint}</p>
+      </section>
     </div>
   )
 }

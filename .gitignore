@@ -11,3 +11,9 @@ dist
 payload-types.ts
 *.tsbuildinfo
 apps/web/.vercel
+apps/web/.env.local
+.agents/skills
+.audit-shots
+.audit-tools
+audit-screenshots
+audit-tools
