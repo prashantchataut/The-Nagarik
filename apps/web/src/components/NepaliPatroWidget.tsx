@@ -252,6 +252,16 @@ export function NepaliPatroWidget({
       className: 'from-slate-700 to-slate-500',
     },
     {
+      href: `#gold`,
+      label: locale === 'ne' ? 'सुनचाँदी' : 'Gold & silver',
+      className: 'from-amber-800 to-amber-600',
+    },
+    {
+      href: `#forex`,
+      label: locale === 'ne' ? 'मुद्रा' : 'Forex',
+      className: 'from-indigo-800 to-indigo-600',
+    },
+    {
       href: `/${locale}/utilities/preeti-unicode`,
       label: locale === 'ne' ? 'प्रीति युनिकोड' : 'Preeti Unicode',
       className: 'from-accent to-teal-600',
@@ -297,7 +307,7 @@ export function NepaliPatroWidget({
           </ul>
         </section>
 
-        <section id="converter" className="border border-line bg-paper p-4">
+        <section id="converter" className="scroll-mt-24 border border-line bg-paper p-4">
           <h2 className="border-b border-line pb-2 text-sm font-semibold">
             {locale === 'ne' ? 'मिति रूपान्तरण' : 'Date converter'}
           </h2>
@@ -336,7 +346,7 @@ export function NepaliPatroWidget({
           </div>
         </section>
 
-        <section className="border border-line bg-paper-elevated p-4">
+        <section id="gold" className="scroll-mt-24 border border-line bg-paper-elevated p-4">
           <h2 className="border-b border-line pb-2 text-sm font-semibold">
             {locale === 'ne' ? 'सुनचाँदी भाउ' : 'Gold & silver'}
           </h2>
@@ -353,7 +363,7 @@ export function NepaliPatroWidget({
           </ul>
         </section>
 
-        <section className="border border-line bg-paper p-4">
+        <section id="forex" className="scroll-mt-24 border border-line bg-paper p-4">
           <h2 className="border-b border-line pb-2 text-sm font-semibold">
             {locale === 'ne' ? 'विदेशी मुद्रा' : 'Foreign exchange'}
           </h2>
@@ -577,8 +587,61 @@ export function NepaliPatroWidget({
           ) : null}
         </div>
 
+        {/* Month festivals / holidays */}
+        <section id="holidays" className="scroll-mt-24 border border-line bg-paper p-4">
+          <h2 className="border-b border-line pb-2 text-sm font-semibold">
+            {locale === 'ne' ? 'यस महिनाका पर्व / बिदा' : 'Festivals & holidays this month'}
+          </h2>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {monthFestivals.length ? (
+              monthFestivals.map((f) => (
+                <li
+                  key={`${f.day}-${f.nameNe}`}
+                  className="flex items-baseline justify-between gap-2 border-b border-line pb-1 text-sm"
+                >
+                  <span className="font-medium text-ink">
+                    {locale === 'ne' ? f.nameNe : f.nameEn}
+                  </span>
+                  <span className="shrink-0 tabular-nums text-stone">
+                    {f.day}{' '}
+                    {(locale === 'ne' ? BS_MONTHS_NE : BS_MONTHS_EN)[view.month - 1]}
+                  </span>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-stone">
+                {locale === 'ne'
+                  ? 'यो महिना सूचीमा पर्व छैन।'
+                  : 'No festivals listed for this month.'}
+              </li>
+            )}
+          </ul>
+        </section>
+
+        <section id="rashifal" className="scroll-mt-24 border border-line bg-paper-elevated p-4">
+          <h2 className="text-sm font-semibold">
+            {locale === 'ne' ? 'राशिफल' : 'Horoscope'}
+          </h2>
+          <p className="mt-2 text-sm text-stone">
+            {locale === 'ne'
+              ? 'दैनिक राशिफल अहिले समाचार कक्षसँग बराबर रेलमा छैन (Phase 1)। पात्रो र पर्व उपकरण प्राथमिक छन्।'
+              : 'Daily horoscope is intentionally not an equal home-rail in Phase 1. Calendar and festival tools ship first.'}
+          </p>
+        </section>
+
+        <section id="sait" className="scroll-mt-24 border border-line bg-paper p-4">
+          <h2 className="text-sm font-semibold">
+            {locale === 'ne' ? 'शुभ साइत' : 'Auspicious times'}
+          </h2>
+          <p className="mt-2 text-sm text-stone">
+            {locale === 'ne'
+              ? 'शुभ साइत तालिका चाँडै। अहिले तिथि/नक्षत्र चयनित दिनमा देखिन्छ।'
+              : 'Auspicious-timing tables come later. Tithi and nakshatra already appear on the selected day.'}
+          </p>
+        </section>
+
         {/* Utility tiles */}
-        <div id="holidays" className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
           {utilityTiles.map((t) => (
             <Link
               key={t.label}

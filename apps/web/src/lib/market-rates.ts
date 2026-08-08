@@ -29,7 +29,14 @@ export async function fetchLiveBullion(): Promise<BullionRow[] | null> {
   return null
 }
 
-export async function fetchLiveUsdNpr(): Promise<number | null> {
-  if (!marketRatesLiveEnabled()) return null
-  return null
+export async function resolveBullion(): Promise<{ rows: BullionRow[]; live: boolean }> {
+  const live = await fetchLiveBullion()
+  if (live?.length) return { rows: live, live: true }
+  return { rows: SAMPLE_BULLION, live: false }
+}
+
+export async function resolveUsdNpr(): Promise<{ rate: number; live: boolean }> {
+  const live = await fetchLiveUsdNpr()
+  if (typeof live === 'number' && Number.isFinite(live)) return { rate: live, live: true }
+  return { rate: SAMPLE_USD_NPR, live: false }
 }
