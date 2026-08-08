@@ -153,6 +153,8 @@ export function mapArticle(doc: Record<string, unknown>): Article {
     attribution: 'original',
     seoTitleNe: typeof doc.seoTitleNe === 'string' ? doc.seoTitleNe : undefined,
     seoTitleEn: typeof doc.seoTitleEn === 'string' ? doc.seoTitleEn : undefined,
+    seoDescriptionNe: typeof doc.seoDescriptionNe === 'string' ? doc.seoDescriptionNe : undefined,
+    seoDescriptionEn: typeof doc.seoDescriptionEn === 'string' ? doc.seoDescriptionEn : undefined,
     corrections,
     publishedAt: asIso(doc.publishedAt),
     updatedAt: asIso(doc.updatedAt),

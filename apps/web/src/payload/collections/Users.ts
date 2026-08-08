@@ -16,7 +16,9 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'roles', 'isActive'],
+    listSearchableFields: ['name', 'email'],
     group: 'People',
+    description: 'Staff accounts. Roles: journalist → editor → publisher → admin.',
   },
   access: {
     read: ownUserOrAdmin,

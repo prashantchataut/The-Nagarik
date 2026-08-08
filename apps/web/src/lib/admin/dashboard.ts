@@ -1,4 +1,5 @@
 import { getContent } from '@/lib/content'
+import { getDeskStatusCounts, payloadDeskAvailable, type DeskStatusCounts } from '@/lib/admin/payload-desk'
 
 export type AdminDashboardSnapshot = {
   contentSource: string
@@ -8,6 +9,8 @@ export type AdminDashboardSnapshot = {
   scheduledHint: string
   categoryCount: number
   authorCount: number
+  payloadConnected: boolean
+  statusCounts: DeskStatusCounts | null
   recent: Array<{
     id: string
     slug: string
@@ -20,10 +23,11 @@ export type AdminDashboardSnapshot = {
 
 export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapshot> {
   const content = getContent()
-  const [articles, categories, authors] = await Promise.all([
+  const [articles, categories, authors, statusCounts] = await Promise.all([
     content.listPublishedArticles({ locale: 'ne' }),
     content.listCategories(),
     content.listAuthors(),
+    getDeskStatusCounts(),
   ])
 
   const cards = await Promise.all(articles.slice(0, 8).map((a) => content.toStoryCard(a, 'ne')))
@@ -31,11 +35,13 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
   return {
     contentSource: content.source,
     usingDevFixtures: content.usingDevFixtures,
-    publishedTotal: articles.length,
+    publishedTotal: statusCounts?.published ?? articles.length,
     breakingCount: articles.filter((a) => a.isBreaking).length,
     scheduledHint: 'Scheduled → published via /api/cron/scheduled-publish',
     categoryCount: categories.length,
     authorCount: authors.length,
+    payloadConnected: payloadDeskAvailable(),
+    statusCounts,
     recent: cards.map((c) => ({
       id: c.id,
       slug: c.slug,

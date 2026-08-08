@@ -218,10 +218,14 @@ export const Articles: CollectionConfig = {
     {
       name: 'corrections',
       type: 'array',
+      labels: { singular: 'Correction', plural: 'Corrections' },
+      admin: {
+        description: 'Visible, dated corrections shown on the article (reader-facing).',
+      },
       fields: [
         { name: 'at', type: 'date', required: true },
-        { name: 'noteNe', type: 'textarea', required: true },
-        { name: 'noteEn', type: 'textarea' },
+        { name: 'noteNe', type: 'textarea', required: true, label: 'Note (Nepali)' },
+        { name: 'noteEn', type: 'textarea', label: 'Note (English)' },
       ],
     },
     {
@@ -229,8 +233,27 @@ export const Articles: CollectionConfig = {
       type: 'date',
       admin: { position: 'sidebar', date: { pickerAppearance: 'dayAndTime' } },
     },
-    { name: 'seoTitleNe', type: 'text', label: 'SEO title (Nepali)' },
-    { name: 'seoTitleEn', type: 'text', label: 'SEO title (English)' },
+    {
+      name: 'seoTitleNe',
+      type: 'text',
+      label: 'SEO title (Nepali)',
+      admin: { description: 'Overrides headline in <title>/OG when set.' },
+    },
+    {
+      name: 'seoTitleEn',
+      type: 'text',
+      label: 'SEO title (English)',
+    },
+    {
+      name: 'seoDescriptionNe',
+      type: 'textarea',
+      label: 'SEO description (Nepali)',
+    },
+    {
+      name: 'seoDescriptionEn',
+      type: 'textarea',
+      label: 'SEO description (English)',
+    },
     {
       name: 'packageId',
       type: 'text',
@@ -238,6 +261,7 @@ export const Articles: CollectionConfig = {
         position: 'sidebar',
         description: 'Optional package/series id for related stories.',
       },
+      index: true,
     },
   ],
 }

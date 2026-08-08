@@ -34,6 +34,7 @@ export type AdminNavGroup = {
 export const ADMIN_PRIMARY_NAV: AdminNavItem[] = [
   { label: 'ड्यासबोर्ड', href: '/admin' },
   { label: 'समाचार', href: '/admin/articles', cmsHref: cmsCollectionUrl('articles') },
+  { label: 'सम्पादकीय कतार', href: '/admin/queue' },
   { label: 'नयाँ लेख', href: cmsArticleCreateUrl(), cmsHref: cmsArticleCreateUrl(), external: true },
 ]
 
@@ -43,6 +44,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { label: 'मिडिया', href: '/admin/media', cmsHref: cmsCollectionUrl('media') },
       { label: 'लेखक', href: '/admin/authors', cmsHref: cmsCollectionUrl('authors') },
+      { label: 'प्रयोगकर्ता', href: '/admin/users', cmsHref: cmsCollectionUrl('users') },
     ],
   },
   {

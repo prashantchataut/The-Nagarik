@@ -33,12 +33,47 @@ export default async function AdminDashboardPage() {
       <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <AdminMetric label="प्रकाशित" value={snap.publishedTotal} href="/admin/articles" tone="accent" />
         <AdminMetric label="ब्रेकिङ" value={snap.breakingCount} href="/admin/articles" tone="danger" />
+        <AdminMetric
+          label="कतार"
+          value={
+            snap.statusCounts
+              ? snap.statusCounts.draft + snap.statusCounts.in_review + snap.statusCounts.scheduled
+              : '—'
+          }
+          href="/admin/queue"
+        />
         <AdminMetric label="विभाग" value={snap.categoryCount} href="/admin/categories" />
-        <AdminMetric label="लेखक" value={snap.authorCount} href="/admin/authors" />
       </div>
+
+      {snap.statusCounts ? (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {(
+            [
+              ['Draft', snap.statusCounts.draft],
+              ['In review', snap.statusCounts.in_review],
+              ['Scheduled', snap.statusCounts.scheduled],
+              ['Published', snap.statusCounts.published],
+              ['Retracted', snap.statusCounts.retracted],
+            ] as const
+          ).map(([label, value]) => (
+            <AdminCard key={label}>
+              <p className="text-xs uppercase tracking-wide text-stone">{label}</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
+            </AdminCard>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-xs text-stone">
+          Workflow counts appear when DATABASE_URL is connected
+          {snap.payloadConnected ? '' : ' (not connected)'}.
+        </p>
+      )}
 
       <div className="mt-8 flex flex-wrap gap-3">
         <AdminButton href={cmsArticleCreateUrl()}>नयाँ लेख (/cms)</AdminButton>
+        <AdminButton href="/admin/queue" variant="ghost">
+          Editorial queue
+        </AdminButton>
         <AdminButton href={cmsCollectionUrl('articles')} variant="ghost">
           Articles in CMS
         </AdminButton>

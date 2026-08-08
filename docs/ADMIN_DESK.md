@@ -35,6 +35,8 @@ Watch problems / traps (see also `docs/nagarik-watch-gap-report.md`):
 
 - `/admin` — dashboard
 - `/admin/articles` — published list → edit in `/cms`
+- `/admin/queue` — draft / in_review / scheduled from Payload
+- `/admin/users` — staff roster → edit in `/cms`
 - `/admin/categories` · `/authors` · `/tags` · `/media` — browse + CMS deep link
 - `/admin/algorithms` — honest desk
 - `/admin/launch` — env gates

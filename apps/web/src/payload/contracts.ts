@@ -26,6 +26,8 @@ export const ARTICLE_FIELDS = [
   'publishedAt',
   'seoTitleNe',
   'seoTitleEn',
+  'seoDescriptionNe',
+  'seoDescriptionEn',
   'packageId',
 ] as const
 

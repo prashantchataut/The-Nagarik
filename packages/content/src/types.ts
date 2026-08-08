@@ -76,6 +76,8 @@ export const ArticleSchema = z.object({
   attribution: z.literal('original').default('original'),
   seoTitleNe: z.string().optional(),
   seoTitleEn: z.string().optional(),
+  seoDescriptionNe: z.string().optional(),
+  seoDescriptionEn: z.string().optional(),
   corrections: z.array(CorrectionSchema).default([]),
   publishedAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
