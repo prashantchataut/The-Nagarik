@@ -29,6 +29,13 @@ export async function fetchLiveBullion(): Promise<BullionRow[] | null> {
   return null
 }
 
+/** Placeholder for a future NRB / vendor fetch. */
+export async function fetchLiveUsdNpr(): Promise<number | null> {
+  if (!marketRatesLiveEnabled()) return null
+  // No vendor wired yet — callers must fall back to SAMPLE_USD_NPR.
+  return null
+}
+
 export async function resolveBullion(): Promise<{ rows: BullionRow[]; live: boolean }> {
   const live = await fetchLiveBullion()
   if (live?.length) return { rows: live, live: true }
