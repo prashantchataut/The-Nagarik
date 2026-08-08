@@ -1,5 +1,11 @@
-import { getContent } from '@/lib/content'
-import { getDeskStatusCounts, payloadDeskAvailable, type DeskStatusCounts } from '@/lib/admin/payload-desk'
+import {
+  getDeskStatusCounts,
+  listDeskAuthors,
+  listDeskCategories,
+  listDeskPublishedStories,
+  payloadDeskAvailable,
+  type DeskStatusCounts,
+} from '@/lib/admin/payload-desk'
 
 export type AdminDashboardSnapshot = {
   contentSource: string
@@ -21,34 +27,53 @@ export type AdminDashboardSnapshot = {
   }>
 }
 
+/**
+ * Desk metrics from Payload only. Never lists facade fixture stories as if they were CMS content.
+ */
 export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapshot> {
-  const content = getContent()
-  const [articles, categories, authors, statusCounts] = await Promise.all([
-    content.listPublishedArticles({ locale: 'ne' }),
-    content.listCategories(),
-    content.listAuthors(),
+  const connected = payloadDeskAvailable()
+  const contentSource = process.env.CONTENT_SOURCE ?? 'facade'
+  const usingDevFixtures = !connected || contentSource !== 'payload'
+
+  if (!connected) {
+    return {
+      contentSource,
+      usingDevFixtures: true,
+      publishedTotal: 0,
+      breakingCount: 0,
+      scheduledHint: 'Connect DATABASE_URL to load desk metrics from Payload.',
+      categoryCount: 0,
+      authorCount: 0,
+      payloadConnected: false,
+      statusCounts: null,
+      recent: [],
+    }
+  }
+
+  const [stories, categories, authors, statusCounts] = await Promise.all([
+    listDeskPublishedStories(8),
+    listDeskCategories(),
+    listDeskAuthors(),
     getDeskStatusCounts(),
   ])
 
-  const cards = await Promise.all(articles.slice(0, 8).map((a) => content.toStoryCard(a, 'ne')))
-
   return {
-    contentSource: content.source,
-    usingDevFixtures: content.usingDevFixtures,
-    publishedTotal: statusCounts?.published ?? articles.length,
-    breakingCount: articles.filter((a) => a.isBreaking).length,
+    contentSource: 'payload',
+    usingDevFixtures: false,
+    publishedTotal: statusCounts?.published ?? stories.length,
+    breakingCount: stories.filter((s) => s.isBreaking).length,
     scheduledHint: 'Scheduled → published via /api/cron/scheduled-publish',
     categoryCount: categories.length,
     authorCount: authors.length,
-    payloadConnected: payloadDeskAvailable(),
+    payloadConnected: true,
     statusCounts,
-    recent: cards.map((c) => ({
-      id: c.id,
-      slug: c.slug,
-      categorySlug: c.categorySlug,
-      title: c.title,
-      publishedAt: c.publishedAt ?? null,
-      isBreaking: c.isBreaking,
+    recent: stories.map((s) => ({
+      id: s.id,
+      slug: s.slug,
+      categorySlug: s.categorySlug,
+      title: s.titleNe,
+      publishedAt: s.publishedAt,
+      isBreaking: s.isBreaking,
     })),
   }
 }

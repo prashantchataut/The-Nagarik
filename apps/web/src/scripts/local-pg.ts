@@ -37,6 +37,7 @@ async function ensureEnvLocal() {
     }
     upsert('DATABASE_URL', connectionString)
     upsert('CONTENT_SOURCE', 'payload')
+    upsert('ALLOW_DEV_FIXTURES', 'false')
     upsert('PAYLOAD_DB_PUSH', 'true')
     if (!/^PAYLOAD_SECRET=.+/m.test(raw) || /^PAYLOAD_SECRET=\s*$/m.test(raw)) {
       upsert('PAYLOAD_SECRET', 'local-dev-payload-secret-min-32-chars!!')

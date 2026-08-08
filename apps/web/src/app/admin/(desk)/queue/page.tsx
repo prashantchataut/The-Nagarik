@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { AdminButton, AdminCard, CmsCanonicalBanner } from '@/components/admin/primitives'
-import { getContent } from '@/lib/content'
 import { getDeskEditorialQueue, payloadDeskAvailable } from '@/lib/admin/payload-desk'
 import { cmsArticleEditUrl, cmsCollectionUrl } from '@/lib/admin/nav'
 
@@ -16,9 +15,8 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export default async function AdminQueuePage() {
-  const content = getContent()
-  const onPayload = content.source === 'payload' && !content.usingDevFixtures
   const connected = payloadDeskAvailable()
+  const onPayload = connected
   const queue = connected ? await getDeskEditorialQueue() : []
 
   return (

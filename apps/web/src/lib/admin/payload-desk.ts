@@ -115,3 +115,142 @@ export async function listDeskUsers(): Promise<DeskUserRow[]> {
     isActive: doc.isActive !== false,
   }))
 }
+
+export type DeskPublishedStory = {
+  id: string
+  slug: string
+  titleNe: string
+  categorySlug: string
+  publishedAt: string | null
+  isBreaking: boolean
+  hasEnglish: boolean
+}
+
+export type DeskTaxonomyRow = {
+  id: string
+  slug: string
+  nameNe: string
+  nameEn: string
+}
+
+export type DeskAuthorRow = {
+  id: string
+  slug: string
+  nameNe: string
+  nameEn: string
+}
+
+export type DeskMediaRow = {
+  id: string
+  alt: string
+  filename: string
+  url: string | null
+}
+
+/** Published stories from Payload only — never facade fixtures. */
+export async function listDeskPublishedStories(limit = 100): Promise<DeskPublishedStory[]> {
+  if (!payloadDeskAvailable()) return []
+  const p = await payload()
+  const result = await p.find({
+    collection: 'articles',
+    where: {
+      and: [
+        { status: { equals: 'published' } },
+        { _status: { equals: 'published' } },
+      ],
+    },
+    limit,
+    depth: 1,
+    overrideAccess: true,
+    sort: '-publishedAt',
+  })
+
+  return result.docs.map((doc) => {
+    const category = doc.category
+    let categorySlug = '—'
+    if (category && typeof category === 'object' && 'slug' in category) {
+      categorySlug = String((category as { slug?: string }).slug ?? '—')
+    }
+    return {
+      id: String(doc.id),
+      slug: String(doc.slug ?? ''),
+      titleNe: String(doc.titleNe ?? '(untitled)'),
+      categorySlug,
+      publishedAt: typeof doc.publishedAt === 'string' ? doc.publishedAt : null,
+      isBreaking: Boolean(doc.isBreaking),
+      hasEnglish: doc.englishStatus === 'published',
+    }
+  })
+}
+
+export async function listDeskCategories(): Promise<DeskTaxonomyRow[]> {
+  if (!payloadDeskAvailable()) return []
+  const p = await payload()
+  const result = await p.find({
+    collection: 'categories',
+    limit: 200,
+    depth: 0,
+    overrideAccess: true,
+    sort: 'nameNe',
+  })
+  return result.docs.map((doc) => ({
+    id: String(doc.id),
+    slug: String(doc.slug ?? ''),
+    nameNe: String(doc.nameNe ?? ''),
+    nameEn: String(doc.nameEn ?? ''),
+  }))
+}
+
+export async function listDeskAuthors(): Promise<DeskAuthorRow[]> {
+  if (!payloadDeskAvailable()) return []
+  const p = await payload()
+  const result = await p.find({
+    collection: 'authors',
+    limit: 500,
+    depth: 0,
+    overrideAccess: true,
+    sort: 'nameNe',
+  })
+  return result.docs.map((doc) => ({
+    id: String(doc.id),
+    slug: String(doc.slug ?? ''),
+    nameNe: String(doc.nameNe ?? ''),
+    nameEn: String(doc.nameEn ?? ''),
+  }))
+}
+
+export async function listDeskTags(): Promise<DeskTaxonomyRow[]> {
+  if (!payloadDeskAvailable()) return []
+  const p = await payload()
+  const result = await p.find({
+    collection: 'tags',
+    limit: 500,
+    depth: 0,
+    overrideAccess: true,
+    sort: 'nameNe',
+  })
+  return result.docs.map((doc) => ({
+    id: String(doc.id),
+    slug: String(doc.slug ?? ''),
+    nameNe: String(doc.nameNe ?? ''),
+    nameEn: String(doc.nameEn ?? ''),
+  }))
+}
+
+export async function listDeskMedia(limit = 40): Promise<DeskMediaRow[]> {
+  if (!payloadDeskAvailable()) return []
+  const p = await payload()
+  const result = await p.find({
+    collection: 'media',
+    limit,
+    depth: 0,
+    overrideAccess: true,
+    sort: '-createdAt',
+  })
+  return result.docs.map((doc) => ({
+    id: String(doc.id),
+    alt: String(doc.alt ?? ''),
+    filename: String(doc.filename ?? doc.id),
+    url: typeof doc.url === 'string' ? doc.url : null,
+  }))
+}

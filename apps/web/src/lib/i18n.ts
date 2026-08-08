@@ -88,6 +88,9 @@ export const dictionaries = {
     trustLegalTitle: 'कानुनी पहिचान',
     trustLegalBody: 'प्रकाशक दर्ता र कानुनी विवरण सार्वजनिक हुनुअघि हामी अनुपालन दाबी गर्दैनौं।',
     viewAlgorithmDesk: 'एल्गोरिदम डेस्क हेर्नुहोस्',
+    staffLogin: 'स्टाफ लगइन',
+    account: 'खाता',
+    newsroomDesk: 'न्युजरुम डेस्क',
   },
   en: {
     siteName: 'The Nagarik',
@@ -167,6 +170,9 @@ export const dictionaries = {
     trustLegalTitle: 'Legal identity',
     trustLegalBody: 'We do not claim regulatory compliance until verified publisher identity is configured.',
     viewAlgorithmDesk: 'View algorithm desk',
+    staffLogin: 'Staff login',
+    account: 'Account',
+    newsroomDesk: 'Newsroom desk',
   },
 } as const
 

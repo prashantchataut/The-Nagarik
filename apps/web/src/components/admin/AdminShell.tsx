@@ -3,7 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, type ReactNode } from 'react'
+import { StaffLogoutButton } from '@/components/auth/StaffLogoutButton'
 import { ADMIN_NAV_GROUPS, ADMIN_PRIMARY_NAV, CMS_BASE } from '@/lib/admin/nav'
+import { primaryRole } from '@/lib/auth/staff-roles'
+import type { StaffSession } from '@/lib/auth/staff-session'
 
 function NavLink({
   href,
@@ -30,9 +33,16 @@ function NavLink({
   )
 }
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export function AdminShell({
+  children,
+  session,
+}: {
+  children: ReactNode
+  session: StaffSession
+}) {
   const pathname = usePathname() ?? '/admin'
   const [open, setOpen] = useState(false)
+  const role = primaryRole(session.roles)
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin' || pathname === '/admin/'
@@ -77,6 +87,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </ul>
         </div>
       ))}
+      <div>
+        <p className="mb-2 px-3 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-stone">
+          खाता
+        </p>
+        <ul className="space-y-0.5">
+          <li>
+            <NavLink href="/admin/account" label="मेरो खाता" active={isActive('/admin/account')} />
+          </li>
+        </ul>
+      </div>
     </nav>
   )
 
@@ -91,6 +111,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <p className="truncate text-sm font-semibold">Newsroom desk</p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden min-w-0 text-right sm:block">
+              <p className="truncate text-xs font-medium">{session.name || session.email}</p>
+              <p className="text-[0.65rem] uppercase tracking-wide text-stone">{role ?? 'staff'}</p>
+            </div>
             <Link
               href={CMS_BASE}
               className="hidden rounded-[var(--radius-control)] bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg sm:inline-flex"
@@ -103,6 +127,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             >
               Reader
             </Link>
+            <StaffLogoutButton className="rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-xs font-semibold hover:border-holiday" />
             <button
               type="button"
               className="rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-xs font-semibold lg:hidden"

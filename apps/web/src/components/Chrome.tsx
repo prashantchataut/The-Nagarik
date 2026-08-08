@@ -80,6 +80,9 @@ export function SiteHeader({
             <Link href={`/${locale}/trust`} className="hover:text-accent">
               {dict.trust}
             </Link>
+            <Link href="/admin/login" className="hover:text-accent">
+              {dict.staffLogin}
+            </Link>
             <Link
               href={otherLocaleHref}
               className="rounded-[var(--radius-control)] border border-line bg-paper px-2 py-0.5 font-semibold text-ink hover:border-accent hover:text-accent"
@@ -307,6 +310,20 @@ export function SiteHeader({
               >
                 {dict.language}
               </Link>
+              <Link
+                href={`/${locale}/account`}
+                className="block rounded-[var(--radius-control)] px-3 py-3 text-base font-medium text-ink hover:bg-paper-elevated"
+                onClick={() => setOpen(false)}
+              >
+                {dict.account}
+              </Link>
+              <Link
+                href="/admin/login"
+                className="block rounded-[var(--radius-control)] px-3 py-3 text-base font-semibold text-accent hover:bg-accent-muted"
+                onClick={() => setOpen(false)}
+              >
+                {dict.staffLogin}
+              </Link>
               <div className="px-3 py-3">
                 <ThemeToggle dict={dict} />
               </div>
@@ -361,6 +378,12 @@ export function SiteFooter({
               </Link>
               <Link href={`/${locale}/trust`} className="text-ink hover:text-accent">
                 {dict.trust}
+              </Link>
+              <Link href={`/${locale}/account`} className="text-ink hover:text-accent">
+                {dict.account}
+              </Link>
+              <Link href="/admin/login" className="text-ink hover:text-accent">
+                {dict.staffLogin}
               </Link>
               <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="text-ink hover:text-accent">
                 RSS

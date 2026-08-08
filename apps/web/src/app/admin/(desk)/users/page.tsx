@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { AdminButton, AdminCard, CmsCanonicalBanner } from '@/components/admin/primitives'
-import { getContent } from '@/lib/content'
 import { listDeskUsers, payloadDeskAvailable } from '@/lib/admin/payload-desk'
 import { cmsCollectionUrl } from '@/lib/admin/nav'
 
@@ -10,9 +9,8 @@ export const metadata = {
 }
 
 export default async function AdminUsersPage() {
-  const content = getContent()
-  const onPayload = content.source === 'payload' && !content.usingDevFixtures
   const connected = payloadDeskAvailable()
+  const onPayload = connected
   const users = connected ? await listDeskUsers() : []
 
   return (

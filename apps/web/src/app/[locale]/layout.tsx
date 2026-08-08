@@ -3,6 +3,7 @@ import { SiteFooter, SiteHeader } from '@/components/Chrome'
 import { MobileBottomNav } from '@/components/MobileNav'
 import { ConsentBanner } from '@/components/ReaderClient'
 import { FixtureBanner } from '@/components/Story'
+import { listDeskTags, payloadDeskAvailable } from '@/lib/admin/payload-desk'
 import { getContent } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -19,10 +20,12 @@ export default async function LocaleLayout({
   const dict = getDictionary(locale)
   const content = getContent()
   const categories = await content.listCategories()
-  const trendingTags =
-    locale === 'ne'
-      ? ['वर्षा', 'काठमाडौं', 'राजनीति', 'अर्थतन्त्र', 'राशिफल']
-      : ['Monsoon', 'Kathmandu', 'Politics', 'Economy', 'Horoscope']
+  const trendingTags = payloadDeskAvailable()
+    ? (await listDeskTags())
+        .slice(0, 6)
+        .map((t) => (locale === 'en' && t.nameEn ? t.nameEn : t.nameNe))
+        .filter(Boolean)
+    : []
 
   return (
     <div lang={locale}>

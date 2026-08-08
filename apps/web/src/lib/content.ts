@@ -1,12 +1,18 @@
 import { createFacadeContent, type ContentFacade } from '@thenagarik/content'
 import { createPayloadContentClient } from '@/lib/payload-content'
 
+/**
+ * Reader content client.
+ * Prefer Payload whenever CONTENT_SOURCE=payload (or auto when DB+secret exist).
+ * Facade fixtures are local UI-only — never treated as newsroom content on the desk.
+ */
 export function getContent(): ContentFacade {
-  const source = process.env.CONTENT_SOURCE ?? 'facade'
-  const allow = process.env.ALLOW_DEV_FIXTURES !== 'false'
-  const launch = process.env.LAUNCH_STATUS ?? 'dev'
   const hasDb = Boolean(process.env.DATABASE_URL?.trim())
   const hasSecret = Boolean(process.env.PAYLOAD_SECRET && process.env.PAYLOAD_SECRET.length >= 32)
+  const explicit = process.env.CONTENT_SOURCE?.trim()
+  const source = explicit ?? (hasDb && hasSecret ? 'payload' : 'facade')
+  const allow = process.env.ALLOW_DEV_FIXTURES !== 'false'
+  const launch = process.env.LAUNCH_STATUS ?? 'dev'
 
   if (source === 'payload') {
     if (hasDb && hasSecret) {

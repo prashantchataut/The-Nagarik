@@ -1,6 +1,6 @@
 import { AdminCard, CmsCanonicalBanner } from '@/components/admin/primitives'
 import { getLaunchChecks } from '@/lib/admin/dashboard'
-import { getContent } from '@/lib/content'
+import { payloadDeskAvailable } from '@/lib/admin/payload-desk'
 
 export const metadata = {
   title: 'Launch check · Newsroom',
@@ -9,8 +9,7 @@ export const metadata = {
 
 export default async function AdminLaunchPage() {
   const checks = getLaunchChecks()
-  const content = getContent()
-  const onPayload = content.source === 'payload' && !content.usingDevFixtures
+  const onPayload = payloadDeskAvailable() && process.env.CONTENT_SOURCE === 'payload'
   const ready = checks.filter((c) => c.id !== 'sentry').every((c) => c.ok)
 
   return (

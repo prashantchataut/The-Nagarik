@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react'
-import { AdminShell } from '@/components/admin/AdminShell'
 
 export const dynamic = 'force-dynamic'
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
-  return <AdminShell>{children}</AdminShell>
+export const metadata = {
+  robots: { index: false, follow: false },
+}
+
+/** Root admin segment — route groups own shells and auth. */
+export default function AdminRootLayout({ children }: { children: ReactNode }) {
+  return children
 }

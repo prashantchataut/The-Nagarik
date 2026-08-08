@@ -33,7 +33,9 @@ Watch problems / traps (see also `docs/nagarik-watch-gap-report.md`):
 
 ## Routes
 
-- `/admin` — dashboard
+- `/admin/login` — staff sign-in (Payload Users cookie; same as `/cms`)
+- `/admin` — dashboard (auth required)
+- `/admin/account` — signed-in profile + logout
 - `/admin/articles` — published list → edit in `/cms`
 - `/admin/queue` — draft / in_review / scheduled from Payload
 - `/admin/users` — staff roster → edit in `/cms`
@@ -41,3 +43,23 @@ Watch problems / traps (see also `docs/nagarik-watch-gap-report.md`):
 - `/admin/algorithms` — honest desk
 - `/admin/launch` — env gates
 - `/admin/cms` — redirect helper to `/cms`
+- `/ne/login` · `/en/login` — redirect to `/admin/login`
+- `/ne/account` · `/en/account` — staff profile or membership-deferred CTA
+
+## Auth (intentional vs Watch)
+
+| Choice | Why |
+|--------|-----|
+| Payload Users only | Watch’s Better Auth + Payload dual login caused drift |
+| One staff login | Compact roles; no separate journalist Better Auth app |
+| Desk lists Payload only | Never show facade fixtures as if they were CMS news |
+| Reader membership later | PRODUCT Phase 1 |
+
+## Watch problems we keep avoiding
+
+1. JSON shadow store + Payload
+2. 20+ newsroom roles
+3. Custom Next article editor
+4. Ads / CSP / consent theater
+5. Sentry stub claiming ready
+6. Unmoderated anonymous comments

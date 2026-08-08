@@ -1,7 +1,7 @@
 import { runDesk } from '@thenagarik/algorithms'
-import { getContent } from '@/lib/content'
 import { getEngagementSnapshot } from '@/lib/engagement'
 import { AdminCard } from '@/components/admin/primitives'
+import { listDeskPublishedStories, payloadDeskAvailable } from '@/lib/admin/payload-desk'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,8 +12,7 @@ export const metadata = {
 
 export default async function AlgorithmDeskPage() {
   const snap = await getEngagementSnapshot()
-  const content = getContent()
-  const articles = await content.listPublishedArticles()
+  const stories = payloadDeskAvailable() ? await listDeskPublishedStories(200) : []
   const enabled = process.env.ALGORITHMS_ENABLED !== 'false'
 
   const desk = runDesk({
@@ -21,7 +20,7 @@ export default async function AlgorithmDeskPage() {
     killSwitches: { ALGORITHMS_ENABLED: enabled },
     engagementSampleN: snap.sampleN,
     lastEventAgeSec: snap.lastEventAgeSec,
-    articleCount: articles.length,
+    articleCount: stories.length,
     searchQueryN: snap.searchQueryN,
   })
 
