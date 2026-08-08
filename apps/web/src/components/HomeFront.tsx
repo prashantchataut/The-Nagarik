@@ -6,7 +6,6 @@ import { RelativeTime } from '@/components/RelativeTime'
 import { provinceLabel } from '@/lib/provinces'
 import { PatroTodayStrip } from '@/components/PatroTodayStrip'
 import { FeedStory } from '@/components/news/FeedStory'
-import { AdSlot } from '@/components/news/AdSlot'
 import { SectionBand } from '@/components/news/SectionBand'
 import { ThumbHeadline } from '@/components/news/ThumbHeadline'
 import { patroHref } from '@/lib/site'
@@ -77,11 +76,6 @@ export function HomeCover({
               priority={i === 0}
               textFirst={i === 0 && !story.hero}
             />
-            {i === 1 ? (
-              <div className="border-b border-line px-4 py-6 md:px-6">
-                <AdSlot variant="infeed" label={dict.advertisement} />
-              </div>
-            ) : null}
           </div>
         ))}
       </div>

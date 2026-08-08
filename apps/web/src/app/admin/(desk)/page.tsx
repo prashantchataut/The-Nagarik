@@ -22,8 +22,8 @@ export default async function AdminDashboardPage() {
       <p className="text-sm font-semibold text-accent">ड्यासबोर्ड</p>
       <h1 className="mt-1 text-3xl font-bold tracking-[-0.03em]">Newsroom overview</h1>
       <p className="mt-2 max-w-[54ch] text-sm text-stone">
-        Same desk shape as Nagarik Watch — dashboard + deep links — without a second article
-        editor. Publish in Payload.
+        Track publishing, review queues, newsroom data, and launch readiness. Story editing stays
+        in Payload CMS.
       </p>
 
       <div className="mt-6">
@@ -65,7 +65,7 @@ export default async function AdminDashboardPage() {
       ) : (
         <p className="mt-4 text-xs text-stone">
           Workflow counts appear when DATABASE_URL is connected
-          {snap.payloadConnected ? '' : ' (not connected)'}.
+          {snap.payloadConnected ? '' : ' for this environment'}.
         </p>
       )}
 
@@ -110,7 +110,7 @@ export default async function AdminDashboardPage() {
                     <p className="mt-0.5 text-xs text-stone">
                       /{story.categorySlug}/{story.slug}
                       {story.publishedAt
-                        ? ` · ${new Date(story.publishedAt).toLocaleString('en-NP')}`
+                        ? ` / ${new Date(story.publishedAt).toLocaleString('en-NP')}`
                         : ''}
                     </p>
                   </div>
@@ -125,7 +125,7 @@ export default async function AdminDashboardPage() {
             </ul>
           ) : (
             <p className="px-4 py-8 text-sm text-stone">
-              No published articles yet. Run seed or publish from{' '}
+              No published articles yet. Publish the first story from{' '}
               <Link href={cmsCollectionUrl('articles')} className="text-accent underline">
                 /cms
               </Link>

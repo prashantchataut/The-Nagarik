@@ -642,12 +642,9 @@ export function ProvinceRail({
 }
 
 export function FixtureBanner({ dict, show }: { dict: Dictionary; show: boolean }) {
-  if (!show) return null
-  return (
-    <div className="border-b border-line bg-paper-elevated px-4 py-2 text-center text-xs text-stone">
-      {dict.fixtureBanner}
-    </div>
-  )
+  void dict
+  void show
+  return null
 }
 
 /** @deprecated Prefer LeadAndRail — kept for any residual imports */

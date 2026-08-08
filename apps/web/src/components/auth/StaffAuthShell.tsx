@@ -26,8 +26,8 @@ export function StaffAuthShell({
             <p className="mt-4 max-w-[42ch] text-sm leading-relaxed text-stone">{lede}</p>
             <ul className="mt-8 space-y-2 text-sm text-ink">
               <li>Payload CMS at <code className="text-accent">/cms</code> is the only editor</li>
-              <li>Roles stay compact: journalist · editor · publisher · admin</li>
-              <li>No second article store — desk lists and deep-links only</li>
+              <li>Roles: journalist / editor / publisher / admin</li>
+              <li>Desk views list, route, and review content from Payload</li>
             </ul>
           </div>
           <p className="mt-10 text-xs text-stone">
@@ -42,7 +42,7 @@ export function StaffAuthShell({
             {footer ? <div className="mt-8 flex flex-wrap gap-4 text-sm text-stone">{footer}</div> : null}
             <p className="mt-10 text-xs text-stone">
               <Link href="/ne" className="font-medium text-accent hover:underline">
-                ← Reader home
+                Reader home
               </Link>
             </p>
           </div>

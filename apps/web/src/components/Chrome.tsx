@@ -8,7 +8,6 @@ import type { AppLocale, Dictionary } from '@/lib/i18n'
 import type { Category } from '@thenagarik/content'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ChromeDate } from '@/components/ChromeDate'
-import { AdSlot } from '@/components/news/AdSlot'
 import { BRAND_EN, BRAND_NE, patroHref, swapLocalePath } from '@/lib/site'
 
 export function SiteHeader({
@@ -23,7 +22,6 @@ export function SiteHeader({
   trendingTags?: string[]
 }) {
   const [open, setOpen] = useState(false)
-  const [compact, setCompact] = useState(false)
   const pathname = usePathname() ?? ''
   const otherLocale: AppLocale = locale === 'ne' ? 'en' : 'ne'
   const otherLocaleHref = swapLocalePath(pathname, otherLocale)
@@ -34,13 +32,6 @@ export function SiteHeader({
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
   const isHome = pathname === `/${locale}` || pathname === `/${locale}/`
   const calendarUrl = patroHref(locale)
-
-  useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 88)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   useEffect(() => {
     setOpen(false)
@@ -65,11 +56,7 @@ export function SiteHeader({
   return (
     <header className="z-40 bg-paper">
       {/* Desktop utility — collapses on scroll */}
-      <div
-        className={`hidden border-b border-line bg-paper-elevated text-sm text-stone md:block ${
-          compact ? 'pointer-events-none max-h-0 overflow-hidden opacity-0' : 'max-h-10 opacity-100'
-        } transition-[max-height,opacity] duration-200`}
-      >
+      <div className="hidden border-b border-line bg-paper-elevated text-sm text-stone md:block">
         <div className="mx-auto flex h-9 max-w-[1240px] items-center justify-between gap-4 px-4 md:px-6">
           <ChromeDate locale={locale} className="font-medium text-ink" />
           <div className="flex items-center gap-4">
@@ -80,8 +67,8 @@ export function SiteHeader({
             <Link href={`/${locale}/trust`} className="hover:text-accent">
               {dict.trust}
             </Link>
-            <Link href="/admin/login" className="hover:text-accent">
-              {dict.staffLogin}
+            <Link href={`/${locale}/login`} className="hover:text-accent">
+              {dict.login}
             </Link>
             <Link
               href={otherLocaleHref}
@@ -126,11 +113,7 @@ export function SiteHeader({
       </div>
 
       {/* Desktop masthead — collapses on scroll */}
-      <div
-        className={`hidden border-b border-line md:block ${
-          compact ? 'pointer-events-none max-h-0 overflow-hidden opacity-0' : 'max-h-[140px] opacity-100'
-        } transition-[max-height,opacity] duration-200`}
-      >
+      <div className="hidden border-b border-line md:block">
         <div className="mx-auto flex max-w-[1240px] items-center gap-6 px-4 py-4 md:px-6">
           <Link href={`/${locale}`} className="min-w-0 shrink-0">
             <span className="block text-[2rem] font-bold leading-none tracking-[-0.03em] text-ink lg:text-[2.35rem]">
@@ -139,9 +122,7 @@ export function SiteHeader({
             <span className="mt-1 block text-sm font-semibold text-ink/80">{BRAND_EN}</span>
             <span className="mt-0.5 block text-xs font-medium text-stone">{dict.tagline}</span>
           </Link>
-          <div className="hidden min-w-0 flex-1 lg:block">
-            <AdSlot variant="leaderboard" label="Leaderboard" className="h-[90px]" />
-          </div>
+          <div className="hidden min-w-0 flex-1 lg:block" />
           <form action={`/${locale}/search`} method="get" className="hidden w-56 shrink-0 xl:block">
             <label className="sr-only" htmlFor="masthead-search">
               {dict.search}
@@ -166,9 +147,7 @@ export function SiteHeader({
 
       {/* Sticky category nav — always present */}
       <nav
-        className={`sticky top-0 z-40 border-b border-black/10 bg-accent text-accent-fg ${
-          compact ? 'shadow-md' : ''
-        }`}
+        className="sticky top-0 z-40 border-b border-black/10 bg-accent text-accent-fg shadow-sm"
         aria-label={dict.categories}
       >
         <div className="mx-auto flex h-12 max-w-[1240px] items-center gap-1 overflow-x-auto px-2 md:px-4">
@@ -318,11 +297,11 @@ export function SiteHeader({
                 {dict.account}
               </Link>
               <Link
-                href="/admin/login"
+                href={`/${locale}/login`}
                 className="block rounded-[var(--radius-control)] px-3 py-3 text-base font-semibold text-accent hover:bg-accent-muted"
                 onClick={() => setOpen(false)}
               >
-                {dict.staffLogin}
+                {dict.login}
               </Link>
               <div className="px-3 py-3">
                 <ThemeToggle dict={dict} />
@@ -382,8 +361,8 @@ export function SiteFooter({
               <Link href={`/${locale}/account`} className="text-ink hover:text-accent">
                 {dict.account}
               </Link>
-              <Link href="/admin/login" className="text-ink hover:text-accent">
-                {dict.staffLogin}
+              <Link href={`/${locale}/login`} className="text-ink hover:text-accent">
+                {dict.login}
               </Link>
               <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="text-ink hover:text-accent">
                 RSS

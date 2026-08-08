@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ArrowSquareOut } from '@phosphor-icons/react'
 import { useState, type ReactNode } from 'react'
 import { StaffLogoutButton } from '@/components/auth/StaffLogoutButton'
 import { ADMIN_NAV_GROUPS, ADMIN_PRIMARY_NAV, CMS_BASE } from '@/lib/admin/nav'
@@ -28,7 +29,9 @@ function NavLink({
       {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
     >
       {label}
-      {external ? <span className="ml-1 text-[0.7em] opacity-70">↗</span> : null}
+      {external ? (
+        <ArrowSquareOut size={13} weight="bold" className="ml-1 inline-block align-[-0.125em] opacity-70" />
+      ) : null}
     </Link>
   )
 }

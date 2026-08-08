@@ -15,12 +15,13 @@ export function StaffLoginForm({
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  void pitchHint
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
     if (!authReady) {
-      setError('Login service offline. Start local:pg or set DATABASE_URL + PAYLOAD_SECRET.')
+      setError('Login service unavailable. Connect the newsroom database and secret.')
       return
     }
 
@@ -48,7 +49,7 @@ export function StaffLoginForm({
         }
         if (!res.ok) {
           if (res.status === 503 || body.code === 'AUTH_UNAVAILABLE') {
-            setError('Login unavailable — database not connected.')
+            setError('Login unavailable. Database is not connected.')
             return
           }
           if (body.code === 'ACCOUNT_DISABLED') {
@@ -78,12 +79,6 @@ export function StaffLoginForm({
         </div>
       ) : null}
 
-      {pitchHint ? (
-        <aside className="border border-accent/30 bg-accent-muted px-3 py-2 text-xs text-ink" lang="en">
-          Local pitch users after seed: <code>*@nagarik.local</code> / see seed output for password.
-        </aside>
-      ) : null}
-
       <label className="block text-sm">
         <span className="font-medium">Email</span>
         <input
@@ -95,7 +90,7 @@ export function StaffLoginForm({
           spellCheck={false}
           required
           disabled={pending || !authReady}
-          placeholder="editor@nagarik.local"
+          placeholder="editor@thenagarik.com"
           className="mt-1.5 w-full rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2.5 text-sm outline-none focus:border-accent"
         />
       </label>
@@ -117,7 +112,7 @@ export function StaffLoginForm({
         disabled={pending || !authReady}
         className="inline-flex w-full items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg disabled:opacity-60"
       >
-        {pending ? 'Signing in…' : 'Sign in'}
+        {pending ? 'Signing in...' : 'Sign in'}
       </button>
     </form>
   )

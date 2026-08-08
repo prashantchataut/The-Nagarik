@@ -64,15 +64,15 @@ export function CmsCanonicalBanner({ onPayload }: { onPayload: boolean }) {
   if (onPayload) {
     return (
       <p className="border border-accent/30 bg-accent-muted px-3 py-2 text-sm text-ink">
-        Content SoT is <strong>Payload</strong> at <code className="text-accent">/cms</code>. This
-        desk lists and links — it does not shadow-edit articles.
+        Content is live from <strong>Payload</strong> at <code className="text-accent">/cms</code>.
+        This desk tracks publishing, review, and launch readiness.
       </p>
     )
   }
   return (
     <p className="border border-holiday/40 bg-paper-elevated px-3 py-2 text-sm text-stone">
-      Reader is still on <strong>facade fixtures</strong>. Set <code>CONTENT_SOURCE=payload</code>{' '}
-      with DATABASE_URL to cut over. See <code>docs/LOCAL_DB.md</code>.
+      Payload is not connected yet. Add <code>DATABASE_URL</code> and <code>PAYLOAD_SECRET</code>,
+      then set <code>CONTENT_SOURCE=payload</code> before launch.
     </p>
   )
 }

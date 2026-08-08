@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ArrowSquareOut } from '@phosphor-icons/react'
 import { useState, type ReactNode } from 'react'
 import { StaffLogoutButton } from '@/components/auth/StaffLogoutButton'
 import type { StaffSession } from '@/lib/auth/staff-session'
@@ -45,7 +46,9 @@ export function JournalistShell({
           {...(item.external ? { target: '_blank', rel: 'noreferrer' } : {})}
         >
           {item.label}
-          {item.external ? <span className="ml-1 text-[0.7em] opacity-70">↗</span> : null}
+          {item.external ? (
+            <ArrowSquareOut size={13} weight="bold" className="ml-1 inline-block align-[-0.125em] opacity-70" />
+          ) : null}
         </Link>
       ))}
     </nav>

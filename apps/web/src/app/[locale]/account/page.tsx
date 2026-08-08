@@ -36,8 +36,8 @@ export default async function LocaleAccountPage({
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-stone">
           {locale === 'ne'
-            ? 'पाठक सदस्यता अहिले खुला छैन। समाचारकक्ष स्टाफ Payload खाताबाट साइन इन गर्नुहोस्।'
-            : 'Reader membership is not open yet. Newsroom staff sign in with their Payload account.'}
+            ? 'पाठक खाता सदस्यता र सुरक्षित सेवाका लागि छुट्याइएको छ। समाचारकक्ष स्टाफ Payload खाताबाट साइन इन गर्नुहोस्।'
+            : 'Reader accounts are reserved for membership and secure services. Newsroom staff sign in with their Payload account.'}
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
@@ -65,7 +65,7 @@ export default async function LocaleAccountPage({
       <h1 className="mt-1 text-3xl font-bold">{session.name || session.email}</h1>
       <p className="mt-2 text-sm text-stone">
         {session.email}
-        {role ? ` · ${role}` : ''}
+        {role ? ` / ${role}` : ''}
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link

@@ -16,7 +16,6 @@ import {
 import { StoryRail } from '@/components/Story'
 import { RelativeTime } from '@/components/RelativeTime'
 import { CategoryTag } from '@/components/news/CategoryTag'
-import { AdSlot } from '@/components/news/AdSlot'
 import { renderInlineMarkup } from '@/components/journalist/inline-markup'
 import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
@@ -91,6 +90,10 @@ export default async function ArticlePage({
   const card = await content.toStoryCard(article, locale)
   const related = await content.getRelated(article, locale, 6)
   const packagePeers = await content.getPackagePeers(article, locale, 4)
+  const heroCredit =
+    article.hero?.credit && !article.hero.credit.toLowerCase().includes('dev_only')
+      ? article.hero.credit
+      : ''
   const authors = (
     await Promise.all(article.authorIds.map((id) => content.getAuthorById(id)))
   ).filter(Boolean)
@@ -222,7 +225,7 @@ export default async function ArticlePage({
             </div>
             <figcaption className="mt-2 px-4 text-xs text-stone md:px-0">
               {article.hero.alt}
-              {article.hero.credit ? ` · ${article.hero.credit}` : ''}
+              {heroCredit ? ` / ${heroCredit}` : ''}
             </figcaption>
           </figure>
         ) : null}
@@ -336,7 +339,7 @@ export default async function ArticlePage({
 
             <p className="mt-10 text-sm">
               <Link href={`/${locale}/${category}`} className="text-accent hover:underline">
-                ← {categoryLabel}
+                {categoryLabel}
               </Link>
             </p>
           </div>
@@ -367,7 +370,6 @@ export default async function ArticlePage({
                           href={`/${locale}/${s.categorySlug}/${s.slug}`}
                           className="flex gap-2 text-sm leading-snug hover:text-accent"
                         >
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
                           {s.title}
                         </Link>
                       </li>
@@ -375,7 +377,6 @@ export default async function ArticlePage({
                   </ul>
                 </div>
               ) : null}
-              <AdSlot variant="sidebar" label={dict.advertisement} />
             </div>
           </aside>
         </div>

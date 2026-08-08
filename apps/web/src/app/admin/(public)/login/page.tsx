@@ -6,7 +6,7 @@ import { StaffLoginForm } from '@/components/auth/StaffLoginForm'
 import { getStaffSession, staffAuthReady } from '@/lib/auth/staff-session'
 
 export const metadata: Metadata = {
-  title: 'Newsroom login · द नागरिक',
+  title: 'Newsroom login | The Nagarik',
   description: 'Staff sign-in for The Nagarik ops desk and Payload CMS.',
   robots: { index: false, follow: false },
 }
@@ -34,7 +34,7 @@ export default async function AdminLoginPage({
   return (
     <StaffAuthShell
       title="सम्पादकीय लगइन"
-      lede="Editors, publishers, and journalists sign in here. Content is edited in Payload — this desk is for queue, launch, and ops."
+      lede="Editors, publishers, and journalists sign in here. Content is edited in Payload; this desk handles queue, launch, and operations."
       formTitle="Staff sign in"
       footer={
         <>
@@ -55,8 +55,8 @@ export default async function AdminLoginPage({
           className="mb-4 border border-holiday/40 bg-paper-elevated px-3 py-2 text-sm text-holiday"
           role="status"
         >
-          <strong>Login offline.</strong> Run <code>pnpm --filter @thenagarik/web local:pg</code> or
-          set Neon <code>DATABASE_URL</code> + <code>PAYLOAD_SECRET</code> (≥32), then refresh.
+          <strong>Login service unavailable.</strong> Connect <code>DATABASE_URL</code> and{' '}
+          <code>PAYLOAD_SECRET</code>, then refresh.
         </aside>
       ) : null}
 
