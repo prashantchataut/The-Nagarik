@@ -11,6 +11,7 @@ import { getContent } from '@/lib/content'
 import { getEngagementSnapshot } from '@/lib/engagement'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 import { detectTrending, mostRead } from '@thenagarik/algorithms'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 export const revalidate = 60
@@ -96,13 +97,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               : 'No published articles in Payload yet. Publish from /cms or run the seed script.'}
           </p>
           <p className="mt-4 text-sm">
-            <a href="/admin" className="font-semibold text-accent hover:underline">
+            <Link href="/admin" className="font-semibold text-accent hover:underline">
               /admin
-            </a>
+            </Link>
             {' · '}
-            <a href="/cms" className="font-semibold text-accent hover:underline">
+            <Link href="/cms" className="font-semibold text-accent hover:underline">
               /cms
-            </a>
+            </Link>
           </p>
         </div>
       )}
