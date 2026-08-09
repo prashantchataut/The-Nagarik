@@ -22,7 +22,7 @@ export default function JournalistError({
         तपाईंको लेख सुरक्षित छ कि छैन भनेर पुष्टि नगरी पृष्ठ बन्द नगर्नुहोस्। यो दृश्य पुनः लोड गर्न सकिन्छ; समस्या दोहोरिए प्रणाली प्रशासकलाई जानकारी दिनुहोस्।
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
-        <button type="button" onClick={reset} className="min-h-11 rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg">
+        <button type="button" onClick={reset} className="min-h-11 rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold ">
           फेरि प्रयास गर्नुहोस्
         </button>
         <Link href="/journalist" className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line bg-paper px-4 text-sm font-semibold hover:border-accent hover:text-accent">

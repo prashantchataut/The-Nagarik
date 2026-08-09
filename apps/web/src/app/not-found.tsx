@@ -10,7 +10,7 @@ export default function NotFound() {
           यो लिंक पुरानो भएको, सारिएको वा उपलब्ध नभएको हुन सक्छ। गृहपृष्ठ वा ताजा समाचारबाट पढाइ जारी राख्नुहोस्।
         </p>
         <div className="mt-8 flex flex-wrap gap-2">
-          <Link href="/ne" className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg">
+          <Link href="/ne" className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold ">
             गृहपृष्ठ
           </Link>
           <Link href="/ne/latest" className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line bg-paper-elevated px-4 text-sm font-semibold hover:border-accent hover:text-accent">

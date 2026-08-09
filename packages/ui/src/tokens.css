@@ -33,6 +33,8 @@
   --font-display: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
   --font-sans: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --accent-solid-bg: var(--accent);
+  --accent-solid-fg: var(--accent-fg);
   color-scheme: light;
 }
 
@@ -45,8 +47,10 @@
   --line: #344943;
   --accent: #54c8bd;
   --accent-strong: #6bd8cd;
-  --accent-fg: #071c19;
+  --accent-fg: #eafaf6;
   --accent-muted: #173b36;
+  --accent-solid-bg: #0d6f66;
+  --accent-solid-fg: #eafaf6;
   --holiday: #ff8c96;
 
   --nav: #073e3a;

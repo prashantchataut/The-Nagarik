@@ -161,8 +161,8 @@ input:disabled, select:disabled, textarea:disabled {
   line-height: 1;
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
-.site-nav-link:hover { background: color-mix(in oklab, var(--nav-fg) 10%, transparent); color: var(--nav-fg); }
-.site-nav-link[data-active='true'] { border-bottom-color: var(--nav-accent); background: color-mix(in oklab, var(--nav-fg) 12%, transparent); }
+.site-nav-link:hover { background: color-mix(in oklab, var(--nav-accent) 18%, transparent); color: var(--nav-fg); }
+.site-nav-link[data-active='true'] { border-bottom-color: var(--nav-accent); background: color-mix(in oklab, var(--nav-accent) 26%, transparent); }
 
 .mobile-section-link {
   display: inline-flex;
@@ -183,6 +183,12 @@ a:hover .editorial-image img, .editorial-image:hover img { transform: scale(1.01
 
 .section-kicker { color: var(--accent); font-size: .74rem; font-weight: 800; letter-spacing: .04em; }
 .surface-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-panel); }
+
+/* Solid accent fill: keeps dark mode away from near-black text on bright teal. */
+.accent-solid {
+  background: var(--accent-solid-bg);
+  color: var(--accent-solid-fg);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .editorial-image img { transition: none; }

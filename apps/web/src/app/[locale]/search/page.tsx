@@ -108,7 +108,7 @@ export default async function SearchPage({
           </div>
           <button
             type="submit"
-            className="inline-flex h-12 items-center justify-center rounded-[var(--radius-control)] bg-accent px-5 text-sm font-bold text-accent-fg hover:opacity-90"
+            className="inline-flex h-12 items-center justify-center rounded-[var(--radius-control)] accent-solid px-5 text-sm font-bold  hover:opacity-90"
           >
             {copy.button}
           </button>

@@ -149,7 +149,7 @@ export function ArticleToolbar({
 export function ReadingProgress() {
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-0 z-[80] h-0.5 origin-left bg-accent"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[80] h-0.5 origin-left accent-solid"
       style={{ transform: 'scaleX(var(--read-progress, 0))' }}
       aria-hidden="true"
     />
@@ -262,7 +262,7 @@ export function ConsentBanner({ dict }: { dict: Dictionary }) {
           </button>
           <button
             type="button"
-            className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-3 text-sm font-semibold text-accent-fg active:scale-[0.98]"
+            className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-3 text-sm font-semibold  active:scale-[0.98]"
             onClick={() => {
               document.cookie = 'tn_consent_analytics=1; path=/; max-age=31536000; samesite=lax'
               setHidden(true)

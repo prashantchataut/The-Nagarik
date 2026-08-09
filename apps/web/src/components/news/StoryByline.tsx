@@ -20,7 +20,7 @@ export function StoryByline({
       className={`flex items-center gap-2 text-xs text-stone ${centered ? 'justify-center' : ''}`}
     >
       <span
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-[0.65rem] font-semibold text-accent-fg"
+        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full accent-solid text-[0.65rem] font-semibold "
         aria-hidden
       >
         {name.slice(0, 1)}

@@ -461,7 +461,7 @@ export function ArticleComposer({
               type="button"
               disabled={pending || status === 'in_review'}
               onClick={requestSubmit}
-              className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-55"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold  hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-55"
             >
               <PaperPlaneTilt size={18} weight="bold" aria-hidden="true" />
               समीक्षामा पठाउनुहोस्
@@ -491,7 +491,7 @@ export function ArticleComposer({
               पठाएपछि यो लेख सम्पादकीय कतारमा जान्छ। आवश्यक परे समीक्षकले सुधारका लागि फिर्ता पठाउन सक्छन्।
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={submitForReview} className="min-h-11 rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg">
+              <button type="button" onClick={submitForReview} className="min-h-11 rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold ">
                 हो, पठाउनुहोस्
               </button>
               <button type="button" onClick={() => setConfirmSubmit(false)} className="min-h-11 rounded-[var(--radius-control)] border border-line bg-paper px-4 text-sm font-semibold">

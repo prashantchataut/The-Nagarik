@@ -279,7 +279,7 @@ export function NepaliPatroWidget({
             <button
               type="button"
               onClick={convertAdToBs}
-              className="min-h-11 rounded-[var(--radius-control)] bg-accent px-3 text-sm font-semibold text-accent-fg active:scale-[0.98]"
+              className="min-h-11 rounded-[var(--radius-control)] accent-solid px-3 text-sm font-semibold  active:scale-[0.98]"
             >
               AD → BS
             </button>
@@ -308,7 +308,7 @@ export function NepaliPatroWidget({
       <div className="min-w-0 space-y-5 lg:col-span-9">
         {/* Today hero */}
         <div className="grid gap-4 border border-line sm:grid-cols-[auto_1fr]">
-          <div className="flex min-h-[120px] flex-col items-center justify-center bg-accent px-8 py-6 text-accent-fg">
+          <div className="flex min-h-[120px] flex-col items-center justify-center accent-solid px-8 py-6 ">
             <p className="text-5xl font-semibold tabular-nums leading-none">{today.day}</p>
             <p className="mt-2 text-lg font-medium">
               {locale === 'ne' ? BS_MONTHS_NE[today.month - 1] : BS_MONTHS_EN[today.month - 1]},{' '}
@@ -435,7 +435,7 @@ export function NepaliPatroWidget({
                   onClick={() => selectDay(cell.day, cell.ad)}
                   className={`relative flex min-h-[4.5rem] flex-col border-b border-r border-line p-1 text-left transition active:scale-[0.99] sm:min-h-[5.5rem] sm:p-1.5 ${
                     isToday
-                      ? 'bg-accent text-accent-fg'
+                      ? 'accent-solid '
                       : isSelected
                         ? 'bg-accent/10'
                         : 'bg-paper hover:bg-paper-elevated'
@@ -444,7 +444,7 @@ export function NepaliPatroWidget({
                   {fest ? (
                     <span
                       className={`mb-0.5 line-clamp-1 text-[0.55rem] leading-tight sm:text-[0.65rem] ${
-                        isToday ? 'text-accent-fg/90' : 'text-accent'
+                        isToday ? 'text-[var(--accent-solid-fg)]' : 'text-accent'
                       }`}
                     >
                       {fest}
@@ -462,14 +462,14 @@ export function NepaliPatroWidget({
                   <span className="mt-auto flex items-end justify-between gap-0.5">
                     <span
                       className={`line-clamp-1 text-[0.5rem] sm:text-[0.6rem] ${
-                        isToday ? 'text-accent-fg/80' : 'text-stone'
+                        isToday ? 'text-[var(--accent-solid-fg)]' : 'text-stone'
                       }`}
                     >
                       {tithi.replace(/^.*?:\s*/, '').slice(0, 8)}
                     </span>
                     <span
                       className={`text-[0.55rem] tabular-nums sm:text-[0.65rem] ${
-                        isToday ? 'text-accent-fg/80' : isSat ? 'text-holiday' : 'text-stone'
+                        isToday ? 'text-[var(--accent-solid-fg)]' : isSat ? 'text-holiday' : 'text-stone'
                       }`}
                     >
                       {cell.ad.day}

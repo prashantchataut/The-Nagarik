@@ -45,7 +45,7 @@ export default function LocaleError({
         </h1>
         <p className="mt-4 max-w-[56ch] text-base leading-7 text-stone">{copy.body}</p>
         <div className="mt-7 flex flex-wrap gap-2">
-          <button type="button" onClick={reset} className="min-h-11 rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg">
+          <button type="button" onClick={reset} className="min-h-11 rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold ">
             {copy.retry}
           </button>
           <Link href={`/${locale}/latest`} className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line bg-paper-elevated px-4 text-sm font-semibold hover:border-accent hover:text-accent">

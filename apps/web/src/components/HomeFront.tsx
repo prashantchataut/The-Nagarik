@@ -16,7 +16,7 @@ export function HomeBreakingStrip({ locale, dict, stories }: { locale: AppLocale
   return (
     <section className="border-b border-line bg-paper-strong" aria-label={dict.latestUpdates}>
       <div className="mx-auto flex min-h-11 max-w-[1280px] items-center gap-3 px-4 md:px-6">
-        <span className={`shrink-0 rounded-[5px] px-2 py-1 text-xs font-extrabold ${lead.isBreaking ? 'bg-danger text-[var(--danger-fg)]' : 'bg-accent text-accent-fg'}`}>
+        <span className={`shrink-0 rounded-[5px] px-2 py-1 text-xs font-extrabold ${lead.isBreaking ? 'bg-danger text-[var(--danger-fg)]' : 'accent-solid '}`}>
           {lead.isBreaking ? dict.breaking : dict.latestUpdates}
         </span>
         <Link href={hrefFor(locale, lead)} className="min-w-0 flex-1 truncate text-[0.95rem] font-bold text-ink hover:text-accent">{lead.title}</Link>

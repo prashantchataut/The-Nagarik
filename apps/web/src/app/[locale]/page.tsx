@@ -164,7 +164,7 @@ export default async function ArticlePage({
           <p className="mt-4 max-w-[66ch] text-lg leading-8 text-stone md:text-xl">{deck}</p>
           <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone">
             <span
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[0.7rem] font-semibold text-accent-fg"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full accent-solid text-[0.7rem] font-semibold "
               aria-hidden
             >
               {dict.siteName.slice(0, 1)}

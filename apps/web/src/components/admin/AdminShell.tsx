@@ -24,7 +24,7 @@ function NavLink({
     <Link
       href={href}
       className={`block rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium ${
-        active ? 'bg-accent text-accent-fg' : 'text-ink hover:bg-accent-muted'
+        active ? 'accent-solid ' : 'text-ink hover:bg-accent-muted'
       }`}
       {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
     >
@@ -120,7 +120,7 @@ export function AdminShell({
             </div>
             <Link
               href={CMS_BASE}
-              className="hidden rounded-[var(--radius-control)] bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg sm:inline-flex"
+              className="hidden rounded-[var(--radius-control)] accent-solid px-3 py-1.5 text-xs font-semibold  sm:inline-flex"
             >
               Open CMS
             </Link>

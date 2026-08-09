@@ -29,7 +29,7 @@ export default async function LocaleLayout({
     <div lang={locale}>
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[var(--radius-control)] focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-fg"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[var(--radius-control)] focus:bg-[var(--accent-solid-bg)] focus:px-3 focus:py-2 focus:text-[var(--accent-solid-fg)]"
       >
         {dict.skipToContent}
       </a>

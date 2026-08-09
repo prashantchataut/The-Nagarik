@@ -15,7 +15,7 @@ export default function OfflinePage() {
           पहिले खुलेका केही समाचार cache बाट उपलब्ध हुन सक्छन्। जडान फर्किएपछि नयाँ पृष्ठ र ताजा अपडेट स्वचालित रूपमा फेरि उपलब्ध हुन्छन्।
         </p>
         <div className="mt-8 flex flex-wrap gap-2">
-          <Link href="/ne" className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg">
+          <Link href="/ne" className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold ">
             गृहपृष्ठ खोल्नुहोस्
           </Link>
           <Link href="/ne/latest" className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line bg-paper-elevated px-4 text-sm font-semibold hover:border-accent hover:text-accent">

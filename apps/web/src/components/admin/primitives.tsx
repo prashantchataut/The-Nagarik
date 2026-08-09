@@ -51,7 +51,7 @@ export function AdminButton({
 }) {
   const cls =
     variant === 'primary'
-      ? 'inline-flex items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-2 text-sm font-semibold text-accent-fg'
+      ? 'inline-flex items-center justify-center rounded-[var(--radius-control)] accent-solid px-4 py-2 text-sm font-semibold '
       : 'inline-flex items-center justify-center rounded-[var(--radius-control)] border border-line px-4 py-2 text-sm font-medium text-ink hover:border-accent'
   return (
     <Link href={href} className={cls}>

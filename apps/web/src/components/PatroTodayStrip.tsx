@@ -52,7 +52,7 @@ export function PatroTodayStrip({
     <div className="border-b border-line bg-paper">
       <div className="mx-auto flex max-w-[1240px] flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between md:px-6">
         <p className="text-sm text-ink" suppressHydrationWarning>
-          <span className="rounded-[var(--radius-control)] bg-accent px-2 py-0.5 text-[0.7rem] font-bold text-accent-fg">
+          <span className="rounded-[var(--radius-control)] accent-solid px-2 py-0.5 text-[0.7rem] font-bold ">
             {dict.today}
           </span>
           {ready ? (

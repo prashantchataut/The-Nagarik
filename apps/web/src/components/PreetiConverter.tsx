@@ -127,7 +127,7 @@ export function PreetiConverter({ locale = 'ne' }: { locale?: AppLocale }) {
             <label className="text-sm font-bold text-ink" htmlFor="unicode-output">{copy.output}</label>
             <button
               type="button"
-              className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] bg-accent px-3 text-sm font-bold text-accent-fg disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] accent-solid px-3 text-sm font-bold  disabled:cursor-not-allowed disabled:opacity-50"
               onClick={copyOutput}
               disabled={!output.trim()}
             >

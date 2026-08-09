@@ -76,7 +76,7 @@ function DeskNav({
             aria-current={active ? 'page' : undefined}
             className={`group flex min-h-12 items-center gap-3 rounded-[var(--radius-control)] px-3 py-2.5 transition-colors ${
               active
-                ? 'bg-accent text-accent-fg'
+                ? 'accent-solid '
                 : 'text-ink hover:bg-accent-muted hover:text-ink'
             }`}
             onClick={onNavigate}
@@ -85,7 +85,7 @@ function DeskNav({
             <Icon size={20} weight={active ? 'fill' : 'regular'} aria-hidden="true" className="shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold leading-5">{item.label}</span>
-              <span className={`block truncate text-[0.7rem] leading-4 ${active ? 'text-accent-fg/72' : 'text-stone'}`}>
+              <span className={`block truncate text-[0.7rem] leading-4 ${active ? 'text-[var(--accent-solid-fg)]' : 'text-stone'}`}>
                 {item.hint}
               </span>
             </span>

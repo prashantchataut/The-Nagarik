@@ -23,7 +23,7 @@ export function ThumbHeadline({
           <Image src={story.hero.url} alt="" fill sizes="80px" className="object-cover" />
         ) : null}
         {numbered != null ? (
-          <span className="absolute left-0 top-0 bg-accent px-1.5 text-[0.7rem] font-semibold text-accent-fg">
+          <span className="absolute left-0 top-0 accent-solid px-1.5 text-[0.7rem] font-semibold ">
             {numbered}
           </span>
         ) : null}

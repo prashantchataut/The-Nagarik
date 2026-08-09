@@ -154,7 +154,7 @@ export function StaffLoginForm({
       <button
         type="submit"
         disabled={pending || !authReady}
-        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg transition-[transform,background-color] hover:bg-[color-mix(in_oklab,var(--accent)_90%,var(--ink))] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold transition-[transform,filter] hover:brightness-95 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55"
       >
         {pending ? <CircleNotch size={18} className="animate-spin" aria-hidden="true" /> : null}
         {pending ? 'प्रवेश हुँदैछ…' : 'समाचारकक्षमा प्रवेश गर्नुहोस्'}

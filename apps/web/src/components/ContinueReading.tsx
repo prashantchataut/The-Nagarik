@@ -72,7 +72,7 @@ export function ContinueReadingRail({
                   {story.title}
                 </p>
                 <div className="mt-2.5 h-px overflow-hidden bg-line">
-                  <div className="h-full bg-accent" style={{ width: `${Math.round(story.progress * 100)}%` }} />
+                  <div className="h-full accent-solid" style={{ width: `${Math.round(story.progress * 100)}%` }} />
                 </div>
                 <p className="mt-1.5 text-xs text-stone">{Math.round(story.progress * 100)}%</p>
               </Link>

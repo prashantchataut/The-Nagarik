@@ -75,7 +75,7 @@ export default async function LocaleAccountPage({ params }: { params: Promise<{ 
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/journalist"
-                  className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg"
+                  className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold "
                 >
                   {copy.desk}
                 </Link>
@@ -88,7 +88,7 @@ export default async function LocaleAccountPage({ params }: { params: Promise<{ 
               <p className="mt-3 text-base leading-relaxed text-stone">{copy.newsroomBody}</p>
               <Link
                 href={`/${locale}/login`}
-                className="mt-6 inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-4 text-sm font-bold text-accent-fg"
+                className="mt-6 inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-4 text-sm font-bold "
               >
                 {copy.login}
               </Link>
