@@ -136,6 +136,7 @@ export const enforceArticlePublish: CollectionBeforeChangeHook = ({
       categoryId: relationshipId(merged.category),
       titleNe: typeof merged.titleNe === 'string' ? merged.titleNe : undefined,
       deckNe: typeof merged.deckNe === 'string' ? merged.deckNe : undefined,
+      slug: typeof merged.slug === 'string' ? merged.slug : undefined,
       publishedAt: typeof merged.publishedAt === 'string' ? merged.publishedAt : undefined,
       hero: heroMeta(merged.hero),
       titleEn: typeof merged.titleEn === 'string' ? merged.titleEn : undefined,

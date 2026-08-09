@@ -134,6 +134,7 @@ export default async function ArticlePage({
     author: authors.map((a) => ({
       '@type': 'Person',
       name: locale === 'en' && a!.nameEn ? a!.nameEn : a!.nameNe,
+      url: siteUrl(`/${locale}/author/${a!.slug}`),
     })),
     image: article.hero?.url,
   }
@@ -150,17 +151,17 @@ export default async function ArticlePage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <article>
-        <header className="mx-auto max-w-[720px] px-4 pt-6 pb-5 md:px-6 md:pt-8">
+        <header className="mx-auto max-w-[800px] px-4 pb-6 pt-7 md:px-6 md:pb-7 md:pt-10">
           <div className="flex flex-wrap items-center gap-2">
             <CategoryTag href={`/${locale}/${category}`}>{categoryLabel}</CategoryTag>
             {article.isBreaking ? (
               <span className="text-[0.7rem] font-semibold text-holiday">{dict.breaking}</span>
             ) : null}
           </div>
-          <h1 className="mt-3 text-[1.85rem] font-semibold leading-[1.22] tracking-[-0.02em] md:text-[2.4rem]">
+          <h1 className="mt-3 text-[2rem] font-bold leading-[1.35] tracking-[-0.03em] sm:text-[2.35rem] md:text-[2.8rem]">
             {title}
           </h1>
-          <p className="mt-4 text-lg leading-relaxed text-stone">{deck}</p>
+          <p className="mt-4 max-w-[66ch] text-lg leading-8 text-stone md:text-xl">{deck}</p>
           <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone">
             <span
               className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[0.7rem] font-semibold text-accent-fg"
@@ -168,10 +169,15 @@ export default async function ArticlePage({
             >
               {dict.siteName.slice(0, 1)}
             </span>
-            <span className="font-medium text-ink">
-              {authors
-                .map((a) => (locale === 'en' && a!.nameEn ? a!.nameEn : a!.nameNe))
-                .join(', ') || dict.siteName}
+            <span className="flex flex-wrap items-center gap-x-1 font-medium text-ink">
+              {authors.length ? authors.map((author, index) => (
+                <span key={author!.id}>
+                  {index ? <span className="text-stone">, </span> : null}
+                  <Link href={`/${locale}/author/${author!.slug}`} className="hover:text-accent hover:underline">
+                    {locale === 'en' && author!.nameEn ? author!.nameEn : author!.nameNe}
+                  </Link>
+                </span>
+              )) : dict.siteName}
             </span>
             <span aria-hidden className="text-line">
               ·
@@ -212,8 +218,8 @@ export default async function ArticlePage({
         />
 
         {article.hero ? (
-          <figure className="relative mx-auto mb-8 aspect-[16/9] max-w-5xl overflow-hidden px-0 md:mb-10 md:px-6">
-            <div className="relative aspect-[16/9] w-full">
+          <figure className="mx-auto mb-8 max-w-[1080px] md:mb-10 md:px-6">
+            <div className="relative aspect-[16/9] w-full overflow-hidden bg-line">
               <Image
                 src={article.hero.url}
                 alt={article.hero.alt}
@@ -223,9 +229,9 @@ export default async function ArticlePage({
                 className="object-cover"
               />
             </div>
-            <figcaption className="mt-2 px-4 text-xs text-stone md:px-0">
-              {article.hero.alt}
-              {heroCredit ? ` / ${heroCredit}` : ''}
+            <figcaption className="mt-2 px-4 text-xs leading-5 text-stone md:px-0">
+              <span>{article.hero.alt}</span>
+              {heroCredit ? <span> · {heroCredit}</span> : null}
             </figcaption>
           </figure>
         ) : null}
@@ -251,7 +257,7 @@ export default async function ArticlePage({
             ) : null}
 
             <div
-              className="space-y-5 text-lg leading-[1.75]"
+              className="space-y-6 text-lg leading-[1.8]"
               style={{ fontSize: 'calc(1.125rem * var(--article-type-scale, 1))' }}
             >
               {body.map((block, i) => {
@@ -264,7 +270,7 @@ export default async function ArticlePage({
                       <h2
                         key={i}
                         id={id}
-                        className="scroll-mt-28 font-[family-name:var(--font-display)] pt-4 text-2xl tracking-[-0.02em]"
+                        className="scroll-mt-28 pt-5 text-[1.75rem] font-bold leading-[1.5] tracking-[-0.02em]"
                       >
                         {renderInlineMarkup(block.text)}
                       </h2>
@@ -276,7 +282,7 @@ export default async function ArticlePage({
                       <h3
                         key={i}
                         id={id}
-                        className="scroll-mt-28 font-[family-name:var(--font-display)] pt-2 text-xl tracking-[-0.02em]"
+                        className="scroll-mt-28 pt-3 text-2xl font-bold leading-[1.5] tracking-[-0.02em]"
                       >
                         {renderInlineMarkup(block.text)}
                       </h3>
@@ -286,7 +292,7 @@ export default async function ArticlePage({
                     return (
                       <blockquote
                         key={i}
-                        className="border-l-2 border-accent pl-4 text-xl leading-snug text-stone"
+                        className="my-8 border-y border-line py-5 text-xl font-semibold leading-[1.75] text-ink"
                       >
                         <p>{block.text}</p>
                         {block.attribution ? (
@@ -311,10 +317,20 @@ export default async function ArticlePage({
                   case 'image':
                     return (
                       <figure key={i} className="my-8">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={block.media.url} alt={block.media.alt} className="w-full" />
-                        {block.caption ? (
-                          <figcaption className="mt-2 text-sm text-stone">{block.caption}</figcaption>
+                        <Image
+                          src={block.media.url}
+                          alt={block.media.alt}
+                          width={block.media.width || 960}
+                          height={block.media.height || 540}
+                          sizes="(max-width: 768px) 100vw, 720px"
+                          className="h-auto w-full"
+                        />
+                        {(block.caption || block.media.credit) ? (
+                          <figcaption className="mt-2 text-sm leading-6 text-stone">
+                            {block.caption ? <span>{block.caption}</span> : null}
+                            {block.caption && block.media.credit ? <span> · </span> : null}
+                            {block.media.credit ? <span>{block.media.credit}</span> : null}
+                          </figcaption>
                         ) : null}
                       </figure>
                     )
@@ -325,6 +341,34 @@ export default async function ArticlePage({
                 }
               })}
             </div>
+
+            {authors.length ? (
+              <section className="mt-10 border-y border-line py-5" aria-labelledby="article-authors-title">
+                <p id="article-authors-title" className="text-xs font-bold uppercase tracking-[0.12em] text-stone">{dict.authors}</p>
+                <div className="mt-3 space-y-4">
+                  {authors.map((author) => {
+                    const name = locale === 'en' && author!.nameEn ? author!.nameEn : author!.nameNe
+                    const bio = locale === 'en' && author!.bioEn ? author!.bioEn : author!.bioNe
+                    return (
+                      <div key={author!.id}>
+                        <Link href={`/${locale}/author/${author!.slug}`} className="inline-flex min-h-11 items-center font-bold text-ink hover:text-accent">
+                          {name}
+                        </Link>
+                        {bio ? <p className="mt-1 max-w-[64ch] text-sm leading-6 text-stone">{bio}</p> : null}
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            ) : null}
+
+            {article.tagSlugs.length ? (
+              <nav className="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Tags">
+                {article.tagSlugs.map((tag) => (
+                  <Link key={tag} href={`/${locale}/search?q=${encodeURIComponent(tag)}`} className="font-semibold text-stone hover:text-accent">#{tag}</Link>
+                ))}
+              </nav>
+            ) : null}
 
             {article.corrections.length ? (
               <aside className="mt-10 border border-line bg-paper-elevated p-4 text-sm">
@@ -388,10 +432,10 @@ export default async function ArticlePage({
             <p className="text-sm font-medium text-accent">{dict.nextStory}</p>
             <Link
               href={`/${locale}/${nextStory.categorySlug}/${nextStory.slug}`}
-              className="mt-3 grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-center"
+              className={`mt-3 grid gap-4 ${nextStory.hero ? 'sm:grid-cols-[9rem_1fr] sm:items-center' : ''}`}
             >
-              <span className="relative aspect-[4/3] overflow-hidden bg-line">
-                {nextStory.hero ? (
+              {nextStory.hero ? (
+                <span className="relative aspect-[4/3] overflow-hidden bg-line">
                   <Image
                     src={nextStory.hero.url}
                     alt={nextStory.hero.alt}
@@ -399,8 +443,8 @@ export default async function ArticlePage({
                     sizes="144px"
                     className="object-cover"
                   />
-                ) : null}
-              </span>
+                </span>
+              ) : null}
               <span>
                 <span className="block font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-[1.35rem]">
                   {nextStory.title}

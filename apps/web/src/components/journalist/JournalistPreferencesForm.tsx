@@ -1,7 +1,7 @@
 'use client'
 
+import { CheckCircle } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
-import { AdminCard } from '@/components/admin/primitives'
 
 const STORAGE_KEY = 'nagarik-journalist-prefs'
 
@@ -40,44 +40,57 @@ export function JournalistPreferencesForm() {
     setPrefs(next)
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     setSaved(true)
-    window.setTimeout(() => setSaved(false), 1500)
+    window.setTimeout(() => setSaved(false), 1800)
   }
 
   return (
-    <AdminCard className="max-w-lg space-y-4">
-      <label className="block text-sm font-medium">
-        Desk UI language preference
-        <select
-          className="mt-1.5 w-full rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 text-sm"
-          value={prefs.uiLocale}
-          onChange={(e) =>
-            persist({ ...prefs, uiLocale: e.target.value === 'en' ? 'en' : 'ne' })
-          }
-        >
-          <option value="ne">नेपाली</option>
-          <option value="en">English</option>
-        </select>
-      </label>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={prefs.compactEditor}
-          onChange={(e) => persist({ ...prefs, compactEditor: e.target.checked })}
-        />
-        Compact compose spacing
-      </label>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={prefs.confirmBeforeSubmit}
-          onChange={(e) => persist({ ...prefs, confirmBeforeSubmit: e.target.checked })}
-        />
-        Confirm before submit for review
-      </label>
-      {saved ? <p className="text-xs text-accent">Saved on this device.</p> : null}
-      <p className="text-xs text-stone">
-        Preferences stay in localStorage only — not a second user database.
-      </p>
-    </AdminCard>
+    <div className="max-w-[760px]">
+      <fieldset className="border-y border-line py-1">
+        <legend className="sr-only">लेखन प्राथमिकता</legend>
+
+        <label className="flex cursor-pointer items-start justify-between gap-6 border-b border-line py-5">
+          <span>
+            <span className="block text-sm font-bold">सघन लेखन दृश्य</span>
+            <span className="mt-1 block max-w-[54ch] text-sm leading-6 text-stone">
+              सामग्री ब्लकबीचको खाली ठाउँ घटाएर लामो समाचारमा बढी सामग्री एकै पटक देखाउँछ।
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            className="mt-1 h-5 w-5 shrink-0 accent-[var(--accent)]"
+            checked={prefs.compactEditor}
+            onChange={(event) => persist({ ...prefs, compactEditor: event.target.checked })}
+          />
+        </label>
+
+        <label className="flex cursor-pointer items-start justify-between gap-6 py-5">
+          <span>
+            <span className="block text-sm font-bold">समीक्षाअघि पुष्टि</span>
+            <span className="mt-1 block max-w-[54ch] text-sm leading-6 text-stone">
+              लेख सम्पादकीय समीक्षामा पठाउनुअघि एक पटक पुष्टि माग्छ। गल्तीले पठिनबाट जोगाउन यो सिफारिस गरिएको सेटिङ हो।
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            className="mt-1 h-5 w-5 shrink-0 accent-[var(--accent)]"
+            checked={prefs.confirmBeforeSubmit}
+            onChange={(event) => persist({ ...prefs, confirmBeforeSubmit: event.target.checked })}
+          />
+        </label>
+      </fieldset>
+
+      <div className="mt-5 min-h-6" aria-live="polite">
+        {saved ? (
+          <p className="inline-flex items-center gap-2 text-sm font-semibold text-success">
+            <CheckCircle size={18} weight="fill" aria-hidden="true" />
+            यो उपकरणमा सेटिङ सुरक्षित भयो।
+          </p>
+        ) : (
+          <p className="text-xs leading-5 text-stone">
+            यी लेखन प्राथमिकता यही ब्राउजरमा मात्र सुरक्षित हुन्छन्। खाता भूमिका, समाचार स्वामित्व र सम्पादकीय अनुमति केन्द्रीय प्रणालीमै सुरक्षित रहन्छन्।
+          </p>
+        )}
+      </div>
+    </div>
   )
 }

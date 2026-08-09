@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation'
 import { SiteFooter, SiteHeader } from '@/components/Chrome'
-import { MobileBottomNav } from '@/components/MobileNav'
 import { ConsentBanner } from '@/components/ReaderClient'
-import { FixtureBanner } from '@/components/Story'
 import { listDeskTags, payloadDeskAvailable } from '@/lib/admin/payload-desk'
 import { getContent } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
@@ -35,13 +33,11 @@ export default async function LocaleLayout({
       >
         {dict.skipToContent}
       </a>
-      <FixtureBanner dict={dict} show={content.usingDevFixtures} />
       <SiteHeader locale={locale} dict={dict} categories={categories} trendingTags={trendingTags} />
-      <main id="main" className="pb-20 lg:pb-0">
+      <main id="main">
         {children}
       </main>
       <SiteFooter locale={locale} dict={dict} categories={categories} />
-      <MobileBottomNav locale={locale} dict={dict} />
       <ConsentBanner dict={dict} />
     </div>
   )

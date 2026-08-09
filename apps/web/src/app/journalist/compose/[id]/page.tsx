@@ -10,10 +10,9 @@ import { requireContributorSession } from '@/lib/journalist/session'
 import { ComposeClientPrefs } from '@/components/journalist/ComposeClientPrefs'
 import type { ComposerInitial } from '@/components/journalist/ArticleComposer'
 import type { EditorBlock } from '@/lib/journalist/schema'
-import { AdminCard } from '@/components/admin/primitives'
 
 export const metadata = {
-  title: 'Edit story · Journalist desk',
+  title: 'समाचार सम्पादन · पत्रकार डेस्क',
   robots: { index: false, follow: false },
 }
 
@@ -104,14 +103,6 @@ export default async function JournalistComposeEditPage({
     listDeskMedia(60),
   ])
 
-  if (!categories.length || !authors.length) {
-    return (
-      <AdminCard>
-        <p className="text-sm text-holiday">Missing categories or authors in Payload.</p>
-      </AdminCard>
-    )
-  }
-
   const initial: ComposerInitial = {
     id: String(doc.id),
     titleNe: String(doc.titleNe ?? ''),
@@ -119,8 +110,8 @@ export default async function JournalistComposeEditPage({
     slug: String(doc.slug ?? ''),
     deckNe: String(doc.deckNe ?? ''),
     deckEn: typeof doc.deckEn === 'string' ? doc.deckEn : '',
-    categoryId: relId(doc.category) || categories[0].id,
-    authorIds: relIds(doc.authors).length ? relIds(doc.authors) : [authors[0].id],
+    categoryId: relId(doc.category) || categories[0]?.id || '',
+    authorIds: relIds(doc.authors).length ? relIds(doc.authors) : authors[0] ? [authors[0].id] : [],
     tagIds: relIds(doc.tags),
     province: typeof doc.province === 'string' ? doc.province : '',
     heroId: relId(doc.hero),
@@ -132,25 +123,31 @@ export default async function JournalistComposeEditPage({
 
   return (
     <div>
-      <p className="text-sm font-semibold text-accent">सम्पादन</p>
-      <h1 className="mt-1 text-3xl font-bold">{initial.titleNe || 'Edit story'}</h1>
-      <p className="mt-2 text-sm text-stone">
-        Status: <strong>{initial.status}</strong>
-      </p>
-      <div className="mt-8">
-        <ComposeClientPrefs
-          initial={initial}
-          categories={categories.map((c) => ({ id: c.id, label: c.nameNe, slug: c.slug }))}
-          authors={authors.map((a) => ({ id: a.id, label: a.nameNe }))}
-          tags={tags.map((t) => ({ id: t.id, label: t.nameNe }))}
-          media={media.map((m) => ({
-            id: m.id,
-            label: m.alt || m.filename,
-            url: m.url,
-            alt: m.alt,
-          }))}
-        />
-      </div>
+      <header className="mx-auto mb-5 max-w-[1220px]">
+        <nav aria-label="Breadcrumb" className="text-xs font-semibold text-stone">पत्रकार डेस्क / सम्पादन</nav>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">Story editor</p>
+            <h1 className="mt-1 max-w-[28ch] truncate text-2xl font-bold tracking-[-0.025em] sm:text-3xl">
+              {initial.titleNe || 'शीर्षक नभएको ड्राफ्ट'}
+            </h1>
+          </div>
+          <p className="text-sm font-semibold text-stone">स्थिति: {initial.status}</p>
+        </div>
+      </header>
+      <ComposeClientPrefs
+        initial={initial}
+        categories={categories.map((item) => ({ id: item.id, label: item.nameNe, slug: item.slug }))}
+        authors={authors.map((item) => ({ id: item.id, label: item.nameNe }))}
+        tags={tags.map((item) => ({ id: item.id, label: item.nameNe }))}
+        media={media.map((item) => ({
+          id: item.id,
+          label: item.alt || item.filename,
+          url: item.url,
+          alt: item.alt,
+          credit: item.credit,
+        }))}
+      />
     </div>
   )
 }

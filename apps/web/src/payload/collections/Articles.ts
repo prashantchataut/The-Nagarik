@@ -50,7 +50,6 @@ export const Articles: CollectionConfig = {
     {
       name: 'titleNe',
       type: 'text',
-      required: true,
       maxLength: 120,
       label: 'Title (Nepali)',
     },
@@ -63,7 +62,6 @@ export const Articles: CollectionConfig = {
     {
       name: 'slug',
       type: 'text',
-      required: true,
       unique: true,
       index: true,
       hooks: {
@@ -71,13 +69,13 @@ export const Articles: CollectionConfig = {
           ({ value, siblingData }) => {
             const source = String(value ?? siblingData?.titleEn ?? '')
             const next = toSlug(source)
-            if (!next) throw new Error('Slug is required.')
-            return next
+            return next || undefined
           },
         ],
       },
       validate: (value: unknown) => {
         const slug = String(value ?? '')
+        if (!slug) return true
         return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || 'Slug must be lowercase with hyphens only.'
       },
       admin: { position: 'sidebar' },
@@ -85,7 +83,6 @@ export const Articles: CollectionConfig = {
     {
       name: 'deckNe',
       type: 'textarea',
-      required: true,
       label: 'Deck (Nepali)',
     },
     {
@@ -163,7 +160,6 @@ export const Articles: CollectionConfig = {
       name: 'category',
       type: 'relationship',
       relationTo: 'categories',
-      required: true,
       admin: { position: 'sidebar' },
       index: true,
     },
@@ -172,7 +168,6 @@ export const Articles: CollectionConfig = {
       type: 'relationship',
       relationTo: 'authors',
       hasMany: true,
-      required: true,
     },
     {
       name: 'tags',

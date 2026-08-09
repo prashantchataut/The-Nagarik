@@ -52,9 +52,17 @@ export async function POST(_request: Request, ctx: Ctx) {
     if (bodyError) {
       return NextResponse.json({ message: bodyError, code: 'VALIDATION' }, { status: 400 })
     }
-    if (!String(existing.titleNe ?? '').trim() || !String(existing.deckNe ?? '').trim()) {
+    const titleNe = String(existing.titleNe ?? '').trim()
+    const deckNe = String(existing.deckNe ?? '').trim()
+    const slug = String(existing.slug ?? '').trim()
+    const category = existing.category
+    const authors = Array.isArray(existing.authors) ? existing.authors : []
+    if (!titleNe || !deckNe || !slug || !category || authors.length === 0) {
       return NextResponse.json(
-        { message: 'Title and deck are required before submit.', code: 'VALIDATION' },
+        {
+          message: 'Headline, deck, slug, category, and at least one author are required before review.',
+          code: 'VALIDATION',
+        },
         { status: 400 },
       )
     }

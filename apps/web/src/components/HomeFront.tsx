@@ -3,396 +3,178 @@ import Link from 'next/link'
 import type { Category, StoryCard } from '@thenagarik/content'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
 import { RelativeTime } from '@/components/RelativeTime'
-import { provinceLabel } from '@/lib/provinces'
-import { PatroTodayStrip } from '@/components/PatroTodayStrip'
-import { FeedStory } from '@/components/news/FeedStory'
+import { StoryByline } from '@/components/news/StoryByline'
 import { SectionBand } from '@/components/news/SectionBand'
-import { ThumbHeadline } from '@/components/news/ThumbHeadline'
-import { patroHref } from '@/lib/site'
+import { HomeSignalRail } from '@/components/home/HomeSignalRail'
+import { HomeProvinceTabs } from '@/components/home/HomeProvinceTabs'
 
-/** Zone A: wire + patro + Ratopati-style centered feed (top 3–5 stories) */
-export function HomeCover({
-  locale,
-  dict,
-  feed,
-  updates,
-  categoryLabel,
-}: {
-  locale: AppLocale
-  dict: Dictionary
-  feed: StoryCard[]
-  updates: StoryCard[]
-  categoryLabel: (slug: string) => string
-}) {
-  const wireLead = updates[0]
-  const wireRest = updates.slice(1, 5)
+const hrefFor = (locale: AppLocale, story: StoryCard) => `/${locale}/${story.categorySlug}/${story.slug}`
 
+export function HomeBreakingStrip({ locale, dict, stories }: { locale: AppLocale; dict: Dictionary; stories: StoryCard[] }) {
+  if (!stories.length) return null
+  const [lead, ...rest] = stories.slice(0, 4)
   return (
-    <section>
-      {wireLead ? (
-        <div className="border-b border-line bg-paper-elevated">
-          <div className="mx-auto flex max-w-[1240px] items-stretch md:px-6">
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5 px-4 py-2.5 md:flex-row md:items-center md:gap-4 md:px-0">
-              <span className="inline-flex shrink-0 items-center self-start rounded-[var(--radius-control)] bg-accent px-2 py-0.5 text-[0.68rem] font-semibold text-accent-fg">
-                {dict.latestUpdates}
-              </span>
-              <Link
-                href={`/${locale}/${wireLead.categorySlug}/${wireLead.slug}`}
-                className="min-w-0 truncate text-sm font-medium text-ink hover:text-accent"
-              >
-                {wireLead.isBreaking ? (
-                  <span className="mr-1.5 text-holiday">{dict.breaking}</span>
-                ) : null}
-                {wireLead.title}
+    <section className="border-b border-line bg-paper-strong" aria-label={dict.latestUpdates}>
+      <div className="mx-auto flex min-h-11 max-w-[1280px] items-center gap-3 px-4 md:px-6">
+        <span className={`shrink-0 rounded-[5px] px-2 py-1 text-xs font-extrabold ${lead.isBreaking ? 'bg-danger text-[var(--danger-fg)]' : 'bg-accent text-accent-fg'}`}>
+          {lead.isBreaking ? dict.breaking : dict.latestUpdates}
+        </span>
+        <Link href={hrefFor(locale, lead)} className="min-w-0 flex-1 truncate text-[0.95rem] font-bold text-ink hover:text-accent">{lead.title}</Link>
+        {rest.length ? (
+          <div className="hidden items-center gap-4 border-l border-line pl-4 text-xs font-medium text-stone xl:flex">
+            {rest.slice(0, 2).map((story) => <Link key={story.id} href={hrefFor(locale, story)} className="max-w-[16rem] truncate hover:text-ink">{story.title}</Link>)}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
+export function HomeHero({ locale, dict, lead, latest, popular, popularLive, categoryLabel }: {
+  locale: AppLocale; dict: Dictionary; lead: StoryCard; latest: StoryCard[]; popular: StoryCard[]; popularLive: boolean; categoryLabel: (slug: string) => string
+}) {
+  const href = hrefFor(locale, lead)
+  return (
+    <section className="border-b border-line bg-paper">
+      <div className="mx-auto grid max-w-[1280px] lg:grid-cols-[minmax(0,1.78fr)_minmax(330px,0.82fr)]">
+        <article className="min-w-0 px-4 py-6 md:px-6 md:py-8 lg:pr-8">
+          {lead.hero ? (
+            <Link href={href} className="editorial-image relative block aspect-[16/8.8] rounded-[8px] shadow-[0_10px_30px_rgb(20_44_39_/_8%)]">
+              <Image src={lead.hero.url} alt={lead.hero.alt} fill priority sizes="(max-width:1024px) 100vw, 68vw" className="object-cover" />
+            </Link>
+          ) : null}
+          <div className="mt-5 flex flex-wrap items-center gap-2 text-xs font-extrabold">
+            <Link href={`/${locale}/${lead.categorySlug}`} className="text-accent hover:underline">{categoryLabel(lead.categorySlug)}</Link>
+            {lead.isBreaking ? <span className="text-danger">{dict.breaking}</span> : null}
+          </div>
+          <h1 className="mt-2 max-w-[26ch] text-[2.15rem] font-extrabold leading-[1.28] tracking-[-0.035em] text-ink sm:text-[2.55rem] md:text-[3.05rem] lg:text-[3.35rem]">
+            <Link href={href} className="hover:text-accent">{lead.title}</Link>
+          </h1>
+          {lead.deck ? <p className="mt-3 max-w-[68ch] text-base font-medium leading-7 text-stone md:text-[1.08rem]">{lead.deck}</p> : null}
+          <div className="mt-4"><StoryByline locale={locale} authors={lead.authorNames} publishedAt={lead.publishedAt} /></div>
+        </article>
+
+        <HomeSignalRail locale={locale} latest={latest} popular={popular} popularLive={popularLive} latestLabel={dict.latest} popularLabel={dict.mostRead} coldLabel={dict.coldStart} seeAllLabel={dict.seeAll} />
+      </div>
+    </section>
+  )
+}
+
+export function HomeSecondaryStories({ locale, stories, categoryLabel }: { locale: AppLocale; stories: StoryCard[]; categoryLabel: (slug: string) => string }) {
+  if (!stories.length) return null
+  return (
+    <section className="border-b border-line bg-paper-elevated">
+      <div className="mx-auto grid max-w-[1280px] gap-4 px-4 py-5 md:grid-cols-3 md:px-6 md:py-6">
+        {stories.slice(0, 3).map((story) => (
+          <article key={story.id} className="group grid grid-cols-[8rem_minmax(0,1fr)] gap-4 md:block">
+            {story.hero ? (
+              <Link href={hrefFor(locale, story)} className="editorial-image relative block aspect-[4/3] rounded-[7px] md:aspect-[16/10]">
+                <Image src={story.hero.url} alt={story.hero.alt} fill sizes="(max-width:767px) 128px, 33vw" className="object-cover" />
               </Link>
-              {wireRest.length ? (
-                <ul className="hidden min-w-0 flex-1 items-center gap-3 border-l border-line pl-4 text-xs text-stone xl:flex">
-                  {wireRest.map((s) => (
-                    <li key={s.id} className="max-w-[14rem] truncate">
-                      <Link
-                        href={`/${locale}/${s.categorySlug}/${s.slug}`}
-                        className="hover:text-ink"
-                      >
-                        {s.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+            ) : null}
+            <div className="min-w-0 md:mt-3">
+              <p className="section-kicker">{categoryLabel(story.categorySlug)}</p>
+              <h2 className="mt-1 text-[1.05rem] font-extrabold leading-[1.42] tracking-[-0.018em] md:text-[1.22rem]">
+                <Link href={hrefFor(locale, story)} className="hover:text-accent">{story.title}</Link>
+              </h2>
+              <p className="mt-2 text-xs text-stone"><RelativeTime iso={story.publishedAt} locale={locale} /></p>
             </div>
-          </div>
-        </div>
-      ) : null}
-
-      <PatroTodayStrip locale={locale} dict={dict} href={patroHref(locale)} />
-
-      <div className="mx-auto max-w-[1210px]">
-        {feed.map((story, i) => (
-          <div key={story.id}>
-            <FeedStory
-              locale={locale}
-              story={story}
-              categoryLabel={categoryLabel(story.categorySlug)}
-              priority={i === 0}
-              textFirst={i === 0 && !story.hero}
-            />
-          </div>
+          </article>
         ))}
       </div>
     </section>
   )
 }
 
-export function HomeSignals({
-  locale,
-  dict,
-  trending,
-  mostRead,
-  trendingLive,
-  mostReadLive,
-}: {
-  locale: AppLocale
-  dict: Dictionary
-  trending: StoryCard[]
-  mostRead: StoryCard[]
-  trendingLive: boolean
-  mostReadLive: boolean
-}) {
-  if (!trending.length && !mostRead.length) return null
-  return (
-    <section className="border-b border-line bg-paper-elevated">
-      <div className="mx-auto grid max-w-[1240px] md:grid-cols-2">
-        <div className="border-b border-line px-4 py-5 md:border-b-0 md:border-r md:px-6">
-          <h2 className="border-b-2 border-accent pb-2 text-lg font-semibold">{dict.trending}</h2>
-          {!trendingLive ? <p className="mt-1 text-xs text-stone">{dict.coldStart}</p> : null}
-          <ol className="mt-2">
-            {trending.map((story, i) => (
-              <li
-                key={story.id}
-                className="grid grid-cols-[1.1rem_1fr] gap-2 border-b border-line py-2.5 last:border-b-0"
-              >
-                <span className="text-sm font-semibold tabular-nums text-accent">{i + 1}</span>
-                <Link
-                  href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                  className="text-[0.98rem] font-medium leading-snug hover:text-accent"
-                >
-                  {story.title}
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </div>
-        <div className="px-4 py-5 md:px-6">
-          <h2 className="border-b-2 border-accent pb-2 text-lg font-semibold">{dict.mostRead}</h2>
-          {!mostReadLive ? <p className="mt-1 text-xs text-stone">{dict.coldStart}</p> : null}
-          <ol className="mt-2">
-            {mostRead.map((story, i) => (
-              <li
-                key={story.id}
-                className="grid grid-cols-[1.1rem_1fr] gap-2 border-b border-line py-2.5 last:border-b-0"
-              >
-                <span className="text-sm font-semibold tabular-nums text-stone">{i + 1}</span>
-                <Link
-                  href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                  className="text-[0.98rem] font-medium leading-snug hover:text-accent"
-                >
-                  {story.title}
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-export function HomeDesk({
-  locale,
-  dict,
-  editors,
-  province,
-}: {
-  locale: AppLocale
-  dict: Dictionary
-  editors: StoryCard[]
-  province: StoryCard[]
-}) {
-  if (!editors.length && !province.length) return null
-  const [feature, ...rest] = editors
-
-  return (
-    <section className="border-b border-line">
-      <div className="mx-auto grid max-w-[1240px] lg:grid-cols-12">
-        {feature ? (
-          <div className="border-b border-line px-4 py-5 md:px-6 md:py-6 lg:col-span-7 lg:border-b-0 lg:border-r">
-            <h2 className="border-b-2 border-accent pb-2 text-lg font-semibold md:text-xl">
-              {dict.editorsPicks}
-            </h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] sm:items-start">
-              <Link
-                href={`/${locale}/${feature.categorySlug}/${feature.slug}`}
-                className="relative block aspect-[16/10] overflow-hidden"
-              >
-                {feature.hero ? (
-                  <Image
-                    src={feature.hero.url}
-                    alt={feature.hero.alt}
-                    fill
-                    sizes="(max-width:1024px) 100vw, 35vw"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-line" />
-                )}
-              </Link>
-              <div>
-                <h3 className="text-lg font-semibold leading-snug tracking-[-0.02em] md:text-xl">
-                  <Link
-                    href={`/${locale}/${feature.categorySlug}/${feature.slug}`}
-                    className="hover:text-accent"
-                  >
-                    {feature.title}
-                  </Link>
-                </h3>
-                <p className="mt-2 line-clamp-3 text-sm text-stone">{feature.deck}</p>
-                <p className="mt-2 text-xs text-stone">
-                  <RelativeTime iso={feature.publishedAt} locale={locale} />
-                </p>
-              </div>
-            </div>
-            {rest.length ? (
-              <ul className="mt-4 border-t border-line">
-                {rest.map((story) => (
-                  <li key={story.id} className="border-b border-line last:border-b-0">
-                    <ThumbHeadline locale={locale} story={story} />
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        ) : null}
-
-        {province.length ? (
-          <div className="px-4 py-5 md:px-6 md:py-6 lg:col-span-5">
-            <div className="flex items-baseline justify-between gap-3 border-b-2 border-accent pb-2">
-              <h2 className="text-lg font-semibold md:text-xl">
-                <Link href={`/${locale}/pradesh`}>{dict.provinces}</Link>
-              </h2>
-              <Link href={`/${locale}/pradesh`} className="text-xs text-accent hover:underline">
-                {dict.seeAll}
-              </Link>
-            </div>
-            <ul>
-              {province.slice(0, 6).map((story) => {
-                const badge = provinceLabel(story.province, locale)
-                return (
-                  <li key={story.id} className="border-b border-line last:border-b-0">
-                    <Link
-                      href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                      className="block py-2.5 hover:text-accent"
-                    >
-                      {badge ? <p className="mb-0.5 text-[0.7rem] font-medium text-accent">{badge}</p> : null}
-                      <span className="text-[1.02rem] font-medium leading-snug text-ink">
-                        {story.title}
-                      </span>
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-    </section>
-  )
-}
-
-export function HomeCategoryBand({
-  locale,
-  dict,
-  category,
-  stories,
-}: {
-  locale: AppLocale
-  dict: Dictionary
-  category: Category
-  stories: StoryCard[]
+export function HomeCategoryBand({ locale, dict, category, stories, variant = 'feature-list' }: {
+  locale: AppLocale; dict: Dictionary; category: Category; stories: StoryCard[]; variant?: 'feature-list' | 'dense'
 }) {
   if (!stories.length) return null
   const title = locale === 'en' ? category.nameEn : category.nameNe
-  const [feature, ...rest] = stories
-  const featureHref = `/${locale}/${feature.categorySlug}/${feature.slug}`
+  const [feature, second, third, fourth, fifth] = stories
+
+  if (variant === 'dense') {
+    return (
+      <SectionBand title={title} href={`/${locale}/${category.slug}`} seeAll={dict.seeAll} className="bg-paper-elevated">
+        <div className="grid gap-5 lg:grid-cols-12 lg:gap-6">
+          {feature ? <article className="lg:col-span-5">
+            {feature.hero ? <Link href={hrefFor(locale, feature)} className="editorial-image relative block aspect-[16/10] rounded-[7px]"><Image src={feature.hero.url} alt={feature.hero.alt} fill sizes="(max-width:1024px) 100vw, 42vw" className="object-cover" /></Link> : null}
+            <h3 className="mt-3 text-xl font-extrabold leading-[1.42] tracking-[-0.02em] md:text-2xl"><Link href={hrefFor(locale, feature)} className="hover:text-accent">{feature.title}</Link></h3>
+            {feature.deck ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone">{feature.deck}</p> : null}
+          </article> : null}
+          <div className="grid gap-4 sm:grid-cols-2 lg:col-span-7">
+            {[second, third, fourth, fifth].filter(Boolean).map((story) => story && (
+              <article key={story.id} className="surface-card overflow-hidden">
+                {story.hero ? <Link href={hrefFor(locale, story)} className="editorial-image relative block aspect-[16/9]"><Image src={story.hero.url} alt={story.hero.alt} fill sizes="(max-width:640px) 100vw, 28vw" className="object-cover" /></Link> : null}
+                <div className="p-3.5">
+                  <h3 className="text-[1.04rem] font-bold leading-[1.45]"><Link href={hrefFor(locale, story)} className="hover:text-accent">{story.title}</Link></h3>
+                  <p className="mt-2 text-xs text-stone"><RelativeTime iso={story.publishedAt} locale={locale} /></p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </SectionBand>
+    )
+  }
 
   return (
     <SectionBand title={title} href={`/${locale}/${category.slug}`} seeAll={dict.seeAll}>
-      <div className="grid gap-5 lg:grid-cols-12 lg:gap-8">
-        <article className="lg:col-span-5">
-          <Link href={featureHref} className="relative mb-3 block aspect-[16/10] overflow-hidden">
-            {feature.hero ? (
-              <Image
-                src={feature.hero.url}
-                alt={feature.hero.alt}
-                fill
-                sizes="(max-width:1024px) 100vw, 40vw"
-                className="object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0 bg-line" />
-            )}
-          </Link>
-          <h3 className="text-lg font-semibold leading-snug tracking-[-0.02em] md:text-xl">
-            <Link href={featureHref} className="hover:text-accent">
-              {feature.title}
-            </Link>
-          </h3>
-          <p className="mt-1.5 line-clamp-2 text-sm text-stone">{feature.deck}</p>
-        </article>
-        <ul className="lg:col-span-7">
-          {rest.slice(0, 5).map((story) => (
-            <li key={story.id} className="border-b border-line last:border-b-0">
-              <ThumbHeadline locale={locale} story={story} />
-            </li>
+      <div className="grid gap-5 lg:grid-cols-12 lg:gap-7">
+        {feature ? <article className="lg:col-span-7">
+          {feature.hero ? <Link href={hrefFor(locale, feature)} className="editorial-image relative block aspect-[16/9] rounded-[7px]"><Image src={feature.hero.url} alt={feature.hero.alt} fill sizes="(max-width:1024px) 100vw, 58vw" className="object-cover" /></Link> : null}
+          <h3 className="mt-3 text-[1.55rem] font-extrabold leading-[1.4] tracking-[-0.025em] md:text-[1.9rem]"><Link href={hrefFor(locale, feature)} className="hover:text-accent">{feature.title}</Link></h3>
+          {feature.deck ? <p className="mt-2 max-w-[62ch] text-sm leading-6 text-stone">{feature.deck}</p> : null}
+        </article> : null}
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
+          {[second, third, fourth, fifth].filter(Boolean).map((story) => story && (
+            <article key={story.id} className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 border-b border-line pb-4 last:border-b-0 lg:grid-cols-[8.5rem_minmax(0,1fr)]">
+              {story.hero ? <Link href={hrefFor(locale, story)} className="editorial-image relative aspect-[4/3] rounded-[6px]"><Image src={story.hero.url} alt="" fill sizes="136px" className="object-cover" /></Link> : null}
+              <div className="self-center"><h3 className="text-[1.02rem] font-bold leading-[1.42]"><Link href={hrefFor(locale, story)} className="hover:text-accent">{story.title}</Link></h3><p className="mt-1.5 text-xs text-stone"><RelativeTime iso={story.publishedAt} locale={locale} /></p></div>
+            </article>
           ))}
-        </ul>
+        </div>
       </div>
     </SectionBand>
   )
 }
 
-export function HomeOpinion({
-  locale,
-  dict,
-  stories,
-}: {
-  locale: AppLocale
-  dict: Dictionary
-  stories: StoryCard[]
-}) {
+export function HomeOpinion({ locale, dict, stories }: { locale: AppLocale; dict: Dictionary; stories: StoryCard[] }) {
   if (!stories.length) return null
   return (
-    <SectionBand title={dict.opinion} href={`/${locale}/bichar`} seeAll={dict.seeAll}>
-      <ul className="grid gap-0 md:grid-cols-3 md:divide-x md:divide-line">
-        {stories.map((story) => (
-          <li
-            key={story.id}
-            className="border-b border-line last:border-b-0 md:border-b-0 md:px-5 md:first:pl-0 md:last:pr-0"
-          >
-            <Link
-              href={`/${locale}/${story.categorySlug}/${story.slug}`}
-              className="block py-3.5 hover:text-accent md:py-4"
-            >
-              <span className="font-[family-name:var(--font-serif)] text-lg leading-snug tracking-[-0.02em] text-ink">
-                {story.title}
-              </span>
-              <span className="mt-1.5 block text-xs text-stone">{story.authorNames.join(', ')}</span>
-            </Link>
-          </li>
+    <SectionBand title={dict.opinion} href={`/${locale}/bichar`} seeAll={dict.seeAll} className="bg-paper-elevated">
+      <div className="grid gap-4 md:grid-cols-3">
+        {stories.slice(0, 3).map((story) => (
+          <article key={story.id} className="surface-card overflow-hidden">
+            {story.hero ? <Link href={hrefFor(locale, story)} className="editorial-image relative block aspect-[16/9]"><Image src={story.hero.url} alt={story.hero.alt} fill sizes="(max-width:767px) 100vw, 33vw" className="object-cover" /></Link> : null}
+            <div className="p-4"><p className="text-xs font-bold text-accent">{story.authorNames.join(', ') || dict.authors}</p><h3 className="mt-2 text-lg font-extrabold leading-[1.48]"><Link href={hrefFor(locale, story)} className="hover:text-accent">{story.title}</Link></h3>{story.deck ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone">{story.deck}</p> : null}</div>
+          </article>
         ))}
-      </ul>
-    </SectionBand>
-  )
-}
-
-export function HomeVisual({
-  locale,
-  dict,
-  stories,
-}: {
-  locale: AppLocale
-  dict: Dictionary
-  stories: StoryCard[]
-}) {
-  if (stories.length < 2) return null
-  const [hero, ...rest] = stories.slice(0, 4)
-  return (
-    <SectionBand title={dict.visual}>
-      <div className="grid gap-3 md:grid-cols-12 md:gap-4">
-        <Link
-          href={`/${locale}/${hero.categorySlug}/${hero.slug}`}
-          className="group relative block aspect-[16/10] overflow-hidden md:col-span-7 md:aspect-auto md:min-h-[320px]"
-        >
-          {hero.hero ? (
-            <Image
-              src={hero.hero.url}
-              alt={hero.hero.alt}
-              fill
-              sizes="(max-width:768px) 100vw, 60vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-            />
-          ) : (
-            <span className="absolute inset-0 bg-line" />
-          )}
-          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-4 pt-16">
-            <span className="text-lg font-semibold leading-snug text-white md:text-xl">{hero.title}</span>
-          </span>
-        </Link>
-        <ul className="grid gap-3 sm:grid-cols-3 md:col-span-5 md:grid-cols-1">
-          {rest.map((story) => (
-            <li key={story.id}>
-              <Link
-                href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                className="group grid grid-cols-[5rem_1fr] gap-3 hover:text-accent sm:grid-cols-1 md:grid-cols-[5.5rem_1fr]"
-              >
-                <span className="relative aspect-[4/3] overflow-hidden bg-line">
-                  {story.hero ? (
-                    <Image
-                      src={story.hero.url}
-                      alt=""
-                      fill
-                      sizes="120px"
-                      className="object-cover"
-                    />
-                  ) : null}
-                </span>
-                <span className="self-center text-[0.98rem] font-medium leading-snug text-ink">
-                  {story.title}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
       </div>
     </SectionBand>
   )
 }
+
+export function HomeVisual({ locale, dict, stories }: { locale: AppLocale; dict: Dictionary; stories: StoryCard[] }) {
+  const visual = stories.filter((story) => story.hero).slice(0, 4)
+  if (visual.length < 2) return null
+  const [feature, ...rest] = visual
+  return (
+    <section className="border-y border-nav bg-nav text-nav-fg">
+      <div className="mx-auto max-w-[1280px] px-4 py-8 md:px-6 md:py-10">
+        <div className="mb-5 flex items-end justify-between border-b border-nav-fg/20 pb-3"><h2 className="text-2xl font-extrabold tracking-[-0.025em]">{dict.visual}</h2></div>
+        <div className="grid gap-4 lg:grid-cols-12">
+          <article className="lg:col-span-8">
+            <Link href={hrefFor(locale, feature)} className="editorial-image relative block aspect-[16/8.8] rounded-[8px]"><Image src={feature.hero!.url} alt={feature.hero!.alt} fill sizes="(max-width:1024px) 100vw, 66vw" className="object-cover" /></Link>
+            <h3 className="mt-3 text-xl font-extrabold leading-[1.45] md:text-2xl"><Link href={hrefFor(locale, feature)} className="hover:text-nav-accent">{feature.title}</Link></h3>
+          </article>
+          <div className="grid gap-4 sm:grid-cols-3 lg:col-span-4 lg:grid-cols-1">
+            {rest.map((story) => <article key={story.id} className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3"><Link href={hrefFor(locale, story)} className="editorial-image relative aspect-[4/3] rounded-[6px]"><Image src={story.hero!.url} alt="" fill sizes="112px" className="object-cover" /></Link><h3 className="self-center text-sm font-bold leading-6"><Link href={hrefFor(locale, story)} className="hover:text-nav-accent">{story.title}</Link></h3></article>)}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export { HomeProvinceTabs }

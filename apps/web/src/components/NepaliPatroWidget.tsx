@@ -23,11 +23,8 @@ import {
 } from '@/lib/panchang'
 import type { AppLocale } from '@/lib/i18n'
 import { BRAND_NE, newsHomeHref } from '@/lib/site'
-import { SAMPLE_BULLION, SAMPLE_USD_NPR } from '@/lib/market-rates'
 
 const WEEKDAYS_EN_SHORT = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as const
-
-const GOLD_FIXTURE = SAMPLE_BULLION
 
 function ktmParts(now = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -83,8 +80,6 @@ export function NepaliPatroWidget({
     return `${t.year}-${String(t.month).padStart(2, '0')}-${String(t.day).padStart(2, '0')}`
   })
   const [convertMsg, setConvertMsg] = useState('')
-  const [forexAmount, setForexAmount] = useState('1')
-  const usdRate = SAMPLE_USD_NPR
 
   useEffect(() => {
     const id = window.setInterval(() => setTick((n) => n + 1), 30_000)
@@ -230,45 +225,6 @@ export function NepaliPatroWidget({
     return list
   }, [])
 
-  const utilityTiles = [
-    {
-      href: `#sait`,
-      label: locale === 'ne' ? 'शुभ साइत' : 'Auspicious times',
-      className: 'from-teal-700 to-teal-500',
-    },
-    {
-      href: `#holidays`,
-      label: locale === 'ne' ? 'सार्वजनिक बिदा' : 'Public holidays',
-      className: 'from-emerald-800 to-emerald-600',
-    },
-    {
-      href: `#rashifal`,
-      label: locale === 'ne' ? 'राशिफल' : 'Horoscope',
-      className: 'from-cyan-800 to-cyan-600',
-    },
-    {
-      href: `#converter`,
-      label: locale === 'ne' ? 'मिति रूपान्तरण' : 'Date converter',
-      className: 'from-slate-700 to-slate-500',
-    },
-    {
-      href: `#gold`,
-      label: locale === 'ne' ? 'सुनचाँदी' : 'Gold & silver',
-      className: 'from-amber-800 to-amber-600',
-    },
-    {
-      href: `#forex`,
-      label: locale === 'ne' ? 'मुद्रा' : 'Forex',
-      className: 'from-indigo-800 to-indigo-600',
-    },
-    {
-      href: `/${locale}/utilities/preeti-unicode`,
-      label: locale === 'ne' ? 'प्रीति युनिकोड' : 'Preeti Unicode',
-      className: 'from-accent to-teal-600',
-    },
-  ]
-
-  const forexOut = (Number(forexAmount) || 0) * usdRate
 
   return (
     <div className="grid gap-6 lg:grid-cols-12">
@@ -317,13 +273,13 @@ export function NepaliPatroWidget({
               <input
                 value={adIn}
                 onChange={(e) => setAdIn(e.target.value)}
-                className="rounded-[var(--radius-control)] border border-line bg-paper-elevated px-2 py-2 text-sm text-ink"
+                className="min-h-11 rounded-[var(--radius-control)] border border-line bg-paper-elevated px-3 text-sm text-ink"
               />
             </label>
             <button
               type="button"
               onClick={convertAdToBs}
-              className="rounded-[var(--radius-control)] bg-accent px-3 py-2 text-sm font-medium text-accent-fg active:scale-[0.98]"
+              className="min-h-11 rounded-[var(--radius-control)] bg-accent px-3 text-sm font-semibold text-accent-fg active:scale-[0.98]"
             >
               AD → BS
             </button>
@@ -332,13 +288,13 @@ export function NepaliPatroWidget({
               <input
                 value={bsIn}
                 onChange={(e) => setBsIn(e.target.value)}
-                className="rounded-[var(--radius-control)] border border-line bg-paper-elevated px-2 py-2 text-sm text-ink"
+                className="min-h-11 rounded-[var(--radius-control)] border border-line bg-paper-elevated px-3 text-sm text-ink"
               />
             </label>
             <button
               type="button"
               onClick={convertBsToAd}
-              className="rounded-[var(--radius-control)] border border-line px-3 py-2 text-sm active:scale-[0.98] hover:border-accent"
+              className="min-h-11 rounded-[var(--radius-control)] border border-line px-3 text-sm font-semibold active:scale-[0.98] hover:border-accent"
             >
               BS → AD
             </button>
@@ -346,45 +302,6 @@ export function NepaliPatroWidget({
           </div>
         </section>
 
-        <section id="gold" className="scroll-mt-24 border border-line bg-paper-elevated p-4">
-          <h2 className="border-b border-line pb-2 text-sm font-semibold">
-            {locale === 'ne' ? 'सुनचाँदी भाउ' : 'Gold & silver'}
-          </h2>
-          <p className="mt-1 text-[0.65rem] text-stone">
-            {locale === 'ne' ? 'नमूना दर — लाइभ फिड चाँडै' : 'Sample rates — live feed soon'}
-          </p>
-          <ul className="mt-3 space-y-2">
-            {GOLD_FIXTURE.map((g) => (
-              <li key={g.labelEn} className="flex items-center justify-between gap-2 text-sm">
-                <span>{locale === 'ne' ? g.labelNe : g.labelEn}</span>
-                <span className="tabular-nums font-medium">{g.today}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section id="forex" className="scroll-mt-24 border border-line bg-paper p-4">
-          <h2 className="border-b border-line pb-2 text-sm font-semibold">
-            {locale === 'ne' ? 'विदेशी मुद्रा' : 'Foreign exchange'}
-          </h2>
-          <p className="mt-1 text-[0.65rem] text-stone">
-            {locale === 'ne' ? 'नमूना दर — लाइभ फिड चाँडै' : 'Sample rates — live feed soon'}
-          </p>
-          <div className="mt-3 grid gap-2 text-sm">
-            <label className="grid gap-1 text-xs text-stone">
-              {locale === 'ne' ? 'रकम (USD)' : 'Amount (USD)'}
-              <input
-                value={forexAmount}
-                onChange={(e) => setForexAmount(e.target.value)}
-                className="rounded-[var(--radius-control)] border border-line bg-paper-elevated px-2 py-2"
-              />
-            </label>
-            <p className="text-xs text-stone">1 USD = {usdRate} NPR</p>
-            <p className="text-lg font-semibold tabular-nums text-accent">
-              {forexOut.toLocaleString('en-NP', { maximumFractionDigits: 2 })} NPR
-            </p>
-          </div>
-        </section>
       </aside>
 
       {/* Main */}
@@ -429,14 +346,14 @@ export function NepaliPatroWidget({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <select
-                aria-label="Year"
+                aria-label={locale === 'ne' ? 'वर्ष' : 'Year'}
                 value={view.year}
                 onChange={(e) => {
                   const y = Number(e.target.value)
                   const max = daysInBsMonth(y, view.month)
                   setView({ year: y, month: view.month, day: Math.min(view.day, max || 1) })
                 }}
-                className="rounded-[var(--radius-control)] border border-line bg-paper px-2 py-1.5 text-sm"
+                className="min-h-11 rounded-[var(--radius-control)] border border-line bg-paper px-3 text-sm"
               >
                 {years.map((y) => (
                   <option key={y} value={y}>
@@ -445,14 +362,14 @@ export function NepaliPatroWidget({
                 ))}
               </select>
               <select
-                aria-label="Month"
+                aria-label={locale === 'ne' ? 'महिना' : 'Month'}
                 value={view.month}
                 onChange={(e) => {
                   const m = Number(e.target.value)
                   const max = daysInBsMonth(view.year, m)
                   setView({ year: view.year, month: m, day: Math.min(view.day, max || 1) })
                 }}
-                className="rounded-[var(--radius-control)] border border-line bg-paper px-2 py-1.5 text-sm"
+                className="min-h-11 rounded-[var(--radius-control)] border border-line bg-paper px-3 text-sm"
               >
                 {(locale === 'ne' ? BS_MONTHS_NE : BS_MONTHS_EN).map((name, i) => (
                   <option key={name} value={i + 1}>
@@ -464,8 +381,9 @@ export function NepaliPatroWidget({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm hover:border-accent"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-control)] border border-line text-sm hover:border-accent"
                 onClick={() => shiftMonth(-1)}
+                aria-label={locale === 'ne' ? 'अघिल्लो महिना' : 'Previous month'}
               >
                 ←
               </button>
@@ -474,8 +392,9 @@ export function NepaliPatroWidget({
               </p>
               <button
                 type="button"
-                className="rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm hover:border-accent"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-control)] border border-line text-sm hover:border-accent"
                 onClick={() => shiftMonth(1)}
+                aria-label={locale === 'ne' ? 'अर्को महिना' : 'Next month'}
               >
                 →
               </button>
@@ -618,40 +537,7 @@ export function NepaliPatroWidget({
           </ul>
         </section>
 
-        <section id="rashifal" className="scroll-mt-24 border border-line bg-paper-elevated p-4">
-          <h2 className="text-sm font-semibold">
-            {locale === 'ne' ? 'राशिफल' : 'Horoscope'}
-          </h2>
-          <p className="mt-2 text-sm text-stone">
-            {locale === 'ne'
-              ? 'दैनिक राशिफल अहिले समाचार कक्षसँग बराबर रेलमा छैन (Phase 1)। पात्रो र पर्व उपकरण प्राथमिक छन्।'
-              : 'Daily horoscope is intentionally not an equal home-rail in Phase 1. Calendar and festival tools ship first.'}
-          </p>
-        </section>
 
-        <section id="sait" className="scroll-mt-24 border border-line bg-paper p-4">
-          <h2 className="text-sm font-semibold">
-            {locale === 'ne' ? 'शुभ साइत' : 'Auspicious times'}
-          </h2>
-          <p className="mt-2 text-sm text-stone">
-            {locale === 'ne'
-              ? 'शुभ साइत तालिका चाँडै। अहिले तिथि/नक्षत्र चयनित दिनमा देखिन्छ।'
-              : 'Auspicious-timing tables come later. Tithi and nakshatra already appear on the selected day.'}
-          </p>
-        </section>
-
-        {/* Utility tiles */}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-          {utilityTiles.map((t) => (
-            <Link
-              key={t.label}
-              href={t.href}
-              className={`flex min-h-[4.5rem] items-center justify-center rounded-[var(--radius-control)] bg-gradient-to-br px-2 text-center text-sm font-semibold text-white ${t.className}`}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </div>
 
         {/* News re-entry */}
         {news.length ? (

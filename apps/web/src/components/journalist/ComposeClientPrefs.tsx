@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   ArticleComposer,
   type ComposerInitial,
+  type ComposerMediaOption,
   type ComposerOption,
 } from '@/components/journalist/ArticleComposer'
 import { readJournalistPrefs } from '@/components/journalist/JournalistPreferencesForm'
@@ -19,7 +20,7 @@ export function ComposeClientPrefs({
   categories: ComposerOption[]
   authors: ComposerOption[]
   tags: ComposerOption[]
-  media: Array<ComposerOption & { url?: string | null; alt?: string }>
+  media: ComposerMediaOption[]
 }) {
   const [prefs, setPrefs] = useState({ compactEditor: false, confirmBeforeSubmit: true })
 

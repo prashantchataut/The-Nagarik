@@ -6,8 +6,8 @@ import { StaffLoginForm } from '@/components/auth/StaffLoginForm'
 import { getStaffSession, staffAuthReady } from '@/lib/auth/staff-session'
 
 export const metadata: Metadata = {
-  title: 'Newsroom login | The Nagarik',
-  description: 'Staff sign-in for The Nagarik ops desk and Payload CMS.',
+  title: 'सम्पादकीय प्रवेश | The Nagarik',
+  description: 'Secure staff sign-in for The Nagarik newsroom.',
   robots: { index: false, follow: false },
 }
 
@@ -33,19 +33,16 @@ export default async function AdminLoginPage({
 
   return (
     <StaffAuthShell
-      title="सम्पादकीय लगइन"
-      lede="Editors, publishers, and journalists sign in here. Content is edited in Payload; this desk handles queue, launch, and operations."
-      formTitle="Staff sign in"
+      title="सम्पादकीय प्रवेश"
+      lede="पत्रकार, सम्पादक, प्रकाशक र प्रशासकका लागि सुरक्षित समाचारकक्ष प्रवेश। एउटै खाताले भूमिकाअनुसार लेखन, समीक्षा र प्रकाशन कार्य खोल्छ।"
+      formTitle="आफ्नो खाताबाट प्रवेश गर्नुहोस्"
       footer={
         <>
           <Link href="/journalist" className="hover:text-accent hover:underline">
-            Journalist desk
-          </Link>
-          <Link href="/cms" className="hover:text-accent hover:underline">
-            Open Payload /cms
+            पत्रकार डेस्क
           </Link>
           <Link href="/ne/login" className="hover:text-accent hover:underline">
-            Locale login page
+            सार्वजनिक खाता पृष्ठ
           </Link>
         </>
       }
@@ -55,8 +52,7 @@ export default async function AdminLoginPage({
           className="mb-4 border border-holiday/40 bg-paper-elevated px-3 py-2 text-sm text-holiday"
           role="status"
         >
-          <strong>Login service unavailable.</strong> Connect <code>DATABASE_URL</code> and{' '}
-          <code>PAYLOAD_SECRET</code>, then refresh.
+          <strong>समाचारकक्ष लगइन उपलब्ध छैन।</strong> सेवा सक्रिय नभएसम्म स्टाफ प्रवेश गर्न सक्दैन। सिस्टम प्रशासकलाई सम्पर्क गर्नुहोस्।
         </aside>
       ) : null}
 

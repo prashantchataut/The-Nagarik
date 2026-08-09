@@ -11,6 +11,7 @@ export function assertPublishable(input: {
   categoryId?: string
   titleNe?: string
   deckNe?: string
+  slug?: string
   publishedAt?: string
 }) {
   const errors: string[] = []
@@ -25,6 +26,9 @@ export function assertPublishable(input: {
   }
   if ((input.status === 'published' || input.status === 'scheduled') && !input.deckNe?.trim()) {
     errors.push('Published/scheduled articles require a Nepali deck')
+  }
+  if ((input.status === 'published' || input.status === 'scheduled') && !input.slug?.trim()) {
+    errors.push('Published/scheduled articles require a slug')
   }
   if (input.hero) {
     if (!input.hero.alt?.trim()) errors.push('Hero alt text is required')

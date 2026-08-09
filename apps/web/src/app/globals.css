@@ -5,12 +5,26 @@
   --color-ink: var(--ink);
   --color-paper: var(--paper);
   --color-paper-elevated: var(--paper-elevated);
+  --color-paper-strong: var(--paper-strong);
   --color-stone: var(--stone);
   --color-line: var(--line);
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-fg: var(--accent-fg);
   --color-accent-muted: var(--accent-muted);
   --color-holiday: var(--holiday);
+  --color-nav: var(--nav);
+  --color-nav-fg: var(--nav-fg);
+  --color-nav-accent: var(--nav-accent);
+  --color-nav-muted: var(--nav-muted);
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-muted: var(--warning-muted);
+  --color-danger: var(--danger);
+  --color-danger-muted: var(--danger-muted);
+  --color-focus: var(--focus);
+  --color-field: var(--field);
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
   --radius-control: var(--radius-control);
@@ -26,6 +40,8 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
@@ -43,7 +59,7 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -84,4 +100,91 @@ p {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled), [role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+input:disabled, select:disabled, textarea:disabled {
+  cursor: not-allowed;
+  background: var(--field-disabled);
+}
+
+.newsroom-field {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--field);
+  color: var(--ink);
+  transition: border-color 180ms ease-out, background-color 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.newsroom-field:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--stone) 70%, var(--line));
+}
+
+.newsroom-field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+  outline: none;
+}
+
+.newsroom-field[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.newsroom-surface {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--paper-elevated);
+}
+
+/* Publication shell helpers: explicit CSS avoids missing utility-token fallbacks. */
+.site-nav-link {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 14px;
+  border-bottom: 3px solid transparent;
+  color: var(--nav-fg);
+  font-weight: 700;
+  font-size: 0.98rem;
+  line-height: 1;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.site-nav-link:hover { background: color-mix(in oklab, var(--nav-fg) 10%, transparent); color: var(--nav-fg); }
+.site-nav-link[data-active='true'] { border-bottom-color: var(--nav-accent); background: color-mix(in oklab, var(--nav-fg) 12%, transparent); }
+
+.mobile-section-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 12px;
+  border-bottom: 3px solid transparent;
+  color: var(--nav-fg);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.mobile-section-link[data-active='true'] { border-bottom-color: var(--nav-accent); }
+
+.editorial-image { overflow: hidden; background: var(--paper-strong); }
+.editorial-image img { transition: transform 320ms ease; }
+a:hover .editorial-image img, .editorial-image:hover img { transform: scale(1.018); }
+
+.section-kicker { color: var(--accent); font-size: .74rem; font-weight: 800; letter-spacing: .04em; }
+.surface-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-panel); }
+
+@media (prefers-reduced-motion: reduce) {
+  .editorial-image img { transition: none; }
+  a:hover .editorial-image img, .editorial-image:hover img { transform: none; }
 }

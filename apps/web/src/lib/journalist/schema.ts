@@ -30,17 +30,27 @@ export const EditorBlockSchema = z.discriminatedUnion('type', [
 
 export type EditorBlock = z.infer<typeof EditorBlockSchema>
 
+const slugSchema = z
+  .string()
+  .max(96)
+  .refine(
+    (value) => !value || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value),
+    'Slug must be lowercase with hyphens',
+  )
+
+/**
+ * Journalist drafts are deliberately permissive. A newsroom draft must be
+ * saveable before it is publish-ready; submission/publish gates enforce the
+ * complete editorial contract.
+ */
 export const ArticleWriteSchema = z.object({
-  titleNe: z.string().min(1).max(120),
+  titleNe: z.string().max(120),
   titleEn: z.string().max(120).optional(),
-  slug: z
-    .string()
-    .min(1)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase with hyphens'),
-  deckNe: z.string().min(1),
+  slug: slugSchema,
+  deckNe: z.string(),
   deckEn: z.string().optional(),
-  categoryId: z.string().min(1),
-  authorIds: z.array(z.string()).min(1),
+  categoryId: z.string(),
+  authorIds: z.array(z.string()),
   tagIds: z.array(z.string()).optional(),
   province: z.string().optional(),
   heroId: z.string().optional().nullable(),

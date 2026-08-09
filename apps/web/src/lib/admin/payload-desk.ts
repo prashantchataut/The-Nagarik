@@ -143,6 +143,7 @@ export type DeskAuthorRow = {
 export type DeskMediaRow = {
   id: string
   alt: string
+  credit: string
   filename: string
   url: string | null
 }
@@ -250,6 +251,7 @@ export async function listDeskMedia(limit = 40): Promise<DeskMediaRow[]> {
   return result.docs.map((doc) => ({
     id: String(doc.id),
     alt: String(doc.alt ?? ''),
+    credit: String(doc.credit ?? ''),
     filename: String(doc.filename ?? doc.id),
     url: typeof doc.url === 'string' ? doc.url : null,
   }))

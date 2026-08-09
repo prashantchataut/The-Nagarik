@@ -10,23 +10,22 @@ export default async function PreetiUnicodePage({ params }: { params: Promise<{ 
   const dict = getDictionary(locale)
 
   return (
-    <div className="mx-auto max-w-[1240px] px-4 py-8 md:px-6 md:py-10">
-      <p className="mb-3 text-sm">
-        <Link href={`/${locale}/utilities`} className="text-accent hover:underline">
-          ← {dict.utilities}
-        </Link>
-      </p>
-      <header className="border-b-2 border-accent pb-4">
-        <h1 className="text-3xl font-semibold tracking-[-0.03em] md:text-4xl">{dict.preetiTranslator}</h1>
-        <p className="mt-2 max-w-[54ch] text-sm text-stone">
+    <main className="mx-auto max-w-[1040px] px-4 py-8 md:px-6 md:py-12">
+      <nav aria-label={dict.utilities} className="text-sm">
+        <Link href={`/${locale}/utilities`} className="font-semibold text-accent hover:underline">← {dict.utilities}</Link>
+      </nav>
+      <header className="mt-5 max-w-[760px] border-b border-line pb-6">
+        <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">{dict.utilities}</p>
+        <h1 className="mt-2 text-4xl font-bold tracking-[-0.035em] text-ink md:text-5xl">{dict.preetiTranslator}</h1>
+        <p className="mt-3 text-base leading-relaxed text-stone">
           {locale === 'ne'
-            ? 'पुरानो प्रीति टेक्स्टलाई युनिकोड नेपालीमा बदल्नुहोस्। प्रकाशनअघि नाम र प्राविधिक शब्द जाँच्नुहोस्।'
-            : 'Convert legacy Preeti text to Unicode Nepali. Proofread names and technical words before publishing.'}
+            ? 'पुरानो प्रीति टेक्स्टलाई युनिकोड नेपालीमा बदल्नुहोस्। प्रकाशनअघि नाम, अंक र प्राविधिक शब्द फेरि जाँच्नुहोस्।'
+            : 'Convert legacy Preeti text to Unicode Nepali. Proofread names, numerals, and technical terms before publishing.'}
         </p>
       </header>
-      <div className="mt-6 max-w-[900px]">
-        <PreetiConverter />
+      <div className="mt-7">
+        <PreetiConverter locale={locale} />
       </div>
-    </div>
+    </main>
   )
 }

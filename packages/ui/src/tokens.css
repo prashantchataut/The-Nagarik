@@ -1,43 +1,71 @@
 :root {
-  --ink: #0c0e12;
-  --paper: #ffffff;
-  --paper-elevated: #f3f5f7;
-  --stone: #3d4654;
-  --line: #c5ccd6;
-  --accent: #0b5a56;
-  --accent-fg: #ffffff;
-  --accent-muted: #e6f3f2;
-  --holiday: #b80f18;
-  --radius-control: 4px;
+  --ink: #10201d;
+  --paper: #fbfcfb;
+  --paper-elevated: #f1f5f3;
+  --paper-strong: #e7eeeb;
+  --stone: #52645f;
+  --line: #c9d5d1;
+  --accent: #0b6b63;
+  --accent-strong: #07584f;
+  --accent-fg: #f8fffd;
+  --accent-muted: #dceeea;
+  --holiday: #a72b36;
+
+  --nav: #075d57;
+  --nav-fg: #f8fffd;
+  --nav-accent: #bce9e3;
+  --nav-muted: #89bbb6;
+
+  --success: #176947;
+  --success-muted: #dceee4;
+  --warning: #855914;
+  --warning-muted: #f3e9d7;
+  --danger: #a72b36;
+  --danger-fg: #fbfcfb;
+  --danger-muted: #f4e1e4;
+  --focus: #0a7c72;
+  --overlay: rgb(10 28 25 / 64%);
+  --field: #ffffff;
+  --field-disabled: #e8eeeb;
+
+  --radius-control: 8px;
+  --radius-panel: 10px;
   --font-display: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
   --font-sans: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   color-scheme: light;
 }
 
-/* Dark only when explicitly chosen — light-first portal default */
 [data-theme='dark'] {
-  --ink: #f0f3f7;
-  --paper: #12141a;
-  --paper-elevated: #1a1d26;
-  --stone: #b0b8c1;
-  --line: #3a4150;
-  --accent: #4ec9c0;
-  --accent-fg: #061413;
-  --accent-muted: #1a3331;
-  --holiday: #ff7a7a;
+  --ink: #edf5f2;
+  --paper: #121a18;
+  --paper-elevated: #192421;
+  --paper-strong: #22302c;
+  --stone: #a8bbb5;
+  --line: #344943;
+  --accent: #54c8bd;
+  --accent-strong: #6bd8cd;
+  --accent-fg: #071c19;
+  --accent-muted: #173b36;
+  --holiday: #ff8c96;
+
+  --nav: #073e3a;
+  --nav-fg: #f3fbf8;
+  --nav-accent: #77d7cf;
+  --nav-muted: #78aaa4;
+
+  --success: #76d0a4;
+  --success-muted: #17352a;
+  --warning: #e7b76b;
+  --warning-muted: #3a2d18;
+  --danger: #ff9099;
+  --danger-fg: #111916;
+  --danger-muted: #402228;
+  --focus: #75ded4;
+  --overlay: rgb(2 8 7 / 76%);
+  --field: #1d2926;
+  --field-disabled: #24312e;
   color-scheme: dark;
 }
 
-[data-theme='light'] {
-  --ink: #0c0e12;
-  --paper: #ffffff;
-  --paper-elevated: #f3f5f7;
-  --stone: #3d4654;
-  --line: #c5ccd6;
-  --accent: #0b5a56;
-  --accent-fg: #ffffff;
-  --accent-muted: #e6f3f2;
-  --holiday: #b80f18;
-  color-scheme: light;
-}
+[data-theme='light'] { color-scheme: light; }
