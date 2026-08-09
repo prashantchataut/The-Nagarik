@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { isLocale } from './lib/i18n'
 
 const PUBLIC_FILE = /\.[^/]+$/
+const METADATA_ROUTE = /^\/(?:icon|apple-icon)$/
 
 function isCalendarHost(host: string): boolean {
   const h = host.split(':')[0].toLowerCase()
@@ -20,6 +21,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/rss') ||
+    METADATA_ROUTE.test(pathname) ||
     PUBLIC_FILE.test(pathname)
   ) {
     return NextResponse.next()
