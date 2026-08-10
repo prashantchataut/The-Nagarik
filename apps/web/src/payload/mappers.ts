@@ -102,6 +102,15 @@ export function mapCategory(doc: Record<string, unknown>): Category {
 }
 
 export function mapAuthor(doc: Record<string, unknown>): Author {
+  const avatar = doc.avatar as { url?: unknown } | string | number | null | undefined
+  const avatarUrl =
+    avatar && typeof avatar === 'object' && typeof avatar.url === 'string'
+      ? avatar.url
+      : undefined
+  const beatsRaw = Array.isArray(doc.beats) ? doc.beats : []
+  const beats = beatsRaw
+    .map((row) => (row && typeof row === 'object' ? String((row as { beat?: unknown }).beat ?? '') : ''))
+    .filter(Boolean)
   return {
     id: String(doc.id),
     slug: String(doc.slug ?? ''),
@@ -109,6 +118,8 @@ export function mapAuthor(doc: Record<string, unknown>): Author {
     nameEn: typeof doc.nameEn === 'string' ? doc.nameEn : undefined,
     bioNe: typeof doc.bioNe === 'string' ? doc.bioNe : undefined,
     bioEn: typeof doc.bioEn === 'string' ? doc.bioEn : undefined,
+    avatarUrl,
+    beats: beats.length ? beats : undefined,
   }
 }
 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { adToBs, formatBs } from '@/lib/bs-calendar'
-import { festivalsForBsDay, panchangForAd } from '@/lib/panchang'
+import { eventsForBsDay, panchangForAd } from '@/lib/panchang'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
 import { patroHref } from '@/lib/site'
 
@@ -36,11 +36,12 @@ export function PatroTodayStrip({
     const ad = ktmAdToday()
     const bs = adToBs(ad)
     const panchang = panchangForAd(ad, locale)
-    const festivals = festivalsForBsDay(bs, ad)
-    const festivalLabel = festivals[0]
+    const events = eventsForBsDay(bs)
+    const featured = events.find((e) => e.kind !== 'lunar') ?? events[0]
+    const festivalLabel = featured
       ? locale === 'ne'
-        ? festivals[0].nameNe
-        : festivals[0].nameEn
+        ? featured.nameNe
+        : featured.nameEn
       : null
     const parts = [formatBs(bs, locale), panchang.tithiLabel]
     if (festivalLabel) parts.push(festivalLabel)

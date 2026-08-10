@@ -9,6 +9,7 @@ import {
   House,
   SignOut,
 } from '@phosphor-icons/react/dist/ssr'
+import { ReaderAccountClient } from '@/components/account/ReaderAccountClient'
 import { StaffLogoutButton } from '@/components/auth/StaffLogoutButton'
 import { primaryRole } from '@/lib/auth/staff-roles'
 import { getStaffSession } from '@/lib/auth/staff-session'
@@ -48,6 +49,11 @@ export default async function LocaleAccountPage({
             : 'Reader preferences, saved reading lists, and newsroom staff access.'}
         </p>
       </header>
+
+      {/* Interactive reader surface: bookmarks, history, preferences */}
+      <div className="mb-10">
+        <ReaderAccountClient locale={locale} />
+      </div>
 
       <div className="grid gap-8 md:grid-cols-2">
         {/* Reader Profile & Bookmarks Card */}

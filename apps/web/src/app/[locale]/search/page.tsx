@@ -73,12 +73,12 @@ export default async function SearchPage({
   const index = buildSearchIndex(docs)
   let results = query ? index.search(query, 40) : []
 
+  const byId = new Map(articles.map((article) => [article.id, article]))
   const targetCategory = selectedCat ? categories.find((c) => c.slug === selectedCat) : undefined
   if (targetCategory) {
     results = results.filter((r) => byId.get(r.id)?.categoryId === targetCategory.id)
   }
 
-  const byId = new Map(articles.map((article) => [article.id, article]))
   const cards = await Promise.all(articles.map((article) => content.toStoryCard(article, locale)))
   const cardById = new Map(cards.map((card) => [card.id, card]))
   const currentStories = cards.slice(0, 6)

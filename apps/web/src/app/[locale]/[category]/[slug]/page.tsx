@@ -14,6 +14,8 @@ import {
   ReadingProgress,
 } from '@/components/ReaderClient'
 import { StoryRail } from '@/components/Story'
+import { CommentsSection } from '@/components/reader/CommentsSection'
+import { NewsletterCard } from '@/components/reader/NewsletterCard'
 import { RelativeTime } from '@/components/RelativeTime'
 import { CategoryTag } from '@/components/news/CategoryTag'
 import { CategoryIcon } from '@/components/CategoryIcon'
@@ -154,7 +156,7 @@ export default async function ArticlePage({
 
       <main>
         {/* Breadcrumb Bar */}
-        <nav aria-label="Breadcrumb" className="border-b border-line bg-paper-elevated text-xs">
+        <nav aria-label="Breadcrumb" className="border-b border-line bg-paper-elevated text-xs" data-focus-hide>
           <div className="mx-auto flex max-w-[1280px] items-center gap-2 px-4 py-2 text-stone md:px-6">
             <Link href={`/${locale}`} className="inline-flex items-center gap-1 hover:text-accent">
               <House size={13} weight="bold" />
@@ -254,6 +256,7 @@ export default async function ArticlePage({
         {/* Sticky Social Share & Reading Controls */}
         <ArticleToolbar
           dict={dict}
+          locale={locale}
           bilingualHref={bilingualHref}
           bilingualLabel={bilingualLabel}
           title={title}
@@ -286,13 +289,17 @@ export default async function ArticlePage({
         ) : null}
 
         {/* Main Content Layout with Sticky Sidebar */}
-        <div className="mx-auto grid max-w-[1280px] gap-10 px-4 pb-16 md:px-6 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:gap-12">
+        <div
+          data-article-grid
+          className="mx-auto grid max-w-[1280px] gap-10 px-4 pb-16 md:px-6 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:gap-12"
+        >
           {/* Article Body */}
           <div className="min-w-0">
             {toc.length >= 2 ? (
               <nav
                 aria-label={dict.onThisPage}
                 className="mb-8 rounded-[var(--radius-panel)] border border-line bg-paper-elevated p-4 lg:hidden"
+                data-focus-hide
               >
                 <p className="text-xs font-bold uppercase tracking-wider text-accent">
                   {dict.onThisPage}
@@ -311,6 +318,7 @@ export default async function ArticlePage({
 
             {/* Typography Content */}
             <div
+              data-article-body
               className="space-y-6 text-lg leading-[1.85] text-ink"
               style={{ fontSize: 'calc(1.125rem * var(--article-type-scale, 1))' }}
             >
@@ -412,13 +420,28 @@ export default async function ArticlePage({
                     const bio = locale === 'en' && author!.bioEn ? author!.bioEn : author!.bioNe
                     return (
                       <div key={author!.id} className="flex gap-3.5 items-start">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-fg font-black text-sm">
-                          {name.slice(0, 1)}
+                        <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-accent-fg font-black text-sm">
+                          {author!.avatarUrl ? (
+                            <Image
+                              src={author!.avatarUrl}
+                              alt={name}
+                              fill
+                              sizes="44px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            name.slice(0, 1)
+                          )}
                         </span>
                         <div>
                           <Link href={`/${locale}/author/${author!.slug}`} className="text-base font-bold text-ink hover:text-accent">
                             {name}
                           </Link>
+                          {author!.beats?.length ? (
+                            <p className="mt-0.5 text-[0.68rem] font-bold text-accent">
+                              {author!.beats.join(' · ')}
+                            </p>
+                          ) : null}
                           {bio ? <p className="mt-1 text-xs leading-relaxed text-stone">{bio}</p> : null}
                         </div>
                       </div>
@@ -430,7 +453,7 @@ export default async function ArticlePage({
 
             {/* Tags */}
             {article.tagSlugs.length ? (
-              <nav className="mt-8 flex flex-wrap gap-2 text-xs" aria-label="Tags">
+              <nav className="mt-8 flex flex-wrap gap-2 text-xs" aria-label="Tags" data-focus-hide>
                 {article.tagSlugs.map((tag) => (
                   <Link
                     key={tag}
@@ -454,10 +477,13 @@ export default async function ArticlePage({
                 </ul>
               </aside>
             ) : null}
+
+            {/* Reader comments with moderation */}
+            <CommentsSection articleId={article.id} locale={locale} />
           </div>
 
           {/* Sticky Desktop Sidebar */}
-          <aside className="hidden lg:block">
+          <aside className="hidden lg:block" data-focus-hide>
             <div className="sticky top-20 space-y-7">
               {/* In-Article TOC */}
               {toc.length >= 2 ? (
@@ -503,6 +529,9 @@ export default async function ArticlePage({
                   </ul>
                 </div>
               ) : null}
+
+              {/* Newsletter signup */}
+              <NewsletterCard locale={locale} variant="sidebar" />
             </div>
           </aside>
         </div>
@@ -510,7 +539,7 @@ export default async function ArticlePage({
 
       {/* Next Story Card */}
       {nextStory ? (
-        <section className="border-y-2 border-line bg-paper-alt py-8">
+        <section className="border-y-2 border-line bg-paper-alt py-8" data-focus-hide>
           <div className="mx-auto max-w-[840px] px-4 md:px-6">
             <p className="text-xs font-bold uppercase tracking-wider text-accent">{dict.nextStory}</p>
             <Link
@@ -546,10 +575,14 @@ export default async function ArticlePage({
 
       {/* Series Packages & Related Stories */}
       {packagePeers.length ? (
-        <StoryRail title={dict.storyPackage} locale={locale} stories={packagePeers} dict={dict} />
+        <div data-focus-hide>
+          <StoryRail title={dict.storyPackage} locale={locale} stories={packagePeers} dict={dict} />
+        </div>
       ) : null}
 
-      <StoryRail title={dict.related} locale={locale} stories={restRelated} dict={dict} />
+      <div data-focus-hide>
+        <StoryRail title={dict.related} locale={locale} stories={restRelated} dict={dict} />
+      </div>
     </>
   )
 }

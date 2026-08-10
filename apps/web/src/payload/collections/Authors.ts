@@ -27,5 +27,31 @@ export const Authors: CollectionConfig = {
     },
     { name: 'bioNe', type: 'textarea', label: 'Bio (Nepali)' },
     { name: 'bioEn', type: 'textarea', label: 'Bio (English)' },
+    {
+      name: 'avatar',
+      type: 'upload',
+      relationTo: 'media',
+      label: 'Profile photo',
+      admin: { description: 'Portrait shown on bylines and the author page.' },
+    },
+    {
+      name: 'beats',
+      type: 'array',
+      label: 'Beat specializations',
+      maxRows: 6,
+      fields: [{ name: 'beat', type: 'text', required: true, maxLength: 40 }],
+      admin: { description: 'Coverage areas, e.g. राजनीति, अर्थतन्त्र, प्रदेश १.' },
+    },
+    {
+      name: 'user',
+      type: 'relationship',
+      relationTo: 'users',
+      index: true,
+      label: 'Linked staff account',
+      admin: {
+        position: 'sidebar',
+        description: 'Staff user who owns this byline (enables self-serve profile editing).',
+      },
+    },
   ],
 }

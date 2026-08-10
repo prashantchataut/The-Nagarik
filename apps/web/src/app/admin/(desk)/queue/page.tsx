@@ -5,6 +5,7 @@ import {
   AdminStatusPill,
   CmsCanonicalBanner,
 } from '@/components/admin/primitives'
+import { CommentModerationPanel } from '@/components/admin/CommentModerationPanel'
 import { getDeskEditorialQueue, payloadDeskAvailable } from '@/lib/admin/payload-desk'
 import { cmsArticleCreateUrl, cmsArticleEditUrl, cmsCollectionUrl } from '@/lib/admin/nav'
 
@@ -136,6 +137,9 @@ export default async function AdminQueuePage() {
           ) : null}
         </div>
       )}
+
+      {/* Reader comment moderation queue */}
+      <CommentModerationPanel />
     </div>
   )
 }

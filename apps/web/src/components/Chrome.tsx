@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Translate,
   User,
+  UserCircle,
   X,
 } from '@phosphor-icons/react'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
@@ -20,6 +21,7 @@ import type { Category } from '@thenagarik/content'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ChromeDate } from '@/components/ChromeDate'
 import { CategoryIcon } from '@/components/CategoryIcon'
+import { NewsletterCard } from '@/components/reader/NewsletterCard'
 import { BRAND_EN, BRAND_NE, patroHref, swapLocalePath } from '@/lib/site'
 
 const FOCUSABLE_SELECTOR =
@@ -103,10 +105,14 @@ export function SiteHeader({
         : 'text-ink hover:bg-paper-elevated hover:text-ink'
     }`
 
+  const accountHref = `/${locale}/account`
+  const accountActive = isActive(accountHref)
+
   return (
     <>
       {/* Desktop Header */}
-      <header className="hidden bg-paper md:block">
+      <header className="hidden bg-paper md:block" data-focus-hide>
+
         {/* Top utility bar */}
         <div className="border-b border-line bg-paper-elevated text-[0.78rem] text-stone">
           <div className="mx-auto flex min-h-9 max-w-[1280px] items-center justify-between gap-6 px-6">
@@ -128,10 +134,23 @@ export function SiteHeader({
                 <ShieldCheck size={13} weight="bold" aria-hidden="true" />
                 <span>{dict.trust}</span>
               </Link>
+              <Link
+                href={accountHref}
+                aria-current={accountActive ? 'page' : undefined}
+                className={`inline-flex min-h-7 items-center gap-1.5 rounded-[var(--radius-control)] px-2 font-bold transition-colors ${
+                  accountActive
+                    ? 'bg-accent-muted text-accent'
+                    : 'text-ink hover:bg-accent-muted hover:text-accent'
+                }`}
+              >
+                <UserCircle size={15} weight="bold" aria-hidden="true" />
+                <span>{dict.account}</span>
+              </Link>
               <Link href={`/${locale}/login`} className="inline-flex items-center gap-1 text-ink hover:text-accent">
                 <User size={13} weight="bold" aria-hidden="true" />
                 <span>{dict.login}</span>
               </Link>
+
               <span className="h-3.5 w-px bg-line" aria-hidden="true" />
               <ThemeToggle dict={dict} />
               <Link
@@ -168,13 +187,13 @@ export function SiteHeader({
             <form
               action={`/${locale}/search`}
               method="get"
-              className="w-full max-w-[18rem] justify-self-end"
+              className="w-full max-w-[19rem] justify-self-end"
               role="search"
             >
               <label className="sr-only" htmlFor="masthead-search">
                 {dict.search}
               </label>
-              <div className="relative">
+              <div className="relative flex">
                 <MagnifyingGlass
                   size={16}
                   weight="bold"
@@ -186,10 +205,18 @@ export function SiteHeader({
                   name="q"
                   type="search"
                   placeholder={dict.searchPlaceholder}
-                  className="min-h-10 w-full rounded-[var(--radius-control)] border border-line bg-field pl-9 pr-3 text-sm text-ink placeholder:text-stone/70 focus:border-accent focus:outline-none"
+                  className="min-h-10 w-full rounded-l-[var(--radius-control)] border border-r-0 border-line bg-field pl-9 pr-3 text-sm text-ink placeholder:text-stone/70 focus:border-accent focus:outline-none"
                 />
+                <button
+                  type="submit"
+                  className="inline-flex min-h-10 shrink-0 items-center rounded-r-[var(--radius-control)] accent-solid px-3.5 text-xs font-bold transition-opacity hover:opacity-90"
+                  aria-label={dict.search}
+                >
+                  {dict.search}
+                </button>
               </div>
             </form>
+
           </div>
         </div>
 
@@ -239,7 +266,10 @@ export function SiteHeader({
       </header>
 
       {/* Mobile Top Header */}
-      <header className="sticky top-0 z-40 border-b border-line bg-paper shadow-[0_2px_8px_rgb(16_32_29_/_0.06)] md:hidden">
+      <header
+        className="sticky top-0 z-40 border-b border-line bg-paper shadow-[0_2px_8px_rgb(16_32_29_/_0.06)] md:hidden"
+        data-focus-hide
+      >
         <div className="grid h-14 grid-cols-[3rem_1fr_3rem] items-center px-2">
           <button
             ref={menuButtonRef}
@@ -314,7 +344,7 @@ export function SiteHeader({
 
       {/* Trending Hashtag Strip */}
       {trendingTags.length ? (
-        <aside className="hidden border-b border-line bg-paper-elevated md:block">
+        <aside className="hidden border-b border-line bg-paper-elevated md:block" data-focus-hide>
           <div className="nav-scroller mx-auto flex min-h-8 max-w-[1280px] items-center gap-3 overflow-x-auto px-6 py-1 text-xs">
             <span className="shrink-0 font-bold text-accent">{dict.trending}:</span>
             {trendingTags.map((tag) => (
@@ -414,6 +444,15 @@ export function SiteHeader({
                 <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-stone">
                   {dict.utilities}
                 </p>
+                <Link
+                  href={accountHref}
+                  className={drawerLinkClass(accountActive)}
+                  aria-current={accountActive ? 'page' : undefined}
+                  onClick={() => setOpen(false)}
+                >
+                  <UserCircle size={18} weight="bold" />
+                  <span>{dict.account}</span>
+                </Link>
                 <Link href={calendarUrl} className={drawerLinkClass()} onClick={() => setOpen(false)}>
                   <CalendarBlank size={18} weight="bold" />
                   <span>{dict.nepaliPatro}</span>
@@ -474,6 +513,7 @@ export function SiteHeader({
       <nav
         className="fixed bottom-0 left-0 right-0 z-30 flex h-14 items-center justify-around border-t border-line bg-paper/95 backdrop-blur px-2 shadow-[0_-2px_10px_rgb(16_32_29_/_0.06)] md:hidden"
         aria-label="Mobile quick actions"
+        data-focus-hide
       >
         <Link
           href={`/${locale}`}
@@ -516,9 +556,16 @@ export function SiteHeader({
           <span>{dict.patroShort}</span>
         </Link>
 
-        <div className="flex flex-col items-center justify-center gap-0.5 px-2 py-1">
-          <ThemeToggle dict={dict} />
-        </div>
+        <Link
+          href={accountHref}
+          className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1 text-[0.68rem] font-bold ${
+            accountActive ? 'text-accent' : 'text-stone hover:text-ink'
+          }`}
+          aria-current={accountActive ? 'page' : undefined}
+        >
+          <UserCircle size={20} weight={accountActive ? 'fill' : 'bold'} />
+          <span>{dict.account}</span>
+        </Link>
       </nav>
     </>
   )
@@ -535,7 +582,7 @@ export function SiteFooter({
 }) {
   const calendarUrl = patroHref(locale)
   return (
-    <footer className="mt-12 border-t-2 border-line bg-paper-elevated pb-16 md:pb-0">
+    <footer className="mt-12 border-t-2 border-line bg-paper-elevated pb-16 md:pb-0" data-focus-hide>
       <div className="mx-auto max-w-[1280px] px-4 py-12 md:px-6">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-12">
           {/* Brand Column */}
@@ -558,6 +605,9 @@ export function SiteFooter({
               <span className="rounded-full bg-paper-strong px-2.5 py-1 text-stone">
                 {locale === 'ne' ? 'सातै प्रदेश' : '7 Provinces'}
               </span>
+            </div>
+            <div className="mt-6">
+              <NewsletterCard locale={locale} variant="footer" />
             </div>
           </div>
 

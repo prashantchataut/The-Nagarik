@@ -29,7 +29,7 @@ export function createPayloadContentClient(): ContentFacade {
       const result = await p.find({
         collection: 'authors',
         limit: 500,
-        depth: 0,
+        depth: 1,
         overrideAccess: true,
       })
       return result.docs.map((doc) => mapAuthor(doc as Record<string, unknown>))

@@ -297,7 +297,77 @@ a:hover .editorial-image img,
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Distraction-free reading (focus) mode                               */
+/* ------------------------------------------------------------------ */
+
+/* Background tints: override the token cascade so every surface follows. */
+html[data-reading='on'][data-reading-tint='paper'] {
+  --paper: #f6efdf;
+  --paper-elevated: #f1e8d2;
+  --paper-strong: #eadfc4;
+  --paper-alt: #f3ebd8;
+  --field: #fbf6ea;
+}
+
+html[data-reading='on'][data-reading-tint='night'] {
+  --paper: #131917;
+  --paper-elevated: #1a2220;
+  --paper-strong: #222c29;
+  --paper-alt: #171e1c;
+  --field: #1a2220;
+  --ink: #e9e7df;
+  --stone: #a9b3ae;
+  --line: #2a3431;
+  --line-strong: #3a4643;
+}
+
+html[data-reading='on'][data-reading-tint='white'] {
+  --paper: #ffffff;
+  --paper-elevated: #fafafa;
+  --paper-strong: #f2f2f2;
+  --paper-alt: #fcfcfc;
+  --field: #ffffff;
+}
+
+/* Hide chrome, rails, comments, and secondary modules while focused. */
+html[data-reading='on'] [data-focus-hide] {
+  display: none !important;
+}
+
+/* Center the article in a clean single column. */
+html[data-reading='on'] [data-article-grid] {
+  grid-template-columns: minmax(0, 720px) !important;
+  justify-content: center !important;
+}
+
+html[data-reading='on'] [data-article-body] {
+  line-height: 1.9;
+}
+
+/* Keep the toolbar pinned to the top while the header is hidden. */
+html[data-reading='on'] [data-article-toolbar] {
+  top: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Article narrator (text-to-speech) highlighting                      */
+/* ------------------------------------------------------------------ */
+
+::highlight(tn-narrator) {
+  background: color-mix(in oklab, var(--accent) 30%, transparent);
+  color: var(--ink);
+}
+
+.narrator-active-block {
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+  border-radius: var(--radius-sm);
+  box-shadow: -6px 0 0 color-mix(in oklab, var(--accent) 55%, transparent);
+  transition: background-color 240ms ease;
+}
+
 @media print {
+
   header,
   footer,
   nav,

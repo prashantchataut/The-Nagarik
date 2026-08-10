@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { continueReading } from './continue-reading.ts'
+import { continueReading } from './continue-reading'
 
 test('continueReading returns unfinished recent entries only', () => {
   const result = continueReading({

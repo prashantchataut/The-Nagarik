@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { Articles } from './collections/Articles'
 import { Authors } from './collections/Authors'
 import { Categories } from './collections/Categories'
+import { Comments } from './collections/Comments'
 import { Media } from './collections/Media'
 import { Tags } from './collections/Tags'
 import { Users } from './collections/Users'
@@ -61,7 +62,7 @@ export default buildConfig({
       title: 'द नागरिक',
     },
   },
-  collections: [Users, Media, Categories, Authors, Tags, Articles],
+  collections: [Users, Media, Categories, Authors, Tags, Articles, Comments],
   plugins: [
     vercelBlobStorage({
       enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim()),

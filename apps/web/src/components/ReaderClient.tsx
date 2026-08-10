@@ -9,13 +9,14 @@ import {
   FacebookLogo,
   LinkSimple,
   Printer,
-  SpeakerHigh,
-  SpeakerSlash,
   TextAa,
   WhatsappLogo,
   XLogo,
 } from '@phosphor-icons/react'
 import type { Dictionary } from '@/lib/i18n'
+import { FocusModeToggle } from '@/components/reader/FocusMode'
+import { ArticleNarrator } from '@/components/reader/Narrator'
+
 
 const TYPE_SCALE_KEY = 'tn_article_type_scale_v1'
 const BOOKMARKS_KEY = 'tn_saved_stories_v1'
@@ -59,12 +60,12 @@ export function SocialShareButtons({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5" aria-label="Social Share">
+    <div className="flex flex-wrap items-center gap-2" aria-label="Social Share">
       <a
         href={fbShareUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line bg-paper text-[#1877f2] hover:border-[#1877f2] hover:bg-[#1877f2]/10 transition-colors"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-paper text-[#1877f2] hover:border-[#1877f2] hover:bg-[#1877f2]/10 transition-colors"
         aria-label={dict.shareOnFacebook}
         title={dict.shareOnFacebook}
       >
@@ -75,7 +76,7 @@ export function SocialShareButtons({
         href={xShareUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line bg-paper text-ink hover:border-ink hover:bg-ink/10 transition-colors"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-paper text-ink hover:border-ink hover:bg-ink/10 transition-colors"
         aria-label={dict.shareOnX}
         title={dict.shareOnX}
       >
@@ -86,7 +87,7 @@ export function SocialShareButtons({
         href={waShareUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line bg-paper text-[#25d366] hover:border-[#25d366] hover:bg-[#25d366]/10 transition-colors"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-paper text-[#25d366] hover:border-[#25d366] hover:bg-[#25d366]/10 transition-colors"
         aria-label={dict.shareOnWhatsapp}
         title={dict.shareOnWhatsapp}
       >
@@ -97,7 +98,7 @@ export function SocialShareButtons({
         href={viberShareUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line bg-paper text-[#7360f2] hover:border-[#7360f2] hover:bg-[#7360f2]/10 transition-colors"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-paper text-[#7360f2] hover:border-[#7360f2] hover:bg-[#7360f2]/10 transition-colors"
         aria-label={dict.shareOnViber}
         title={dict.shareOnViber}
       >
@@ -107,7 +108,7 @@ export function SocialShareButtons({
       <button
         type="button"
         onClick={() => void copyToClipboard()}
-        className="inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-semibold text-ink hover:border-accent hover:text-accent transition-colors"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-paper px-3.5 text-xs font-semibold text-ink hover:border-accent hover:text-accent transition-colors"
         aria-label={dict.copyLink}
       >
         {copied ? (
@@ -125,6 +126,7 @@ export function SocialShareButtons({
     </div>
   )
 }
+
 
 export function TextSizeControls({ dict }: { dict: Dictionary }) {
   const [size, setSize] = useState<'sm' | 'md' | 'lg'>('md')
@@ -170,14 +172,15 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        className="inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-semibold hover:border-accent hover:text-accent transition-colors"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-paper px-3.5 text-xs font-semibold hover:border-accent hover:text-accent transition-colors"
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
       >
         <TextAa size={16} weight="bold" aria-hidden="true" />
-        <span>{dict.textSize}</span>
+        <span className="hidden sm:inline">{dict.textSize}</span>
       </button>
+
       {open ? (
         <div
           role="menu"
@@ -194,7 +197,7 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
               type="button"
               role="menuitemradio"
               aria-checked={size === value}
-              className={`flex min-h-9 w-full items-center justify-between rounded-[var(--radius-sm)] px-3 text-xs font-semibold ${
+              className={`flex min-h-11 w-full items-center justify-between rounded-[var(--radius-sm)] px-3 text-xs font-semibold ${
                 size === value ? 'bg-accent-muted text-accent' : 'hover:bg-paper text-ink'
               }`}
               onClick={() => {
@@ -244,6 +247,7 @@ export function BookmarkButton({
       if (saved) {
         items = items.filter((i: { storyId: string }) => i.storyId !== storyId)
         setSaved(false)
+        notifyServiceWorker('UNCACHE_STORY')
       } else {
         items.unshift({
           storyId,
@@ -253,6 +257,7 @@ export function BookmarkButton({
           savedAt: new Date().toISOString(),
         })
         setSaved(true)
+        notifyServiceWorker('CACHE_STORY')
       }
       localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(items.slice(0, 50)))
     } catch {
@@ -260,66 +265,36 @@ export function BookmarkButton({
     }
   }
 
-  return (
-    <button
-      type="button"
-      onClick={toggleBookmark}
-      className={`inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border px-2.5 text-xs font-semibold transition-colors ${
-        saved
-          ? 'bg-accent-muted border-accent text-accent'
-          : 'border-line bg-paper text-ink hover:border-accent hover:text-accent'
-      }`}
-      aria-label={saved ? 'कथा सुरक्षित भयो' : 'कथा सुरक्षित गर्नुहोस्'}
-      title={saved ? 'कथा सुरक्षित भयो' : 'कथा सुरक्षित गर्नुहोस्'}
-    >
-      <BookmarkSimple size={15} weight={saved ? 'fill' : 'bold'} />
-      <span className="hidden sm:inline">{saved ? 'सुरक्षित' : 'सेभ'}</span>
-    </button>
-  )
-}
-
-export function AudioListenButton({
-  textToRead,
-}: {
-  textToRead?: string
-}) {
-  const [playing, setPlaying] = useState(false)
-
-  function toggleAudio() {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
-
-    if (playing) {
-      window.speechSynthesis.cancel()
-      setPlaying(false)
-    } else {
-      const text = textToRead || document.querySelector('article')?.textContent || ''
-      const utterance = new SpeechSynthesisUtterance(text.slice(0, 1000))
-      utterance.rate = 0.95
-      utterance.onend = () => setPlaying(false)
-      utterance.onerror = () => setPlaying(false)
-      window.speechSynthesis.speak(utterance)
-      setPlaying(true)
+  function notifyServiceWorker(type: 'CACHE_STORY' | 'UNCACHE_STORY') {
+    // Offline mode: ask the service worker to pin or unpin this story.
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready
+          .then((registration) => {
+            registration.active?.postMessage({ type, url: window.location.pathname })
+          })
+          .catch(() => {})
+      }
+    } catch {
+      // Offline pinning is best-effort
     }
   }
 
   return (
     <button
       type="button"
-      onClick={toggleAudio}
-      className={`inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border px-2.5 text-xs font-semibold transition-colors ${
-        playing
-          ? 'bg-accent-muted border-accent text-accent animate-pulse'
+      onClick={toggleBookmark}
+      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-xs font-semibold transition-colors ${
+        saved
+          ? 'bg-accent-muted border-accent text-accent'
           : 'border-line bg-paper text-ink hover:border-accent hover:text-accent'
       }`}
-      aria-label={playing ? 'अडियो रोक्नुहोस्' : 'समाचार सुन्नुहोस्'}
-      title={playing ? 'अडियो रोक्नुहोस्' : 'समाचार सुन्नुहोस्'}
+      aria-pressed={saved}
+      aria-label={saved ? 'कथा सुरक्षित भयो' : 'कथा सुरक्षित गर्नुहोस्'}
+      title={saved ? 'कथा सुरक्षित भयो' : 'कथा सुरक्षित गर्नुहोस्'}
     >
-      {playing ? (
-        <SpeakerSlash size={15} weight="bold" />
-      ) : (
-        <SpeakerHigh size={15} weight="bold" />
-      )}
-      <span className="hidden sm:inline">{playing ? 'बन्द' : 'सुन्नुहोस्'}</span>
+      <BookmarkSimple size={15} weight={saved ? 'fill' : 'bold'} />
+      <span className="hidden sm:inline">{saved ? 'सुरक्षित' : 'सेभ'}</span>
     </button>
   )
 }
@@ -331,18 +306,20 @@ export function PrintButton() {
       onClick={() => {
         if (typeof window !== 'undefined') window.print()
       }}
-      className="inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-semibold text-ink hover:border-accent hover:text-accent transition-colors"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-paper px-3.5 text-xs font-semibold text-ink hover:border-accent hover:text-accent transition-colors"
       aria-label="प्रिन्ट गर्नुहोस्"
       title="प्रिन्ट गर्नुहोस्"
     >
       <Printer size={15} weight="bold" />
-      <span className="hidden sm:inline">प्रिन्ट</span>
+      <span className="hidden lg:inline">प्रिन्ट</span>
     </button>
   )
 }
 
+
 export function ArticleToolbar({
   dict,
+  locale = 'ne',
   bilingualHref,
   bilingualLabel,
   title,
@@ -352,6 +329,7 @@ export function ArticleToolbar({
   deck,
 }: {
   dict: Dictionary
+  locale?: 'ne' | 'en'
   bilingualHref?: string
   bilingualLabel?: string
   title?: string
@@ -361,40 +339,59 @@ export function ArticleToolbar({
   deck?: string
 }) {
   return (
-    <div className="sticky top-11 z-30 border-y border-line bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex min-h-12 max-w-[840px] flex-wrap items-center justify-between gap-2.5 px-4 md:px-6">
-        <SocialShareButtons dict={dict} title={title} />
+    <div
+      data-article-toolbar
+      className="sticky top-11 z-30 border-y border-line bg-paper/95 backdrop-blur"
+    >
+      <div className="mx-auto flex max-w-[840px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:gap-4 md:px-6">
+        {/* Share group */}
+        <div className="flex items-center gap-3" data-focus-hide>
+          <SocialShareButtons dict={dict} title={title} />
+        </div>
 
-        <div className="flex items-center gap-1.5">
-          {storyId && title && categorySlug && slug ? (
-            <BookmarkButton
-              storyId={storyId}
-              title={title}
-              categorySlug={categorySlug}
-              slug={slug}
-            />
-          ) : null}
+        {/* Reading tools group */}
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2" data-focus-hide>
+            {storyId && title && categorySlug && slug ? (
+              <BookmarkButton
+                storyId={storyId}
+                title={title}
+                categorySlug={categorySlug}
+                slug={slug}
+              />
+            ) : null}
+            <PrintButton />
+          </div>
 
-          <AudioListenButton textToRead={deck ? `${title}. ${deck}` : title} />
+          <span className="hidden h-6 w-px bg-line sm:block" aria-hidden="true" data-focus-hide />
 
-          <PrintButton />
+          <div className="flex items-center gap-2">
+            <ArticleNarrator locale={locale} title={title} deck={deck} />
+            <FocusModeToggle locale={locale} />
+          </div>
 
-          <TextSizeControls dict={dict} />
+          <span className="hidden h-6 w-px bg-line sm:block" aria-hidden="true" />
 
-          {bilingualHref && bilingualLabel ? (
-            <Link
-              href={bilingualHref}
-              className="inline-flex min-h-9 items-center gap-1 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-bold text-accent hover:border-accent"
-            >
-              <LinkSimple size={13} weight="bold" aria-hidden="true" />
-              <span>{bilingualLabel}</span>
-            </Link>
-          ) : null}
+          <div className="flex items-center gap-2">
+            <TextSizeControls dict={dict} />
+            {bilingualHref && bilingualLabel ? (
+              <span data-focus-hide>
+                <Link
+                  href={bilingualHref}
+                  className="inline-flex min-h-11 items-center gap-1 rounded-full border border-line bg-paper px-3.5 text-xs font-bold text-accent hover:border-accent"
+                >
+                  <LinkSimple size={13} weight="bold" aria-hidden="true" />
+                  <span>{bilingualLabel}</span>
+                </Link>
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
   )
 }
+
 
 export function ReadingProgress() {
   return (
@@ -533,7 +530,10 @@ export function ConsentBanner({ dict }: { dict: Dictionary }) {
   if (hidden) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper-elevated p-4 shadow-[0_-12px_40px_rgba(16,32,29,0.12)]">
+    <div
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper-elevated p-4 shadow-[0_-12px_40px_rgba(16,32,29,0.12)]"
+      data-focus-hide
+    >
       <div className="mx-auto flex max-w-[1280px] flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <p className="max-w-2xl text-xs sm:text-sm text-stone">{dict.consentBody}</p>
         <div className="flex gap-2">

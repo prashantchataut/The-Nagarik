@@ -26,6 +26,10 @@ export const AuthorSchema = z.object({
   nameEn: z.string().optional(),
   bioNe: z.string().optional(),
   bioEn: z.string().optional(),
+  /** Portrait URL when the newsroom profile has an avatar photo. */
+  avatarUrl: z.string().optional(),
+  /** Beat specializations, e.g. राजनीति, अर्थतन्त्र. */
+  beats: z.array(z.string()).optional(),
 })
 export type Author = z.infer<typeof AuthorSchema>
 

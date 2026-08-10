@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import {
+  BS_MAX_YEAR,
+  BS_MIN_YEAR,
   BS_MONTHS_EN,
   BS_MONTHS_NE,
   WEEKDAYS_NE,
@@ -17,10 +19,13 @@ import {
 } from '@/lib/bs-calendar'
 import {
   approximateTithi,
-  festivalsForBsDay,
-  festivalsInBsMonth,
+  eventsForBsDay,
+  eventsInBsMonth,
   panchangForAd,
+  upcomingPatroEvents,
+  type PatroEvent,
 } from '@/lib/panchang'
+
 import type { AppLocale } from '@/lib/i18n'
 import { BRAND_NE, newsHomeHref } from '@/lib/site'
 
@@ -102,7 +107,7 @@ export function NepaliPatroWidget({
   )
 
   const todayPanchang = useMemo(() => panchangForAd(todayAd, locale), [locale, todayAd])
-  const todayFestivals = useMemo(() => festivalsForBsDay(today, todayAd), [today, todayAd])
+  const todayFestivals = useMemo(() => eventsForBsDay(today), [today])
 
   const selectedAd = useMemo(() => {
     try {
@@ -113,50 +118,42 @@ export function NepaliPatroWidget({
   }, [selected, todayAd])
 
   const selectedPanchang = useMemo(() => panchangForAd(selectedAd, locale), [locale, selectedAd])
-  const selectedFestivals = useMemo(
-    () => festivalsForBsDay(selected, selectedAd),
-    [selected, selectedAd],
-  )
+  const selectedFestivals = useMemo(() => eventsForBsDay(selected), [selected])
 
   const grid = useMemo(() => monthGrid(view.year, view.month), [view.month, view.year])
   const monthFestivals = useMemo(
-    () => festivalsInBsMonth(view.year, view.month),
+    () => eventsInBsMonth(view.year, view.month),
     [view.month, view.year],
   )
   const festivalByDay = useMemo(() => {
-    const map = new Map<number, string>()
+    const map = new Map<number, PatroEvent>()
     for (const f of monthFestivals) {
-      map.set(f.day, locale === 'ne' ? f.nameNe : f.nameEn)
+      const existing = map.get(f.day)
+      // Named festivals win over plain lunar markers on crowded days.
+      if (!existing || (existing.kind === 'lunar' && f.kind !== 'lunar')) {
+        map.set(f.day, f)
+      }
     }
     return map
-  }, [locale, monthFestivals])
+  }, [monthFestivals])
 
+  /**
+   * Upcoming list follows the month the reader is browsing: viewing the
+   * current month anchors on today, any other month anchors on its 1st day.
+   */
   const upcoming = useMemo(() => {
-    const items: Array<{ day: number; month: number; year: number; name: string; days: number }> = []
-    for (let offset = 0; offset < 3 && items.length < 8; offset++) {
-      let y = today.year
-      let m = today.month + offset
-      while (m > 12) {
-        m -= 12
-        y += 1
-      }
-      if (!isSupportedBsYear(y)) continue
-      const fest = festivalsInBsMonth(y, m)
-      for (const f of fest) {
-        if (offset === 0 && f.day < today.day) continue
-        const target = { year: y, month: m, day: f.day }
-        items.push({
-          day: f.day,
-          month: m,
-          year: y,
-          name: locale === 'ne' ? f.nameNe : f.nameEn,
-          days: daysUntilBs(today, target),
-        })
-        if (items.length >= 8) break
-      }
-    }
-    return items
-  }, [locale, today])
+    const viewingCurrentMonth = view.year === today.year && view.month === today.month
+    const anchor: BsDate = viewingCurrentMonth
+      ? today
+      : { year: view.year, month: view.month, day: 1 }
+    const events = upcomingPatroEvents(anchor, { limit: 9, monthSpan: 4 })
+    return events.map((event) => ({
+      ...event,
+      name: locale === 'ne' ? event.nameNe : event.nameEn,
+      days: daysUntilBs(today, { year: event.year, month: event.month, day: event.day }),
+    }))
+  }, [locale, today, view.month, view.year])
+
 
   const monthLabel = locale === 'ne' ? BS_MONTHS_NE[view.month - 1] : BS_MONTHS_EN[view.month - 1]
   const todayWeekday = (() => {
@@ -214,16 +211,19 @@ export function NepaliPatroWidget({
       setSelected(next)
     } catch {
       setConvertMsg(
-        locale === 'ne' ? 'मान्य BS मिति हाल्नुहोस् (२०७०-२०९०)' : 'Valid BS date required (2070-2090)',
+        locale === 'ne'
+          ? `मान्य BS मिति हाल्नुहोस् (${BS_MIN_YEAR}-${BS_MAX_YEAR})`
+          : `Valid BS date required (${BS_MIN_YEAR}-${BS_MAX_YEAR})`,
       )
     }
   }
 
   const years = useMemo(() => {
     const list: number[] = []
-    for (let y = 2070; y <= 2090; y++) list.push(y)
+    for (let y = BS_MIN_YEAR; y <= BS_MAX_YEAR; y++) list.push(y)
     return list
   }, [])
+
 
 
   return (
@@ -234,11 +234,26 @@ export function NepaliPatroWidget({
           <h2 className="border-b border-line pb-2 text-sm font-semibold">
             {locale === 'ne' ? 'आगामी पर्वहरू' : 'Upcoming festivals'}
           </h2>
-          <ul className="mt-3 max-h-72 space-y-2 overflow-y-auto">
+          <p className="mt-1.5 text-[0.68rem] leading-snug text-stone">
+            {locale === 'ne'
+              ? `${BS_MONTHS_NE[view.month - 1]} ${view.year} बाट गणना गरिएको`
+              : `Computed from ${BS_MONTHS_EN[view.month - 1]} ${view.year}`}
+          </p>
+          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto">
             {upcoming.map((u) => (
-              <li key={`${u.year}-${u.month}-${u.day}-${u.name}`} className="flex gap-2 text-sm">
-                <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center bg-paper text-center text-[0.65rem] leading-tight text-stone">
-                  <span className="text-base font-semibold tabular-nums text-ink">{u.day}</span>
+              <li key={`${u.year}-${u.month}-${u.day}-${u.id}`} className="flex gap-2 text-sm">
+                <span
+                  className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center text-center text-[0.65rem] leading-tight ${
+                    u.holiday ? 'bg-danger-muted text-holiday' : 'bg-paper text-stone'
+                  }`}
+                >
+                  <span
+                    className={`text-base font-semibold tabular-nums ${
+                      u.holiday ? 'text-holiday' : 'text-ink'
+                    }`}
+                  >
+                    {u.day}
+                  </span>
                   {(locale === 'ne' ? BS_MONTHS_NE : BS_MONTHS_EN)[u.month - 1].slice(0, 3)}
                 </span>
                 <span className="min-w-0">
@@ -248,9 +263,13 @@ export function NepaliPatroWidget({
                       ? locale === 'ne'
                         ? 'आज'
                         : 'Today'
-                      : locale === 'ne'
-                        ? `${u.days} दिन बाँकी`
-                        : `${u.days} days left`}
+                      : u.days < 0
+                        ? `${u.year} ${
+                            (locale === 'ne' ? BS_MONTHS_NE : BS_MONTHS_EN)[u.month - 1]
+                          }`
+                        : locale === 'ne'
+                          ? `${u.days} दिन बाँकी`
+                          : `${u.days} days left`}
                   </span>
                 </span>
               </li>
@@ -426,6 +445,8 @@ export function NepaliPatroWidget({
                 view.year === selected.year
               const isSat = i % 7 === 6
               const fest = festivalByDay.get(cell.day)
+              const festName = fest ? (locale === 'ne' ? fest.nameNe : fest.nameEn) : ''
+              const isRedDay = isSat || Boolean(fest?.holiday)
               const tithi = panchangForAd(cell.ad, locale).tithiLabel
 
               return (
@@ -441,24 +462,29 @@ export function NepaliPatroWidget({
                         : 'bg-paper hover:bg-paper-elevated'
                   }`}
                 >
-                  {fest ? (
+                  {festName ? (
                     <span
                       className={`mb-0.5 line-clamp-1 text-[0.55rem] leading-tight sm:text-[0.65rem] ${
-                        isToday ? 'text-[var(--accent-solid-fg)]' : 'text-accent'
+                        isToday
+                          ? 'text-[var(--accent-solid-fg)]'
+                          : fest?.holiday
+                            ? 'text-holiday'
+                            : 'text-accent'
                       }`}
                     >
-                      {fest}
+                      {festName}
                     </span>
                   ) : (
                     <span className="mb-0.5 h-3" />
                   )}
                   <span
                     className={`text-center text-lg font-semibold tabular-nums leading-none sm:text-2xl ${
-                      isToday ? '' : isSat || fest ? 'text-holiday' : 'text-ink'
+                      isToday ? '' : isRedDay ? 'text-holiday' : 'text-ink'
                     }`}
                   >
                     {cell.day}
                   </span>
+
                   <span className="mt-auto flex items-end justify-between gap-0.5">
                     <span
                       className={`line-clamp-1 text-[0.5rem] sm:text-[0.6rem] ${
@@ -515,11 +541,22 @@ export function NepaliPatroWidget({
             {monthFestivals.length ? (
               monthFestivals.map((f) => (
                 <li
-                  key={`${f.day}-${f.nameNe}`}
+                  key={`${f.day}-${f.id}`}
                   className="flex items-baseline justify-between gap-2 border-b border-line pb-1 text-sm"
                 >
-                  <span className="font-medium text-ink">
-                    {locale === 'ne' ? f.nameNe : f.nameEn}
+                  <span className="min-w-0">
+                    <span className={`font-medium ${f.holiday ? 'text-holiday' : 'text-ink'}`}>
+                      {locale === 'ne' ? f.nameNe : f.nameEn}
+                    </span>
+                    {f.kind === 'lunar' ? (
+                      <span className="ml-1.5 text-[0.65rem] text-stone">
+                        {locale === 'ne' ? 'तिथि' : 'tithi'}
+                      </span>
+                    ) : f.holiday ? (
+                      <span className="ml-1.5 text-[0.65rem] text-holiday">
+                        {locale === 'ne' ? 'बिदा' : 'holiday'}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="shrink-0 tabular-nums text-stone">
                     {f.day}{' '}
@@ -528,6 +565,7 @@ export function NepaliPatroWidget({
                 </li>
               ))
             ) : (
+
               <li className="text-sm text-stone">
                 {locale === 'ne'
                   ? 'यो महिना सूचीमा पर्व छैन।'

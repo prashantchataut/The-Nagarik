@@ -10,6 +10,7 @@ import {
   List,
   NotePencil,
   Queue,
+  UserCircle,
   X,
 } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -32,6 +33,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: '/journalist', label: 'मेरो डेस्क', hint: 'समाचार र स्थिति', icon: House },
   { href: '/journalist/compose', label: 'नयाँ लेख', hint: 'मस्यौदा सुरु गर्नुहोस्', icon: NotePencil },
+  { href: '/journalist/profile', label: 'मेरो प्रोफाइल', hint: 'बाइलाइन, तस्बिर र बिट', icon: UserCircle },
   { href: '/journalist/preferences', label: 'लेखन सेटिङ', hint: 'यो उपकरणका प्राथमिकता', icon: GearSix },
   {
     href: '/admin/queue',
