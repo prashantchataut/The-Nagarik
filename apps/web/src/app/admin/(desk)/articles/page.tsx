@@ -1,10 +1,17 @@
 import Link from 'next/link'
-import { AdminButton, AdminCard, CmsCanonicalBanner } from '@/components/admin/primitives'
+import {
+  AdminButton,
+  AdminCard,
+  AdminStatusPill,
+  CmsCanonicalBanner,
+} from '@/components/admin/primitives'
 import { cmsArticleCreateUrl, cmsArticleEditUrl, cmsCollectionUrl } from '@/lib/admin/nav'
 import {
   listDeskPublishedStories,
   payloadDeskAvailable,
 } from '@/lib/admin/payload-desk'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Articles · Newsroom',
@@ -13,82 +20,97 @@ export const metadata = {
 
 export default async function AdminArticlesPage() {
   const connected = payloadDeskAvailable()
-  const stories = connected ? await listDeskPublishedStories() : []
+  const stories = connected ? await listDeskPublishedStories(100) : []
 
   return (
-    <div>
-      <p className="text-sm font-semibold text-accent">समाचार</p>
-      <h1 className="mt-1 text-3xl font-bold">Published articles</h1>
-      <p className="mt-2 max-w-[54ch] text-sm text-stone">
-        Payload-only list. Create, edit, and schedule in CMS — this desk does not shadow-store
-        articles.
-      </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-5">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-accent">
+            समाचार व्यवस्थापन
+          </p>
+          <h1 className="mt-1 text-2xl font-black text-ink md:text-3xl">
+            Published Articles
+          </h1>
+          <p className="mt-1 text-xs text-stone">
+            All active published journalism from Payload CMS.
+          </p>
+        </div>
 
-      <div className="mt-6">
-        <CmsCanonicalBanner onPayload={connected} />
+        <div className="flex flex-wrap gap-2.5">
+          <AdminButton href={cmsArticleCreateUrl()} external>
+            + नयाँ लेख सिर्जना
+          </AdminButton>
+          <AdminButton href={cmsCollectionUrl('articles')} variant="secondary" external>
+            Open Payload List
+          </AdminButton>
+        </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <AdminButton href={cmsArticleCreateUrl()}>नयाँ लेख</AdminButton>
-        <AdminButton href={cmsCollectionUrl('articles')} variant="ghost">
-          Open Payload list
-        </AdminButton>
-        <AdminButton href="/admin/queue" variant="ghost">
-          Editorial queue
-        </AdminButton>
-      </div>
+      <CmsCanonicalBanner onPayload={connected} />
 
       {!connected ? (
-        <AdminCard className="mt-8">
-          <p className="text-sm text-holiday">
-            Connect Postgres to list published stories. Fixtures are never shown here.
+        <AdminCard>
+          <p className="text-xs text-stone">
+            Connect PostgreSQL database to list published stories from Payload.
           </p>
         </AdminCard>
       ) : (
-        <AdminCard className="mt-8 !p-0 overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-line bg-paper text-xs uppercase tracking-wide text-stone">
+        <div className="surface-card overflow-x-auto">
+          <table className="w-full min-w-[680px] text-left text-xs">
+            <thead className="border-b border-line bg-paper-elevated text-stone uppercase tracking-wider font-bold">
               <tr>
-                <th className="px-4 py-3 font-semibold">Title</th>
-                <th className="px-4 py-3 font-semibold">Section</th>
-                <th className="px-4 py-3 font-semibold">Flags</th>
-                <th className="px-4 py-3 font-semibold">Published</th>
-                <th className="px-4 py-3 font-semibold">Actions</th>
+                <th className="px-4 py-3">शीर्षक</th>
+                <th className="px-4 py-3">विभाग</th>
+                <th className="px-4 py-3">फ्ल्याग</th>
+                <th className="px-4 py-3">प्रकाशित मिति</th>
+                <th className="px-4 py-3">कार्यहरू</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {stories.map((story) => (
-                <tr key={story.id}>
-                  <td className="px-4 py-3 font-medium">{story.titleNe}</td>
-                  <td className="px-4 py-3 text-stone">{story.categorySlug}</td>
-                  <td className="px-4 py-3">
+                <tr key={story.id} className="hover:bg-paper-elevated/50 transition-colors">
+                  <td className="px-4 py-3 font-bold text-ink max-w-[320px] truncate">
                     {story.isBreaking ? (
-                      <span className="text-xs font-semibold text-holiday">breaking</span>
-                    ) : (
-                      <span className="text-xs text-stone">—</span>
-                    )}
-                    {story.hasEnglish ? (
-                      <span className="ml-2 text-xs text-accent">EN</span>
+                      <span className="mr-2 rounded bg-danger px-1.5 py-0.5 text-[0.65rem] font-extrabold text-danger-fg">
+                        ब्रेकिङ
+                      </span>
                     ) : null}
+                    <span>{story.titleNe}</span>
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-accent capitalize">
+                    {story.categorySlug}
+                  </td>
+                  <td className="px-4 py-3">
+                    {story.hasEnglish ? (
+                      <span className="rounded bg-accent-muted px-1.5 py-0.5 text-[0.65rem] font-bold text-accent">
+                        EN
+                      </span>
+                    ) : (
+                      <span className="text-stone text-[0.7rem] font-medium">NE only</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-stone tabular-nums">
                     {story.publishedAt
-                      ? new Date(story.publishedAt).toLocaleDateString('en-NP')
-                      : '—'}
+                      ? new Date(story.publishedAt).toLocaleDateString('ne-NP')
+                      : '-'}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-3 font-bold">
                       <Link
                         href={`/ne/${story.categorySlug}/${story.slug}`}
-                        className="text-xs font-semibold text-accent hover:underline"
+                        target="_blank"
+                        className="text-accent hover:underline"
                       >
                         View
                       </Link>
                       <Link
                         href={cmsArticleEditUrl(story.id)}
-                        className="text-xs font-semibold text-ink hover:underline"
+                        target="_blank"
+                        className="text-ink hover:underline"
                       >
-                        Edit
+                        Edit in CMS
                       </Link>
                     </div>
                   </td>
@@ -96,16 +118,16 @@ export default async function AdminArticlesPage() {
               ))}
             </tbody>
           </table>
+
           {!stories.length ? (
-            <p className="px-4 py-10 text-sm text-stone">
-              No published stories in Payload yet. Publish from{' '}
-              <Link href={cmsCollectionUrl('articles')} className="text-accent underline">
-                /cms
-              </Link>
-              .
-            </p>
+            <div className="p-12 text-center">
+              <p className="text-sm font-bold text-ink">कुनै प्रकाशित समाचार छैन</p>
+              <p className="mt-1 text-xs text-stone">
+                Publish articles from Payload CMS at /cms.
+              </p>
+            </div>
           ) : null}
-        </AdminCard>
+        </div>
       )}
     </div>
   )

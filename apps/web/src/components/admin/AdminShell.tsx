@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowSquareOut } from '@phosphor-icons/react'
+import { ArrowSquareOut, List, X, House, Article, Users, Folder, Sparkle, Rocket, SignOut } from '@phosphor-icons/react'
 import { useState, type ReactNode } from 'react'
 import { StaffLogoutButton } from '@/components/auth/StaffLogoutButton'
 import { ADMIN_NAV_GROUPS, ADMIN_PRIMARY_NAV, CMS_BASE } from '@/lib/admin/nav'
@@ -23,14 +23,16 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`block rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium ${
-        active ? 'accent-solid ' : 'text-ink hover:bg-accent-muted'
+      className={`flex items-center justify-between rounded-[var(--radius-control)] px-3 py-2 text-xs font-bold transition-all ${
+        active
+          ? 'accent-solid shadow-sm'
+          : 'text-ink hover:bg-accent-muted hover:text-accent'
       }`}
       {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
     >
-      {label}
+      <span>{label}</span>
       {external ? (
-        <ArrowSquareOut size={13} weight="bold" className="ml-1 inline-block align-[-0.125em] opacity-70" />
+        <ArrowSquareOut size={12} weight="bold" className="opacity-70" />
       ) : null}
     </Link>
   )
@@ -54,11 +56,12 @@ export function AdminShell({
 
   const nav = (
     <nav className="flex flex-col gap-6" aria-label="Newsroom desk">
+      {/* Primary Section */}
       <div>
-        <p className="mb-2 px-3 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-stone">
+        <p className="mb-2 px-3 text-[0.68rem] font-black uppercase tracking-wider text-stone">
           प्राथमिक
         </p>
-        <ul className="space-y-0.5">
+        <ul className="space-y-1">
           {ADMIN_PRIMARY_NAV.map((item) => (
             <li key={item.href + item.label}>
               <NavLink
@@ -71,12 +74,14 @@ export function AdminShell({
           ))}
         </ul>
       </div>
+
+      {/* Nav Groups */}
       {ADMIN_NAV_GROUPS.map((group) => (
         <div key={group.heading}>
-          <p className="mb-2 px-3 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-stone">
+          <p className="mb-2 px-3 text-[0.68rem] font-black uppercase tracking-wider text-stone">
             {group.heading}
           </p>
-          <ul className="space-y-0.5">
+          <ul className="space-y-1">
             {group.items.map((item) => (
               <li key={item.href + item.label}>
                 <NavLink
@@ -90,11 +95,13 @@ export function AdminShell({
           </ul>
         </div>
       ))}
+
+      {/* Account Section */}
       <div>
-        <p className="mb-2 px-3 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-stone">
+        <p className="mb-2 px-3 text-[0.68rem] font-black uppercase tracking-wider text-stone">
           खाता
         </p>
-        <ul className="space-y-0.5">
+        <ul className="space-y-1">
           <li>
             <NavLink href="/admin/account" label="मेरो खाता" active={isActive('/admin/account')} />
           </li>
@@ -105,52 +112,83 @@ export function AdminShell({
 
   return (
     <div className="min-h-[100dvh] bg-paper text-ink">
+      {/* Top Desk Header */}
       <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-4 py-3 md:px-6">
-          <div className="min-w-0">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-accent">
-              द नागरिक
-            </p>
-            <p className="truncate text-sm font-semibold">Newsroom desk</p>
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-4 py-2.5 md:px-6">
+          <div className="flex items-center gap-3">
+            <Link href="/admin" className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] bg-accent text-accent-fg font-black text-sm">
+                ना
+              </span>
+              <div>
+                <p className="text-[0.68rem] font-black uppercase tracking-wider text-accent leading-none">
+                  द नागरिक
+                </p>
+                <p className="text-xs font-bold text-ink leading-tight">Newsroom Desk</p>
+              </div>
+            </Link>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden min-w-0 text-right sm:block">
-              <p className="truncate text-xs font-medium">{session.name || session.email}</p>
-              <p className="text-[0.65rem] uppercase tracking-wide text-stone">{role ?? 'staff'}</p>
+
+          <div className="flex items-center gap-2.5">
+            {/* User Chip */}
+            <div className="hidden items-center gap-2 rounded-full border border-line bg-paper-elevated px-3 py-1 text-xs sm:flex">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-accent-fg text-[0.65rem] font-black">
+                {(session.name || session.email || 'U').slice(0, 1).toUpperCase()}
+              </span>
+              <span className="font-semibold text-ink max-w-[120px] truncate">
+                {session.name || session.email}
+              </span>
+              <span className="rounded-full bg-paper px-1.5 py-0.5 text-[0.65rem] font-extrabold uppercase text-accent border border-line">
+                {role ?? 'staff'}
+              </span>
             </div>
+
             <Link
               href={CMS_BASE}
-              className="hidden rounded-[var(--radius-control)] accent-solid px-3 py-1.5 text-xs font-semibold  sm:inline-flex"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden rounded-[var(--radius-control)] accent-solid px-3 py-1.5 text-xs font-bold sm:inline-flex items-center gap-1"
             >
-              Open CMS
+              <span>Open CMS</span>
+              <ArrowSquareOut size={12} weight="bold" />
             </Link>
+
             <Link
               href="/ne"
-              className="rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-xs font-medium"
+              className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-1.5 text-xs font-bold text-ink hover:border-accent hover:text-accent"
             >
-              Reader
+              Reader View
             </Link>
-            <StaffLogoutButton className="rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-xs font-semibold hover:border-holiday" />
+
+            <StaffLogoutButton className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-1.5 text-xs font-bold text-stone hover:text-danger hover:border-danger" />
+
             <button
               type="button"
-              className="rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-xs font-semibold lg:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line lg:hidden"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
+              aria-label="Toggle Desk Nav"
             >
-              Menu
+              {open ? <X size={20} weight="bold" /> : <List size={20} weight="bold" />}
             </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Dropdown */}
         {open ? (
-          <div className="border-t border-line px-4 py-4 lg:hidden" onClick={() => setOpen(false)}>
+          <div className="border-t border-line bg-paper-elevated px-4 py-5 lg:hidden" onClick={() => setOpen(false)}>
             {nav}
           </div>
         ) : null}
       </header>
 
+      {/* Main Grid Layout */}
       <div className="mx-auto grid max-w-[1400px] lg:grid-cols-[240px_1fr]">
-        <aside className="hidden border-r border-line px-3 py-6 lg:block">{nav}</aside>
-        <main className="min-w-0 px-4 py-8 md:px-6">{children}</main>
+        <aside className="hidden border-r border-line bg-paper-elevated/40 p-5 lg:block min-h-[calc(100dvh-53px)]">
+          {nav}
+        </aside>
+
+        <main className="min-w-0 px-4 py-8 md:px-8">{children}</main>
       </div>
     </div>
   )

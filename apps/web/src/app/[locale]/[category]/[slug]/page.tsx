@@ -16,9 +16,11 @@ import {
 import { StoryRail } from '@/components/Story'
 import { RelativeTime } from '@/components/RelativeTime'
 import { CategoryTag } from '@/components/news/CategoryTag'
+import { CategoryIcon } from '@/components/CategoryIcon'
 import { renderInlineMarkup } from '@/components/journalist/inline-markup'
 import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
+import { Clock, CaretRight, House } from '@phosphor-icons/react/dist/ssr'
 
 export const revalidate = 60
 
@@ -55,7 +57,7 @@ export async function generateMetadata({
   }
 
   return {
-    title,
+    title: `${title} | The Nagarik`,
     description,
     alternates: {
       canonical: siteUrl(`/${locale}/${category}/${slug}`),
@@ -150,60 +152,98 @@ export default async function ArticlePage({
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <article>
-        <header className="mx-auto max-w-[800px] px-4 pb-6 pt-7 md:px-6 md:pb-7 md:pt-10">
+      <main>
+        {/* Breadcrumb Bar */}
+        <nav aria-label="Breadcrumb" className="border-b border-line bg-paper-elevated text-xs">
+          <div className="mx-auto flex max-w-[1280px] items-center gap-2 px-4 py-2 text-stone md:px-6">
+            <Link href={`/${locale}`} className="inline-flex items-center gap-1 hover:text-accent">
+              <House size={13} weight="bold" />
+              <span>{dict.home}</span>
+            </Link>
+            <CaretRight size={10} weight="bold" className="text-line-strong" />
+            <Link href={`/${locale}/${category}`} className="font-semibold text-ink hover:text-accent">
+              {categoryLabel}
+            </Link>
+            <CaretRight size={10} weight="bold" className="text-line-strong" />
+            <span className="truncate max-w-[200px] sm:max-w-[360px] text-stone">{title}</span>
+          </div>
+        </nav>
+
+        {/* Article Header */}
+        <header className="mx-auto max-w-[840px] px-4 pb-6 pt-6 md:px-6 md:pb-7 md:pt-9">
           <div className="flex flex-wrap items-center gap-2">
-            <CategoryTag href={`/${locale}/${category}`}>{categoryLabel}</CategoryTag>
+            <Link
+              href={`/${locale}/${category}`}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-accent-muted px-2.5 py-1 text-xs font-bold text-accent hover:bg-accent hover:text-accent-fg transition-colors"
+            >
+              <CategoryIcon slug={category} size={13} weight="bold" />
+              <span>{categoryLabel}</span>
+            </Link>
             {article.isBreaking ? (
-              <span className="text-[0.7rem] font-semibold text-holiday">{dict.breaking}</span>
+              <span className="rounded-[var(--radius-control)] bg-danger px-2 py-0.5 text-xs font-extrabold text-danger-fg animate-pulse">
+                {dict.breaking}
+              </span>
             ) : null}
           </div>
-          <h1 className="mt-3 text-[2rem] font-bold leading-[1.35] tracking-[-0.03em] sm:text-[2.35rem] md:text-[2.8rem]">
+
+          <h1 className="mt-4 text-3xl font-black leading-[1.28] tracking-[-0.035em] text-ink sm:text-4xl md:text-[2.65rem] lg:text-[2.9rem]">
             {title}
           </h1>
-          <p className="mt-4 max-w-[66ch] text-lg leading-8 text-stone md:text-xl">{deck}</p>
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone">
-            <span
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full accent-solid text-[0.7rem] font-semibold "
-              aria-hidden
-            >
-              {dict.siteName.slice(0, 1)}
+
+          {deck ? (
+            <p className="mt-4 max-w-[68ch] text-lg font-medium leading-relaxed text-stone md:text-xl">
+              {deck}
+            </p>
+          ) : null}
+
+          {/* Author & Timestamp Bar */}
+          <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-line py-3.5 text-xs font-semibold text-stone">
+            <span className="flex items-center gap-2 text-ink">
+              <span
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full accent-solid text-xs font-black"
+                aria-hidden
+              >
+                {dict.siteName.slice(0, 1)}
+              </span>
+              <span className="font-bold">
+                {authors.length ? (
+                  authors.map((author, index) => (
+                    <span key={author!.id}>
+                      {index ? <span className="text-stone">, </span> : null}
+                      <Link href={`/${locale}/author/${author!.slug}`} className="hover:text-accent hover:underline">
+                        {locale === 'en' && author!.nameEn ? author!.nameEn : author!.nameNe}
+                      </Link>
+                    </span>
+                  ))
+                ) : (
+                  <span>{dict.siteName}</span>
+                )}
+              </span>
             </span>
-            <span className="flex flex-wrap items-center gap-x-1 font-medium text-ink">
-              {authors.length ? authors.map((author, index) => (
-                <span key={author!.id}>
-                  {index ? <span className="text-stone">, </span> : null}
-                  <Link href={`/${locale}/author/${author!.slug}`} className="hover:text-accent hover:underline">
-                    {locale === 'en' && author!.nameEn ? author!.nameEn : author!.nameNe}
-                  </Link>
-                </span>
-              )) : dict.siteName}
-            </span>
-            <span aria-hidden className="text-line">
-              ·
-            </span>
-            <span>
-              {card.readTimeMinutes} {dict.minutesRead}
-            </span>
-            <span aria-hidden className="text-line">
-              ·
-            </span>
+
+            <span className="h-3 w-px bg-line" aria-hidden="true" />
+
+            <div className="inline-flex items-center gap-1">
+              <Clock size={13} weight="bold" aria-hidden="true" />
+              <span>
+                {card.readTimeMinutes} {dict.minutesRead}
+              </span>
+            </div>
+
+            <span className="h-3 w-px bg-line" aria-hidden="true" />
+
             <RelativeTime iso={article.publishedAt} locale={locale} />
+
             {article.updatedAt ? (
               <>
-                <span aria-hidden className="text-line">
-                  ·
-                </span>
+                <span className="h-3 w-px bg-line" aria-hidden="true" />
                 <span>
-                  {dict.updated}{' '}
-                  {new Intl.DateTimeFormat('en-GB', {
-                    timeZone: 'Asia/Kathmandu',
-                    day: 'numeric',
+                  {dict.updated}:{' '}
+                  {new Intl.DateTimeFormat(locale === 'ne' ? 'ne-NP' : 'en-NP', {
                     month: 'short',
-                    year: 'numeric',
+                    day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
-                    hour12: false,
                   }).format(new Date(article.updatedAt))}
                 </span>
               </>
@@ -211,42 +251,51 @@ export default async function ArticlePage({
           </div>
         </header>
 
+        {/* Sticky Social Share & Reading Controls */}
         <ArticleToolbar
           dict={dict}
           bilingualHref={bilingualHref}
           bilingualLabel={bilingualLabel}
+          title={title}
         />
 
+        {/* Hero Figure */}
         {article.hero ? (
-          <figure className="mx-auto mb-8 max-w-[1080px] md:mb-10 md:px-6">
-            <div className="relative aspect-[16/9] w-full overflow-hidden bg-line">
+          <figure className="mx-auto mb-8 max-w-[1080px] px-4 md:mb-10 md:px-6">
+            <div className="editorial-image relative aspect-[16/9] w-full rounded-[var(--radius-panel)] shadow-[0_8px_28px_rgb(16_32_29_/_0.08)]">
               <Image
                 src={article.hero.url}
-                alt={article.hero.alt}
+                alt={article.hero.alt || title}
                 fill
                 priority
-                sizes="(max-width: 1024px) 100vw, 960px"
+                sizes="(max-width: 1024px) 100vw, 1080px"
                 className="object-cover"
               />
             </div>
-            <figcaption className="mt-2 px-4 text-xs leading-5 text-stone md:px-0">
-              <span>{article.hero.alt}</span>
-              {heroCredit ? <span> · {heroCredit}</span> : null}
-            </figcaption>
+            {(article.hero.alt || heroCredit) ? (
+              <figcaption className="mt-2.5 px-1 text-xs leading-relaxed text-stone">
+                <span>{article.hero.alt}</span>
+                {heroCredit ? <span> · तस्बिर: {heroCredit}</span> : null}
+              </figcaption>
+            ) : null}
           </figure>
         ) : null}
 
-        <div className="mx-auto grid max-w-[1240px] gap-10 px-4 pb-16 md:px-6 lg:grid-cols-[minmax(0,720px)_280px] lg:justify-center lg:gap-10">
-          <div>
+        {/* Main Content Layout with Sticky Sidebar */}
+        <div className="mx-auto grid max-w-[1280px] gap-10 px-4 pb-16 md:px-6 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:gap-12">
+          {/* Article Body */}
+          <div className="min-w-0">
             {toc.length >= 2 ? (
               <nav
                 aria-label={dict.onThisPage}
-                className="mb-8 border-y border-line py-4 lg:hidden"
+                className="mb-8 rounded-[var(--radius-panel)] border border-line bg-paper-elevated p-4 lg:hidden"
               >
-                <p className="text-sm font-medium text-stone">{dict.onThisPage}</p>
-                <ol className="mt-3 space-y-2 text-sm">
+                <p className="text-xs font-bold uppercase tracking-wider text-accent">
+                  {dict.onThisPage}
+                </p>
+                <ol className="mt-2.5 space-y-1.5 text-sm font-medium">
                   {toc.map((item) => (
-                    <li key={item.id} className={item.level === 'heading3' ? 'pl-3' : ''}>
+                    <li key={item.id} className={item.level === 'heading3' ? 'pl-3 text-xs' : ''}>
                       <a href={`#${item.id}`} className="text-ink hover:text-accent">
                         {item.text}
                       </a>
@@ -256,8 +305,9 @@ export default async function ArticlePage({
               </nav>
             ) : null}
 
+            {/* Typography Content */}
             <div
-              className="space-y-6 text-lg leading-[1.8]"
+              className="space-y-6 text-lg leading-[1.85] text-ink"
               style={{ fontSize: 'calc(1.125rem * var(--article-type-scale, 1))' }}
             >
               {body.map((block, i) => {
@@ -270,7 +320,7 @@ export default async function ArticlePage({
                       <h2
                         key={i}
                         id={id}
-                        className="scroll-mt-28 pt-5 text-[1.75rem] font-bold leading-[1.5] tracking-[-0.02em]"
+                        className="scroll-mt-24 pt-6 text-2xl font-black leading-tight tracking-[-0.025em] text-ink border-t border-line/60 md:text-[1.85rem]"
                       >
                         {renderInlineMarkup(block.text)}
                       </h2>
@@ -282,7 +332,7 @@ export default async function ArticlePage({
                       <h3
                         key={i}
                         id={id}
-                        className="scroll-mt-28 pt-3 text-2xl font-bold leading-[1.5] tracking-[-0.02em]"
+                        className="scroll-mt-24 pt-4 text-xl font-bold leading-snug tracking-[-0.02em] text-ink"
                       >
                         {renderInlineMarkup(block.text)}
                       </h3>
@@ -292,23 +342,25 @@ export default async function ArticlePage({
                     return (
                       <blockquote
                         key={i}
-                        className="my-8 border-y border-line py-5 text-xl font-semibold leading-[1.75] text-ink"
+                        className="my-8 rounded-[var(--radius-control)] border-l-4 border-accent bg-paper-elevated p-5 text-xl font-bold leading-relaxed text-ink shadow-sm"
                       >
-                        <p>{block.text}</p>
+                        <p>&ldquo;{block.text}&rdquo;</p>
                         {block.attribution ? (
-                          <cite className="mt-2 block text-sm not-italic">{block.attribution}</cite>
+                          <cite className="mt-3 block text-xs font-semibold not-italic text-stone">
+                            - {block.attribution}
+                          </cite>
                         ) : null}
                       </blockquote>
                     )
                   case 'list':
                     return block.ordered ? (
-                      <ol key={i} className="list-decimal space-y-1 pl-5">
+                      <ol key={i} className="list-decimal space-y-2 pl-6 text-base leading-relaxed">
                         {block.items.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ol>
                     ) : (
-                      <ul key={i} className="list-disc space-y-1 pl-5">
+                      <ul key={i} className="list-disc space-y-2 pl-6 text-base leading-relaxed">
                         {block.items.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
@@ -317,19 +369,21 @@ export default async function ArticlePage({
                   case 'image':
                     return (
                       <figure key={i} className="my-8">
-                        <Image
-                          src={block.media.url}
-                          alt={block.media.alt}
-                          width={block.media.width || 960}
-                          height={block.media.height || 540}
-                          sizes="(max-width: 768px) 100vw, 720px"
-                          className="h-auto w-full"
-                        />
+                        <div className="editorial-image relative aspect-[16/9] w-full rounded-[var(--radius-panel)] overflow-hidden">
+                          <Image
+                            src={block.media.url}
+                            alt={block.media.alt || ''}
+                            width={block.media.width || 960}
+                            height={block.media.height || 540}
+                            sizes="(max-width: 768px) 100vw, 760px"
+                            className="h-auto w-full object-cover"
+                          />
+                        </div>
                         {(block.caption || block.media.credit) ? (
-                          <figcaption className="mt-2 text-sm leading-6 text-stone">
+                          <figcaption className="mt-2 text-xs leading-relaxed text-stone">
                             {block.caption ? <span>{block.caption}</span> : null}
                             {block.caption && block.media.credit ? <span> · </span> : null}
-                            {block.media.credit ? <span>{block.media.credit}</span> : null}
+                            {block.media.credit ? <span>तस्बिर: {block.media.credit}</span> : null}
                           </figcaption>
                         ) : null}
                       </figure>
@@ -342,19 +396,27 @@ export default async function ArticlePage({
               })}
             </div>
 
+            {/* Author Profile Cards */}
             {authors.length ? (
-              <section className="mt-10 border-y border-line py-5" aria-labelledby="article-authors-title">
-                <p id="article-authors-title" className="text-xs font-bold uppercase tracking-[0.12em] text-stone">{dict.authors}</p>
-                <div className="mt-3 space-y-4">
+              <section className="mt-12 rounded-[var(--radius-panel)] border border-line bg-paper-elevated p-6" aria-labelledby="article-authors-title">
+                <p id="article-authors-title" className="text-xs font-bold uppercase tracking-wider text-accent">
+                  {dict.authors}
+                </p>
+                <div className="mt-4 space-y-4">
                   {authors.map((author) => {
                     const name = locale === 'en' && author!.nameEn ? author!.nameEn : author!.nameNe
                     const bio = locale === 'en' && author!.bioEn ? author!.bioEn : author!.bioNe
                     return (
-                      <div key={author!.id}>
-                        <Link href={`/${locale}/author/${author!.slug}`} className="inline-flex min-h-11 items-center font-bold text-ink hover:text-accent">
-                          {name}
-                        </Link>
-                        {bio ? <p className="mt-1 max-w-[64ch] text-sm leading-6 text-stone">{bio}</p> : null}
+                      <div key={author!.id} className="flex gap-3.5 items-start">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-fg font-black text-sm">
+                          {name.slice(0, 1)}
+                        </span>
+                        <div>
+                          <Link href={`/${locale}/author/${author!.slug}`} className="text-base font-bold text-ink hover:text-accent">
+                            {name}
+                          </Link>
+                          {bio ? <p className="mt-1 text-xs leading-relaxed text-stone">{bio}</p> : null}
+                        </div>
                       </div>
                     )
                   })}
@@ -362,41 +424,47 @@ export default async function ArticlePage({
               </section>
             ) : null}
 
+            {/* Tags */}
             {article.tagSlugs.length ? (
-              <nav className="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Tags">
+              <nav className="mt-8 flex flex-wrap gap-2 text-xs" aria-label="Tags">
                 {article.tagSlugs.map((tag) => (
-                  <Link key={tag} href={`/${locale}/search?q=${encodeURIComponent(tag)}`} className="font-semibold text-stone hover:text-accent">#{tag}</Link>
+                  <Link
+                    key={tag}
+                    href={`/${locale}/search?q=${encodeURIComponent(tag)}`}
+                    className="rounded-full bg-paper-elevated border border-line px-3 py-1.5 font-bold text-stone hover:border-accent hover:text-accent transition-colors"
+                  >
+                    #{tag}
+                  </Link>
                 ))}
               </nav>
             ) : null}
 
+            {/* Corrections */}
             {article.corrections.length ? (
-              <aside className="mt-10 border border-line bg-paper-elevated p-4 text-sm">
-                <h2 className="font-medium">{dict.corrections}</h2>
-                <ul className="mt-2 space-y-2 text-stone">
+              <aside className="mt-8 rounded-[var(--radius-panel)] border border-warning/40 bg-warning-muted/30 p-4 text-xs">
+                <h2 className="font-bold text-warning">{dict.corrections}</h2>
+                <ul className="mt-2 space-y-1.5 text-stone">
                   {article.corrections.map((c) => (
                     <li key={c.at}>{locale === 'en' && c.noteEn ? c.noteEn : c.noteNe}</li>
                   ))}
                 </ul>
               </aside>
             ) : null}
-
-            <p className="mt-10 text-sm">
-              <Link href={`/${locale}/${category}`} className="text-accent hover:underline">
-                {categoryLabel}
-              </Link>
-            </p>
           </div>
 
+          {/* Sticky Desktop Sidebar */}
           <aside className="hidden lg:block">
-            <div className="sticky top-16 space-y-6">
+            <div className="sticky top-20 space-y-7">
+              {/* In-Article TOC */}
               {toc.length >= 2 ? (
-                <div>
-                  <p className="text-sm font-semibold text-stone">{dict.onThisPage}</p>
-                  <ol className="mt-3 space-y-2.5 border-l border-line pl-3 text-sm text-stone">
+                <div className="rounded-[var(--radius-panel)] border border-line bg-paper-elevated p-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-accent mb-3">
+                    {dict.onThisPage}
+                  </p>
+                  <ol className="space-y-2 border-l border-line pl-3 text-xs text-stone">
                     {toc.map((item) => (
                       <li key={item.id} className={item.level === 'heading3' ? 'pl-2' : ''}>
-                        <a href={`#${item.id}`} className="hover:text-accent">
+                        <a href={`#${item.id}`} className="hover:text-accent font-medium transition-colors">
                           {item.text}
                         </a>
                       </li>
@@ -404,18 +472,28 @@ export default async function ArticlePage({
                   </ol>
                 </div>
               ) : null}
+
+              {/* Latest News Widget */}
               {latestCards.length ? (
-                <div>
-                  <p className="border-b-2 border-accent pb-2 text-sm font-semibold">{dict.latest}</p>
-                  <ul className="mt-2">
-                    {latestCards.map((s) => (
-                      <li key={s.id} className="border-b border-line py-2 last:border-b-0">
+                <div className="rounded-[var(--radius-panel)] border border-line bg-paper p-4">
+                  <div className="flex items-center justify-between border-b-2 border-accent pb-2 mb-3">
+                    <p className="text-sm font-black text-ink">{dict.latest}</p>
+                    <Link href={`/${locale}/latest`} className="text-xs font-bold text-accent hover:underline">
+                      {dict.seeAll}
+                    </Link>
+                  </div>
+                  <ul className="divide-y divide-line">
+                    {latestCards.slice(0, 5).map((s) => (
+                      <li key={s.id} className="py-2.5 first:pt-1 last:pb-0 group">
                         <Link
                           href={`/${locale}/${s.categorySlug}/${s.slug}`}
-                          className="flex gap-2 text-sm leading-snug hover:text-accent"
+                          className="text-xs font-bold leading-snug text-ink group-hover:text-accent transition-colors block"
                         >
                           {s.title}
                         </Link>
+                        <p className="mt-1 text-[0.68rem] text-stone">
+                          <RelativeTime iso={s.publishedAt} locale={locale} />
+                        </p>
                       </li>
                     ))}
                   </ul>
@@ -424,38 +502,45 @@ export default async function ArticlePage({
             </div>
           </aside>
         </div>
-      </article>
+      </main>
 
+      {/* Next Story Card */}
       {nextStory ? (
-        <section className="border-y border-line">
-          <div className="mx-auto max-w-[720px] px-4 py-6 md:px-6">
-            <p className="text-sm font-medium text-accent">{dict.nextStory}</p>
+        <section className="border-y-2 border-line bg-paper-alt py-8">
+          <div className="mx-auto max-w-[840px] px-4 md:px-6">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">{dict.nextStory}</p>
             <Link
               href={`/${locale}/${nextStory.categorySlug}/${nextStory.slug}`}
-              className={`mt-3 grid gap-4 ${nextStory.hero ? 'sm:grid-cols-[9rem_1fr] sm:items-center' : ''}`}
+              className={`mt-4 surface-card grid gap-4 p-4 overflow-hidden group ${
+                nextStory.hero ? 'sm:grid-cols-[10rem_1fr] sm:items-center' : ''
+              }`}
             >
               {nextStory.hero ? (
-                <span className="relative aspect-[4/3] overflow-hidden bg-line">
+                <span className="editorial-image relative aspect-[4/3] rounded-[var(--radius-control)] overflow-hidden">
                   <Image
                     src={nextStory.hero.url}
-                    alt={nextStory.hero.alt}
+                    alt={nextStory.hero.alt || nextStory.title}
                     fill
-                    sizes="144px"
+                    sizes="160px"
                     className="object-cover"
                   />
                 </span>
               ) : null}
-              <span>
-                <span className="block font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-[1.35rem]">
+              <div>
+                <span className="text-xs font-bold text-accent capitalize">{nextStory.categorySlug}</span>
+                <h3 className="mt-1 text-xl font-bold leading-snug tracking-[-0.018em] text-ink group-hover:text-accent transition-colors">
                   {nextStory.title}
-                </span>
-                <span className="mt-2 block line-clamp-2 text-sm text-stone">{nextStory.deck}</span>
-              </span>
+                </h3>
+                {nextStory.deck ? (
+                  <p className="mt-2 line-clamp-2 text-xs text-stone">{nextStory.deck}</p>
+                ) : null}
+              </div>
             </Link>
           </div>
         </section>
       ) : null}
 
+      {/* Series Packages & Related Stories */}
       {packagePeers.length ? (
         <StoryRail title={dict.storyPackage} locale={locale} stories={packagePeers} dict={dict} />
       ) : null}

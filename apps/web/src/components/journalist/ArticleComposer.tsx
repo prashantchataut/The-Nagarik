@@ -663,7 +663,7 @@ export function ArticleComposer({
                         </label>
                         {block.media.id ? (
                           <div className="md:col-span-2 text-xs leading-5 text-stone">
-                            <strong className="text-ink">Alt:</strong> {block.media.alt || '—'} · <strong className="text-ink">Credit:</strong> {block.media.credit || '—'}
+                            <strong className="text-ink">Alt:</strong> {block.media.alt || '-'} · <strong className="text-ink">Credit:</strong> {block.media.credit || '-'}
                           </div>
                         ) : null}
                       </div>
@@ -703,7 +703,7 @@ export function ArticleComposer({
                           return block.text ? (
                             <blockquote key={index} className="my-7 border-y border-line py-5 text-xl font-semibold leading-[1.7]">
                               <p>{renderInlineMarkup(block.text)}</p>
-                              {block.attribution ? <footer className="mt-2 text-sm font-medium text-stone">— {block.attribution}</footer> : null}
+                              {block.attribution ? <footer className="mt-2 text-sm font-medium text-stone">- {block.attribution}</footer> : null}
                             </blockquote>
                           ) : null
                         case 'list':

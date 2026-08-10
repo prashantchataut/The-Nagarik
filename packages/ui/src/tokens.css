@@ -3,8 +3,11 @@
   --paper: #fbfcfb;
   --paper-elevated: #f1f5f3;
   --paper-strong: #e7eeeb;
+  --paper-alt: #f4f8f6;
+  --paper-muted: #edf3f0;
   --stone: #52645f;
   --line: #c9d5d1;
+  --line-strong: #a8bab4;
   --accent: #0b6b63;
   --accent-strong: #07584f;
   --accent-fg: #f8fffd;
@@ -28,10 +31,25 @@
   --field: #ffffff;
   --field-disabled: #e8eeeb;
 
+  --radius-sm: 4px;
   --radius-control: 8px;
   --radius-panel: 10px;
-  --font-display: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
-  --font-sans: 'Mukta', 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
+  --radius-lg: 14px;
+
+  --aspect-hero: 16/9;
+  --aspect-card: 16/10;
+  --aspect-thumb: 4/3;
+  --aspect-square: 1/1;
+
+  --shadow-sm: 0 1px 2px rgb(16 32 29 / 0.05);
+  --shadow-md: 0 4px 12px rgb(16 32 29 / 0.08);
+  --shadow-lg: 0 10px 24px rgb(16 32 29 / 0.09);
+  --shadow-xl: 0 16px 36px rgb(16 32 29 / 0.12);
+  --shadow-hover: 0 12px 32px rgb(16 32 29 / 0.13);
+
+  --font-display: 'Mukta', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Mukta', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Noto Serif Devanagari', Georgia, serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --accent-solid-bg: var(--accent);
   --accent-solid-fg: var(--accent-fg);
@@ -43,17 +61,20 @@
   --paper: #121a18;
   --paper-elevated: #192421;
   --paper-strong: #22302c;
+  --paper-alt: #16201e;
+  --paper-muted: #1e2c28;
   --stone: #a8bbb5;
   --line: #344943;
+  --line-strong: #4a665f;
   --accent: #54c8bd;
   --accent-strong: #6bd8cd;
-  --accent-fg: #eafaf6;
+  --accent-fg: #0d2723;
   --accent-muted: #173b36;
-  --accent-solid-bg: #0d6f66;
-  --accent-solid-fg: #eafaf6;
+  --accent-solid-bg: #54c8bd;
+  --accent-solid-fg: #0d2723;
   --holiday: #ff8c96;
 
-  --nav: #073e3a;
+  --nav: #0d2925;
   --nav-fg: #f3fbf8;
   --nav-accent: #77d7cf;
   --nav-muted: #78aaa4;
@@ -69,6 +90,13 @@
   --overlay: rgb(2 8 7 / 76%);
   --field: #1d2926;
   --field-disabled: #24312e;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 10px 24px rgb(0 0 0 / 0.55);
+  --shadow-xl: 0 16px 36px rgb(0 0 0 / 0.65);
+  --shadow-hover: 0 12px 32px rgb(0 0 0 / 0.60);
+
   color-scheme: dark;
 }
 

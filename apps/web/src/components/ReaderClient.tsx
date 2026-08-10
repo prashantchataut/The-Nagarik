@@ -2,42 +2,121 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Check, LinkSimple, ShareNetwork, TextAa } from '@phosphor-icons/react'
+import {
+  Check,
+  Copy,
+  FacebookLogo,
+  LinkSimple,
+  ShareNetwork,
+  TextAa,
+  WhatsappLogo,
+  XLogo,
+} from '@phosphor-icons/react'
 import type { Dictionary } from '@/lib/i18n'
 
 const TYPE_SCALE_KEY = 'tn_article_type_scale_v1'
 
-export function ShareCopyButton({ dict }: { dict: Dictionary }) {
+export function SocialShareButtons({
+  dict,
+  title,
+  url,
+}: {
+  dict: Dictionary
+  title?: string
+  url?: string
+}) {
   const [copied, setCopied] = useState(false)
+  const [currentUrl, setCurrentUrl] = useState(url ?? '')
 
-  async function share() {
-    const url = window.location.href
-    if (navigator.share) {
-      try {
-        await navigator.share({ url, title: document.title })
-        return
-      } catch {
-        // A dismissed share sheet is not an error state for the reader.
-      }
+  useEffect(() => {
+    if (!url && typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href)
     }
+  }, [url])
+
+  const encodedUrl = encodeURIComponent(currentUrl)
+  const encodedTitle = encodeURIComponent(title ?? (typeof document !== 'undefined' ? document.title : 'The Nagarik'))
+
+  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
+  const xShareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`
+  const waShareUrl = `https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}`
+  const viberShareUrl = `viber://forward?text=${encodedTitle}%20${encodedUrl}`
+
+  async function copyToClipboard() {
     try {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(currentUrl)
       setCopied(true)
-      window.setTimeout(() => setCopied(false), 1600)
+      window.setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Clipboard can be blocked by browser permissions. Keep the toolbar usable.
+      // Ignore clipboard permission errors
     }
   }
 
   return (
-    <button
-      type="button"
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper-elevated px-3 text-sm font-semibold hover:border-accent hover:text-accent"
-      onClick={() => void share()}
-    >
-      {copied ? <Check size={16} weight="bold" aria-hidden="true" /> : <ShareNetwork size={16} aria-hidden="true" />}
-      {copied ? dict.copied : dict.share}
-    </button>
+    <div className="flex flex-wrap items-center gap-1.5" aria-label="Social Share">
+      <a
+        href={fbShareUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line bg-paper text-[#1877f2] hover:border-[#1877f2] hover:bg-[#1877f2]/10 transition-colors"
+        aria-label={dict.shareOnFacebook}
+        title={dict.shareOnFacebook}
+      >
+        <FacebookLogo size={18} weight="fill" />
+      </a>
+
+      <a
+        href={xShareUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line bg-paper text-ink hover:border-ink hover:bg-ink/10 transition-colors"
+        aria-label={dict.shareOnX}
+        title={dict.shareOnX}
+      >
+        <XLogo size={17} weight="bold" />
+      </a>
+
+      <a
+        href={waShareUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line bg-paper text-[#25d366] hover:border-[#25d366] hover:bg-[#25d366]/10 transition-colors"
+        aria-label={dict.shareOnWhatsapp}
+        title={dict.shareOnWhatsapp}
+      >
+        <WhatsappLogo size={18} weight="fill" />
+      </a>
+
+      <a
+        href={viberShareUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-line bg-paper text-[#7360f2] hover:border-[#7360f2] hover:bg-[#7360f2]/10 transition-colors"
+        aria-label={dict.shareOnViber}
+        title={dict.shareOnViber}
+      >
+        <span className="text-xs font-black">V</span>
+      </a>
+
+      <button
+        type="button"
+        onClick={() => void copyToClipboard()}
+        className="inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-semibold text-ink hover:border-accent hover:text-accent transition-colors"
+        aria-label={dict.copyLink}
+      >
+        {copied ? (
+          <>
+            <Check size={14} weight="bold" className="text-success" />
+            <span className="text-success">{dict.copied}</span>
+          </>
+        ) : (
+          <>
+            <Copy size={14} weight="bold" />
+            <span>{dict.share}</span>
+          </>
+        )}
+      </button>
+    </div>
   )
 }
 
@@ -85,16 +164,20 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper-elevated px-3 text-sm font-semibold hover:border-accent hover:text-accent"
+        className="inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-semibold hover:border-accent hover:text-accent transition-colors"
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
       >
-        <TextAa size={17} aria-hidden="true" />
-        {dict.textSize}
+        <TextAa size={16} weight="bold" aria-hidden="true" />
+        <span>{dict.textSize}</span>
       </button>
       {open ? (
-        <div role="menu" aria-label={dict.textSize} className="absolute left-0 top-[calc(100%+0.4rem)] z-50 min-w-40 border border-line bg-paper-elevated p-1.5 shadow-[0_12px_28px_rgb(18_20_26_/_14%)]">
+        <div
+          role="menu"
+          aria-label={dict.textSize}
+          className="absolute left-0 top-[calc(100%+0.35rem)] z-50 min-w-36 rounded-[var(--radius-control)] border border-line bg-paper-elevated p-1 shadow-[0_12px_28px_rgb(16_32_29_/_0.15)]"
+        >
           {([
             ['sm', dict.textSmall],
             ['md', dict.textMedium],
@@ -105,11 +188,18 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
               type="button"
               role="menuitemradio"
               aria-checked={size === value}
-              className={`flex min-h-11 w-full items-center justify-between rounded-[var(--radius-control)] px-3 text-sm font-semibold ${size === value ? 'bg-accent-muted text-accent' : 'hover:bg-paper'}`}
-              onClick={() => { setSize(value); setOpen(false) }}
+              className={`flex min-h-9 w-full items-center justify-between rounded-[var(--radius-sm)] px-3 text-xs font-semibold ${
+                size === value
+                  ? 'bg-accent-muted text-accent'
+                  : 'hover:bg-paper text-ink'
+              }`}
+              onClick={() => {
+                setSize(value)
+                setOpen(false)
+              }}
             >
               <span>{label}</span>
-              {size === value ? <Check size={15} weight="bold" aria-hidden="true" /> : null}
+              {size === value ? <Check size={14} weight="bold" aria-hidden="true" /> : null}
             </button>
           ))}
         </div>
@@ -122,25 +212,30 @@ export function ArticleToolbar({
   dict,
   bilingualHref,
   bilingualLabel,
+  title,
 }: {
   dict: Dictionary
   bilingualHref?: string
   bilingualLabel?: string
+  title?: string
 }) {
   return (
-    <div className="sticky top-24 z-30 border-y border-line bg-paper md:top-11">
-      <div className="mx-auto flex min-h-14 max-w-[800px] flex-wrap items-center gap-2 px-4 md:px-6">
-        <ShareCopyButton dict={dict} />
-        <TextSizeControls dict={dict} />
-        {bilingualHref && bilingualLabel ? (
-          <Link
-            href={bilingualHref}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper-elevated px-3 text-sm font-semibold hover:border-accent hover:text-accent"
-          >
-            <LinkSimple size={15} aria-hidden="true" />
-            {bilingualLabel}
-          </Link>
-        ) : null}
+    <div className="sticky top-11 z-30 border-y border-line bg-paper/95 backdrop-blur">
+      <div className="mx-auto flex min-h-12 max-w-[840px] flex-wrap items-center justify-between gap-3 px-4 md:px-6">
+        <SocialShareButtons dict={dict} title={title} />
+
+        <div className="flex items-center gap-2">
+          <TextSizeControls dict={dict} />
+          {bilingualHref && bilingualLabel ? (
+            <Link
+              href={bilingualHref}
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-bold text-accent hover:border-accent"
+            >
+              <LinkSimple size={14} weight="bold" aria-hidden="true" />
+              <span>{bilingualLabel}</span>
+            </Link>
+          ) : null}
+        </div>
       </div>
     </div>
   )
@@ -149,7 +244,7 @@ export function ArticleToolbar({
 export function ReadingProgress() {
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-0 z-[80] h-0.5 origin-left accent-solid"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[80] h-1 origin-left accent-solid"
       style={{ transform: 'scaleX(var(--read-progress, 0))' }}
       aria-hidden="true"
     />
@@ -246,13 +341,13 @@ export function ConsentBanner({ dict }: { dict: Dictionary }) {
   if (hidden) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper-elevated p-4 shadow-[0_-12px_40px_rgba(18,20,26,0.08)]">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <p className="max-w-2xl text-sm text-stone">{dict.consentBody}</p>
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper-elevated p-4 shadow-[0_-12px_40px_rgba(16,32,29,0.12)]">
+      <div className="mx-auto flex max-w-[1280px] flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <p className="max-w-2xl text-xs sm:text-sm text-stone">{dict.consentBody}</p>
         <div className="flex gap-2">
           <button
             type="button"
-            className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line px-3 text-sm font-semibold active:scale-[0.98]"
+            className="inline-flex min-h-9 items-center rounded-[var(--radius-control)] border border-line px-3 text-xs font-bold active:scale-[0.98]"
             onClick={() => {
               document.cookie = 'tn_consent_analytics=0; path=/; max-age=31536000; samesite=lax'
               setHidden(true)
@@ -262,7 +357,7 @@ export function ConsentBanner({ dict }: { dict: Dictionary }) {
           </button>
           <button
             type="button"
-            className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-3 text-sm font-semibold  active:scale-[0.98]"
+            className="inline-flex min-h-9 items-center rounded-[var(--radius-control)] accent-solid px-3 text-xs font-bold active:scale-[0.98]"
             onClick={() => {
               document.cookie = 'tn_consent_analytics=1; path=/; max-age=31536000; samesite=lax'
               setHidden(true)
