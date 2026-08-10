@@ -1,153 +1,216 @@
-import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import {
-  listDeskAuthors,
-  listDeskCategories,
-  listDeskMedia,
-  listDeskTags,
-} from '@/lib/admin/payload-desk'
-import { getJournalistArticle } from '@/lib/journalist/desk'
+  NotePencil,
+  FileText,
+  Clock,
+  CheckCircle,
+  Hourglass,
+  ArrowSquareOut,
+} from '@phosphor-icons/react/dist/ssr'
 import { requireContributorSession } from '@/lib/journalist/session'
-import { ComposeClientPrefs } from '@/components/journalist/ComposeClientPrefs'
-import type { ComposerInitial } from '@/components/journalist/ArticleComposer'
-import type { EditorBlock } from '@/lib/journalist/schema'
+import {
+  getJournalistStatusCounts,
+  listJournalistStories,
+} from '@/lib/journalist/desk'
+import { payloadDeskAvailable } from '@/lib/admin/payload-desk'
+import { AdminStatusPill } from '@/components/admin/primitives'
+import { primaryRole } from '@/lib/auth/staff-roles'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'समाचार सम्पादन · पत्रकार डेस्क',
+  title: 'मेरो डेस्क · पत्रकार पोर्टल',
   robots: { index: false, follow: false },
 }
 
-function mapBody(raw: unknown): EditorBlock[] {
-  if (!Array.isArray(raw) || !raw.length) return [{ type: 'paragraph', text: '' }]
-  const out: EditorBlock[] = []
-  for (const item of raw) {
-    if (!item || typeof item !== 'object') continue
-    const b = item as Record<string, unknown>
-    switch (b.type) {
-      case 'paragraph':
-      case 'heading2':
-      case 'heading3':
-        if (typeof b.text === 'string') out.push({ type: b.type, text: b.text })
-        break
-      case 'pullQuote':
-        if (typeof b.text === 'string') {
-          out.push({
-            type: 'pullQuote',
-            text: b.text,
-            attribution: typeof b.attribution === 'string' ? b.attribution : undefined,
-          })
-        }
-        break
-      case 'list':
-        if (Array.isArray(b.items)) {
-          out.push({
-            type: 'list',
-            ordered: Boolean(b.ordered),
-            items: b.items.filter((x): x is string => typeof x === 'string'),
-          })
-        }
-        break
-      case 'image': {
-        const media = b.media
-        if (media && typeof media === 'object') {
-          const m = media as Record<string, unknown>
-          out.push({
-            type: 'image',
-            media: {
-              id: String(m.id ?? ''),
-              url: String(m.url ?? ''),
-              alt: String(m.alt ?? ''),
-              credit: String(m.credit ?? ''),
-              width: typeof m.width === 'number' ? m.width : undefined,
-              height: typeof m.height === 'number' ? m.height : undefined,
-            },
-            caption: typeof b.caption === 'string' ? b.caption : undefined,
-          })
-        }
-        break
-      }
-      default:
-        break
-    }
-  }
-  return out.length ? out : [{ type: 'paragraph', text: '' }]
-}
+export default async function JournalistDashboardPage() {
+  const session = await requireContributorSession('/journalist')
+  const connected = payloadDeskAvailable()
+  const role = primaryRole(session.roles)
 
-function relId(value: unknown): string {
-  if (value == null) return ''
-  if (typeof value === 'string' || typeof value === 'number') return String(value)
-  if (typeof value === 'object' && 'id' in value) {
-    return String((value as { id: string | number }).id)
-  }
-  return ''
-}
-
-function relIds(value: unknown): string[] {
-  if (!Array.isArray(value)) return []
-  return value.map(relId).filter(Boolean)
-}
-
-export default async function JournalistComposeEditPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-  const session = await requireContributorSession(`/journalist/compose/${id}`)
-  const doc = await getJournalistArticle(session, id)
-  if (!doc) notFound()
-
-  const [categories, authors, tags, media] = await Promise.all([
-    listDeskCategories(),
-    listDeskAuthors(),
-    listDeskTags(),
-    listDeskMedia(60),
+  const [counts, stories] = await Promise.all([
+    getJournalistStatusCounts(session),
+    listJournalistStories(session, { limit: 50 }),
   ])
 
-  const initial: ComposerInitial = {
-    id: String(doc.id),
-    titleNe: String(doc.titleNe ?? ''),
-    titleEn: typeof doc.titleEn === 'string' ? doc.titleEn : '',
-    slug: String(doc.slug ?? ''),
-    deckNe: String(doc.deckNe ?? ''),
-    deckEn: typeof doc.deckEn === 'string' ? doc.deckEn : '',
-    categoryId: relId(doc.category) || categories[0]?.id || '',
-    authorIds: relIds(doc.authors).length ? relIds(doc.authors) : authors[0] ? [authors[0].id] : [],
-    tagIds: relIds(doc.tags),
-    province: typeof doc.province === 'string' ? doc.province : '',
-    heroId: relId(doc.hero),
-    bodyNe: mapBody(doc.bodyNe),
-    seoTitleNe: typeof doc.seoTitleNe === 'string' ? doc.seoTitleNe : '',
-    seoDescriptionNe: typeof doc.seoDescriptionNe === 'string' ? doc.seoDescriptionNe : '',
-    status: String(doc.status ?? 'draft'),
-  }
+  const draftCount = counts?.draft ?? 0
+  const inReviewCount = counts?.in_review ?? 0
+  const publishedCount = counts?.published ?? 0
+  const totalCount = draftCount + inReviewCount + publishedCount
 
   return (
-    <div>
-      <header className="mx-auto mb-5 max-w-[1220px]">
-        <nav aria-label="Breadcrumb" className="text-xs font-semibold text-stone">पत्रकार डेस्क / सम्पादन</nav>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">Story editor</p>
-            <h1 className="mt-1 max-w-[28ch] truncate text-2xl font-bold tracking-[-0.025em] sm:text-3xl">
-              {initial.titleNe || 'शीर्षक नभएको ड्राफ्ट'}
-            </h1>
+    <div className="space-y-8 max-w-[1240px]">
+      {/* Welcome Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">
+              पत्रकार कार्यथलो
+            </p>
           </div>
-          <p className="text-sm font-semibold text-stone">स्थिति: {initial.status}</p>
+          <h1 className="mt-1 text-2xl font-black text-ink sm:text-3xl">
+            मेरो डेस्क (Journalist Workspace)
+          </h1>
+          <p className="mt-1 text-xs text-stone">
+            साइन इन: <strong>{session.name || session.email}</strong> ({role ?? 'journalist'})
+          </p>
         </div>
-      </header>
-      <ComposeClientPrefs
-        initial={initial}
-        categories={categories.map((item) => ({ id: item.id, label: item.nameNe, slug: item.slug }))}
-        authors={authors.map((item) => ({ id: item.id, label: item.nameNe }))}
-        tags={tags.map((item) => ({ id: item.id, label: item.nameNe }))}
-        media={media.map((item) => ({
-          id: item.id,
-          label: item.alt || item.filename,
-          url: item.url,
-          alt: item.alt,
-          credit: item.credit,
-        }))}
-      />
+
+        <div className="flex flex-wrap gap-2.5">
+          <Link
+            href="/journalist/compose"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-[var(--radius-control)] accent-solid px-4 text-xs font-bold shadow-sm hover:opacity-95 transition-opacity"
+          >
+            <NotePencil size={16} weight="bold" />
+            <span>+ नयाँ लेख मस्यौदा</span>
+          </Link>
+
+          <Link
+            href="/journalist/preferences"
+            className="inline-flex min-h-10 items-center rounded-[var(--radius-control)] border border-line bg-paper px-3 text-xs font-bold text-ink hover:border-accent"
+          >
+            सेटिङ
+          </Link>
+        </div>
+      </div>
+
+      {/* Metric Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="surface-card p-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-stone">
+            मस्यौदा (Drafts)
+          </p>
+          <p className="mt-2 text-3xl font-black tabular-nums text-ink">
+            {draftCount}
+          </p>
+          <p className="mt-1 text-[0.7rem] text-stone">तयारी भइरहेका लेखहरू</p>
+        </div>
+
+        <div className="surface-card p-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-warning">
+            समीक्षामा (In Review)
+          </p>
+          <p className="mt-2 text-3xl font-black tabular-nums text-warning">
+            {inReviewCount}
+          </p>
+          <p className="mt-1 text-[0.7rem] text-stone">सम्पादकको पर्खाइमा</p>
+        </div>
+
+        <div className="surface-card p-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-accent">
+            प्रकाशित (Published)
+          </p>
+          <p className="mt-2 text-3xl font-black tabular-nums text-accent">
+            {publishedCount}
+          </p>
+          <p className="mt-1 text-[0.7rem] text-stone">पाठकले पढिरहेका लेखहरू</p>
+        </div>
+
+        <div className="surface-card p-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-stone">
+            कुल सामग्री
+          </p>
+          <p className="mt-2 text-3xl font-black tabular-nums text-ink">
+            {totalCount}
+          </p>
+          <p className="mt-1 text-[0.7rem] text-stone">मेरो सम्पूर्ण पत्रकारिता</p>
+        </div>
+      </div>
+
+      {/* Stories Table */}
+      <div>
+        <div className="flex items-center justify-between border-b-2 border-accent pb-3 mb-4">
+          <h2 className="text-base font-black text-ink">
+            मेरा समाचार तथा मस्यौैदाहरू (My Stories & Drafts)
+          </h2>
+          <span className="text-xs font-bold text-stone">
+            {stories.length} सामग्रीहरू
+          </span>
+        </div>
+
+        {!connected ? (
+          <div className="surface-card p-8 text-center text-stone text-xs">
+            Connect PostgreSQL database to load stories from Payload.
+          </div>
+        ) : stories.length ? (
+          <div className="surface-card overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-xs">
+              <thead className="border-b border-line bg-paper-elevated text-stone uppercase tracking-wider font-bold">
+                <tr>
+                  <th className="px-4 py-3">शीर्षक</th>
+                  <th className="px-4 py-3">विभाग</th>
+                  <th className="px-4 py-3">स्थिति</th>
+                  <th className="px-4 py-3">अन्तिम अद्यावधिक</th>
+                  <th className="px-4 py-3">कार्यहरू</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {stories.map((story) => (
+                  <tr key={story.id} className="hover:bg-paper-elevated/50 transition-colors">
+                    <td className="px-4 py-3 font-bold text-ink max-w-[320px] truncate">
+                      {story.isBreaking ? (
+                        <span className="mr-2 rounded bg-danger px-1.5 py-0.5 text-[0.65rem] font-black text-danger-fg">
+                          ब्रेकिङ
+                        </span>
+                      ) : null}
+                      <span>{story.titleNe}</span>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-accent capitalize">
+                      {story.categorySlug}
+                    </td>
+                    <td className="px-4 py-3">
+                      <AdminStatusPill status={story.status} />
+                    </td>
+                    <td className="px-4 py-3 text-stone tabular-nums">
+                      {story.updatedAt
+                        ? new Date(story.updatedAt).toLocaleDateString('ne-NP')
+                        : '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3 font-bold">
+                        <Link
+                          href={`/journalist/compose/${story.id}`}
+                          className="text-accent hover:underline"
+                        >
+                          सम्पादन (Edit) →
+                        </Link>
+                        {story.status === 'published' ? (
+                          <Link
+                            href={`/ne/${story.categorySlug}/${story.slug}`}
+                            target="_blank"
+                            className="text-stone hover:text-ink inline-flex items-center gap-0.5"
+                          >
+                            <span>हेर्नुहोस्</span>
+                            <ArrowSquareOut size={11} weight="bold" />
+                          </Link>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="surface-card p-12 text-center">
+            <FileText size={32} weight="bold" className="mx-auto text-stone/60 mb-3" />
+            <p className="text-sm font-bold text-ink">कुनै मस्यौदा भेटिएन</p>
+            <p className="mt-1 text-xs text-stone">
+              पहिलो समाचार मस्यौदा तयार गरी सम्पादकीय समीक्षामा पठाउनुहोस्।
+            </p>
+            <div className="mt-5">
+              <Link
+                href="/journalist/compose"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] accent-solid px-4 py-2 text-xs font-bold shadow-sm"
+              >
+                <NotePencil size={15} weight="bold" />
+                <span>+ नयाँ लेख लेख्नुहोस्</span>
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

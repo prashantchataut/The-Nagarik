@@ -2,465 +2,284 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import {
-  articleHasEnglish,
-  localizeBody,
-  localizeDeck,
-  localizeTitle,
-} from '@thenagarik/content'
-import {
-  ArticleEngagement,
-  ArticleToolbar,
-  ReadingProgress,
-} from '@/components/ReaderClient'
-import { StoryRail } from '@/components/Story'
-import { RelativeTime } from '@/components/RelativeTime'
-import { CategoryTag } from '@/components/news/CategoryTag'
-import { renderInlineMarkup } from '@/components/journalist/inline-markup'
+import type { StoryCard } from '@thenagarik/content'
 import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
+import { getEngagementSnapshot } from '@/lib/engagement'
+import { detectTrending, mostRead } from '@thenagarik/algorithms'
+import { RelativeTime } from '@/components/RelativeTime'
+import { CategoryIcon } from '@/components/CategoryIcon'
+import { TrendingSection } from '@/components/home/TrendingSection'
+import { LatestSection } from '@/components/home/LatestSection'
 
 export const revalidate = 60
-
-function slugifyHeading(text: string, index: number): string {
-  const base = text
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .slice(0, 48)
-  return base || `section-${index}`
-}
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string; category: string; slug: string }>
+  params: Promise<{ locale: string; category: string }>
 }): Promise<Metadata> {
-  const { locale: raw, category, slug } = await params
+  const { locale: raw, category } = await params
   if (!isLocale(raw)) return {}
   const locale = raw as AppLocale
   const content = getContent()
-  const article = await content.getArticleBySlug(category, slug)
-  if (!article) return {}
-  if (locale === 'en' && !articleHasEnglish(article)) return { robots: { index: false } }
+  const categoryDoc = await content.getCategoryBySlug(category)
+  if (!categoryDoc) return {}
 
-  const title = localizeTitle(article, locale)
-  const description = localizeDeck(article, locale)
-  const languages: Record<string, string> = {
-    ne: siteUrl(`/ne/${category}/${slug}`),
-  }
-  if (articleHasEnglish(article)) {
-    languages.en = siteUrl(`/en/${category}/${slug}`)
-  }
+  const title = locale === 'en' ? categoryDoc.nameEn : categoryDoc.nameNe
+  const description = locale === 'en' ? categoryDoc.descriptionEn : categoryDoc.descriptionNe
 
   return {
-    title,
+    title: `${title} | The Nagarik`,
     description,
     alternates: {
-      canonical: siteUrl(`/${locale}/${category}/${slug}`),
-      languages,
+      canonical: siteUrl(`/${locale}/${category}`),
+      languages: {
+        ne: siteUrl(`/ne/${category}`),
+        en: siteUrl(`/en/${category}`),
+      },
     },
     openGraph: {
       title,
       description,
-      type: 'article',
-      images: article.hero ? [{ url: article.hero.url, alt: article.hero.alt }] : undefined,
+      type: 'website',
     },
   }
 }
 
-export default async function ArticlePage({
+export default async function CategoryPage({
   params,
 }: {
-  params: Promise<{ locale: string; category: string; slug: string }>
+  params: Promise<{ locale: string; category: string }>
 }) {
-  const { locale: raw, category, slug } = await params
+  const { locale: raw, category: categorySlug } = await params
   if (!isLocale(raw)) notFound()
   const locale = raw as AppLocale
   const dict = getDictionary(locale)
   const content = getContent()
-  const article = await content.getArticleBySlug(category, slug)
-  if (!article) notFound()
-  if (locale === 'en' && !articleHasEnglish(article)) notFound()
 
-  const title = localizeTitle(article, locale)
-  const deck = localizeDeck(article, locale)
-  const body = localizeBody(article, locale)
-  const card = await content.toStoryCard(article, locale)
-  const related = await content.getRelated(article, locale, 6)
-  const packagePeers = await content.getPackagePeers(article, locale, 4)
-  const heroCredit =
-    article.hero?.credit && !article.hero.credit.toLowerCase().includes('dev_only')
-      ? article.hero.credit
-      : ''
-  const authors = (
-    await Promise.all(article.authorIds.map((id) => content.getAuthorById(id)))
-  ).filter(Boolean)
-  const categoryDoc = await content.getCategoryBySlug(category)
-  const categoryLabel =
-    categoryDoc == null
-      ? category
-      : locale === 'en'
-        ? categoryDoc.nameEn
-        : categoryDoc.nameNe
+  const categoryDoc = await content.getCategoryBySlug(categorySlug)
+  if (!categoryDoc) notFound()
 
-  const toc = body
-    .map((block, i) => {
-      if (block.type !== 'heading2' && block.type !== 'heading3') return null
-      return { id: slugifyHeading(block.text, i), text: block.text, level: block.type }
-    })
-    .filter(Boolean) as { id: string; text: string; level: 'heading2' | 'heading3' }[]
+  const allArticles = await content.listPublishedArticles({ locale })
+  const catArticles = allArticles.filter((a) => a.categoryId === categoryDoc.id)
+  const cards = await Promise.all(catArticles.map((a) => content.toStoryCard(a, locale)))
+  const allCards = await Promise.all(allArticles.map((a) => content.toStoryCard(a, locale)))
 
-  const nextStory = related[0]
-  const restRelated = related.slice(1)
-  const hasEn = articleHasEnglish(article)
-  const otherLocale: AppLocale = locale === 'ne' ? 'en' : 'ne'
-  const bilingualHref = hasEn ? `/${otherLocale}/${category}/${slug}` : undefined
-  const bilingualLabel = hasEn ? (otherLocale === 'en' ? 'English' : 'नेपाली') : undefined
-  const latestPool = await content.listPublishedArticles({ locale })
-  const latestCards = (
-    await Promise.all(latestPool.slice(0, 8).map((a) => content.toStoryCard(a, locale)))
-  ).filter((c) => c.id !== article.id).slice(0, 6)
+  const categoryName = locale === 'en' ? categoryDoc.nameEn : categoryDoc.nameNe
+  const categoryDesc = locale === 'en' ? categoryDoc.descriptionEn : categoryDoc.descriptionNe
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'NewsArticle',
-    headline: title,
-    description: deck,
-    datePublished: article.publishedAt,
-    dateModified: article.updatedAt ?? article.publishedAt,
-    inLanguage: locale,
-    author: authors.map((a) => ({
-      '@type': 'Person',
-      name: locale === 'en' && a!.nameEn ? a!.nameEn : a!.nameNe,
-      url: siteUrl(`/${locale}/author/${a!.slug}`),
-    })),
-    image: article.hero?.url,
-  }
+  const [leadStory, secondStory, thirdStory, ...streamStories] = cards
+
+  // Side trending & latest recommendations
+  const snap = await getEngagementSnapshot()
+  const trending = detectTrending(
+    allArticles.map((a) => ({ id: a.id, publishedAt: a.publishedAt })),
+    snap.trendingSamples,
+    { limit: 5 },
+  )
+  const byId = new Map(allCards.map((c) => [c.id, c]))
+  const trendingCards = trending.items.map((i) => byId.get(i.id)).filter(Boolean) as StoryCard[]
+  const otherStories = allCards.filter((c) => c.categorySlug !== categorySlug).slice(0, 4)
 
   return (
-    <>
-      <ReadingProgress />
-      <ArticleEngagement
-        storyId={article.id}
-        categorySlug={category}
-        slug={slug}
-        title={title}
-      />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
-      <article>
-        <header className="mx-auto max-w-[800px] px-4 pb-6 pt-7 md:px-6 md:pb-7 md:pt-10">
-          <div className="flex flex-wrap items-center gap-2">
-            <CategoryTag href={`/${locale}/${category}`}>{categoryLabel}</CategoryTag>
-            {article.isBreaking ? (
-              <span className="text-[0.7rem] font-semibold text-holiday">{dict.breaking}</span>
-            ) : null}
-          </div>
-          <h1 className="mt-3 text-[2rem] font-bold leading-[1.35] tracking-[-0.03em] sm:text-[2.35rem] md:text-[2.8rem]">
-            {title}
-          </h1>
-          <p className="mt-4 max-w-[66ch] text-lg leading-8 text-stone md:text-xl">{deck}</p>
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone">
-            <span
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full accent-solid text-[0.7rem] font-semibold "
-              aria-hidden
-            >
-              {dict.siteName.slice(0, 1)}
+    <main className="mx-auto max-w-[1280px] px-4 py-6 md:px-6 md:py-9">
+      {/* Category Masthead */}
+      <header className="border-b-2 border-accent pb-5 mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-fg">
+              <CategoryIcon slug={categorySlug} size={22} weight="bold" />
             </span>
-            <span className="flex flex-wrap items-center gap-x-1 font-medium text-ink">
-              {authors.length ? authors.map((author, index) => (
-                <span key={author!.id}>
-                  {index ? <span className="text-stone">, </span> : null}
-                  <Link href={`/${locale}/author/${author!.slug}`} className="hover:text-accent hover:underline">
-                    {locale === 'en' && author!.nameEn ? author!.nameEn : author!.nameNe}
-                  </Link>
-                </span>
-              )) : dict.siteName}
-            </span>
-            <span aria-hidden className="text-line">
-              ·
-            </span>
-            <span>
-              {card.readTimeMinutes} {dict.minutesRead}
-            </span>
-            <span aria-hidden className="text-line">
-              ·
-            </span>
-            <RelativeTime iso={article.publishedAt} locale={locale} />
-            {article.updatedAt ? (
-              <>
-                <span aria-hidden className="text-line">
-                  ·
-                </span>
-                <span>
-                  {dict.updated}{' '}
-                  {new Intl.DateTimeFormat('en-GB', {
-                    timeZone: 'Asia/Kathmandu',
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false,
-                  }).format(new Date(article.updatedAt))}
-                </span>
-              </>
-            ) : null}
-          </div>
-        </header>
-
-        <ArticleToolbar
-          dict={dict}
-          bilingualHref={bilingualHref}
-          bilingualLabel={bilingualLabel}
-        />
-
-        {article.hero ? (
-          <figure className="mx-auto mb-8 max-w-[1080px] md:mb-10 md:px-6">
-            <div className="relative aspect-[16/9] w-full overflow-hidden bg-line">
-              <Image
-                src={article.hero.url}
-                alt={article.hero.alt}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 960px"
-                className="object-cover"
-              />
-            </div>
-            <figcaption className="mt-2 px-4 text-xs leading-5 text-stone md:px-0">
-              <span>{article.hero.alt}</span>
-              {heroCredit ? <span> · {heroCredit}</span> : null}
-            </figcaption>
-          </figure>
-        ) : null}
-
-        <div className="mx-auto grid max-w-[1240px] gap-10 px-4 pb-16 md:px-6 lg:grid-cols-[minmax(0,720px)_280px] lg:justify-center lg:gap-10">
-          <div>
-            {toc.length >= 2 ? (
-              <nav
-                aria-label={dict.onThisPage}
-                className="mb-8 border-y border-line py-4 lg:hidden"
-              >
-                <p className="text-sm font-medium text-stone">{dict.onThisPage}</p>
-                <ol className="mt-3 space-y-2 text-sm">
-                  {toc.map((item) => (
-                    <li key={item.id} className={item.level === 'heading3' ? 'pl-3' : ''}>
-                      <a href={`#${item.id}`} className="text-ink hover:text-accent">
-                        {item.text}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </nav>
-            ) : null}
-
-            <div
-              className="space-y-6 text-lg leading-[1.8]"
-              style={{ fontSize: 'calc(1.125rem * var(--article-type-scale, 1))' }}
-            >
-              {body.map((block, i) => {
-                switch (block.type) {
-                  case 'paragraph':
-                    return <p key={i}>{renderInlineMarkup(block.text)}</p>
-                  case 'heading2': {
-                    const id = slugifyHeading(block.text, i)
-                    return (
-                      <h2
-                        key={i}
-                        id={id}
-                        className="scroll-mt-28 pt-5 text-[1.75rem] font-bold leading-[1.5] tracking-[-0.02em]"
-                      >
-                        {renderInlineMarkup(block.text)}
-                      </h2>
-                    )
-                  }
-                  case 'heading3': {
-                    const id = slugifyHeading(block.text, i)
-                    return (
-                      <h3
-                        key={i}
-                        id={id}
-                        className="scroll-mt-28 pt-3 text-2xl font-bold leading-[1.5] tracking-[-0.02em]"
-                      >
-                        {renderInlineMarkup(block.text)}
-                      </h3>
-                    )
-                  }
-                  case 'pullQuote':
-                    return (
-                      <blockquote
-                        key={i}
-                        className="my-8 border-y border-line py-5 text-xl font-semibold leading-[1.75] text-ink"
-                      >
-                        <p>{block.text}</p>
-                        {block.attribution ? (
-                          <cite className="mt-2 block text-sm not-italic">{block.attribution}</cite>
-                        ) : null}
-                      </blockquote>
-                    )
-                  case 'list':
-                    return block.ordered ? (
-                      <ol key={i} className="list-decimal space-y-1 pl-5">
-                        {block.items.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ol>
-                    ) : (
-                      <ul key={i} className="list-disc space-y-1 pl-5">
-                        {block.items.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    )
-                  case 'image':
-                    return (
-                      <figure key={i} className="my-8">
-                        <Image
-                          src={block.media.url}
-                          alt={block.media.alt}
-                          width={block.media.width || 960}
-                          height={block.media.height || 540}
-                          sizes="(max-width: 768px) 100vw, 720px"
-                          className="h-auto w-full"
-                        />
-                        {(block.caption || block.media.credit) ? (
-                          <figcaption className="mt-2 text-sm leading-6 text-stone">
-                            {block.caption ? <span>{block.caption}</span> : null}
-                            {block.caption && block.media.credit ? <span> · </span> : null}
-                            {block.media.credit ? <span>{block.media.credit}</span> : null}
-                          </figcaption>
-                        ) : null}
-                      </figure>
-                    )
-                  default: {
-                    const _exhaustive: never = block
-                    return _exhaustive
-                  }
-                }
-              })}
-            </div>
-
-            {authors.length ? (
-              <section className="mt-10 border-y border-line py-5" aria-labelledby="article-authors-title">
-                <p id="article-authors-title" className="text-xs font-bold uppercase tracking-[0.12em] text-stone">{dict.authors}</p>
-                <div className="mt-3 space-y-4">
-                  {authors.map((author) => {
-                    const name = locale === 'en' && author!.nameEn ? author!.nameEn : author!.nameNe
-                    const bio = locale === 'en' && author!.bioEn ? author!.bioEn : author!.bioNe
-                    return (
-                      <div key={author!.id}>
-                        <Link href={`/${locale}/author/${author!.slug}`} className="inline-flex min-h-11 items-center font-bold text-ink hover:text-accent">
-                          {name}
-                        </Link>
-                        {bio ? <p className="mt-1 max-w-[64ch] text-sm leading-6 text-stone">{bio}</p> : null}
-                      </div>
-                    )
-                  })}
-                </div>
-              </section>
-            ) : null}
-
-            {article.tagSlugs.length ? (
-              <nav className="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Tags">
-                {article.tagSlugs.map((tag) => (
-                  <Link key={tag} href={`/${locale}/search?q=${encodeURIComponent(tag)}`} className="font-semibold text-stone hover:text-accent">#{tag}</Link>
-                ))}
-              </nav>
-            ) : null}
-
-            {article.corrections.length ? (
-              <aside className="mt-10 border border-line bg-paper-elevated p-4 text-sm">
-                <h2 className="font-medium">{dict.corrections}</h2>
-                <ul className="mt-2 space-y-2 text-stone">
-                  {article.corrections.map((c) => (
-                    <li key={c.at}>{locale === 'en' && c.noteEn ? c.noteEn : c.noteNe}</li>
-                  ))}
-                </ul>
-              </aside>
-            ) : null}
-
-            <p className="mt-10 text-sm">
-              <Link href={`/${locale}/${category}`} className="text-accent hover:underline">
-                {categoryLabel}
-              </Link>
-            </p>
-          </div>
-
-          <aside className="hidden lg:block">
-            <div className="sticky top-16 space-y-6">
-              {toc.length >= 2 ? (
-                <div>
-                  <p className="text-sm font-semibold text-stone">{dict.onThisPage}</p>
-                  <ol className="mt-3 space-y-2.5 border-l border-line pl-3 text-sm text-stone">
-                    {toc.map((item) => (
-                      <li key={item.id} className={item.level === 'heading3' ? 'pl-2' : ''}>
-                        <a href={`#${item.id}`} className="hover:text-accent">
-                          {item.text}
-                        </a>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              ) : null}
-              {latestCards.length ? (
-                <div>
-                  <p className="border-b-2 border-accent pb-2 text-sm font-semibold">{dict.latest}</p>
-                  <ul className="mt-2">
-                    {latestCards.map((s) => (
-                      <li key={s.id} className="border-b border-line py-2 last:border-b-0">
-                        <Link
-                          href={`/${locale}/${s.categorySlug}/${s.slug}`}
-                          className="flex gap-2 text-sm leading-snug hover:text-accent"
-                        >
-                          {s.title}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-ink md:text-4xl">
+                {categoryName}
+              </h1>
+              {categoryDesc ? (
+                <p className="mt-1 text-sm text-stone max-w-[65ch]">{categoryDesc}</p>
               ) : null}
             </div>
-          </aside>
+          </div>
+
+          <div className="text-right text-xs font-bold text-stone">
+            <span className="rounded-full bg-paper-elevated px-3 py-1.5 border border-line">
+              {cards.length} {dict.stories}
+            </span>
+          </div>
         </div>
-      </article>
+      </header>
 
-      {nextStory ? (
-        <section className="border-y border-line">
-          <div className="mx-auto max-w-[720px] px-4 py-6 md:px-6">
-            <p className="text-sm font-medium text-accent">{dict.nextStory}</p>
-            <Link
-              href={`/${locale}/${nextStory.categorySlug}/${nextStory.slug}`}
-              className={`mt-3 grid gap-4 ${nextStory.hero ? 'sm:grid-cols-[9rem_1fr] sm:items-center' : ''}`}
-            >
-              {nextStory.hero ? (
-                <span className="relative aspect-[4/3] overflow-hidden bg-line">
-                  <Image
-                    src={nextStory.hero.url}
-                    alt={nextStory.hero.alt}
-                    fill
-                    sizes="144px"
-                    className="object-cover"
-                  />
-                </span>
-              ) : null}
-              <span>
-                <span className="block font-[family-name:var(--font-display)] text-xl leading-snug tracking-[-0.02em] md:text-[1.35rem]">
-                  {nextStory.title}
-                </span>
-                <span className="mt-2 block line-clamp-2 text-sm text-stone">{nextStory.deck}</span>
-              </span>
-            </Link>
+      {cards.length ? (
+        <>
+          {/* Main Category Package (Lead 7 cols + 2 secondary 5 cols) */}
+          <div className="grid gap-6 lg:grid-cols-12 lg:gap-8">
+            {/* Lead Story */}
+            {leadStory ? (
+              <article className="lg:col-span-7 group">
+                {leadStory.hero ? (
+                  <Link
+                    href={`/${locale}/${leadStory.categorySlug}/${leadStory.slug}`}
+                    className="editorial-image relative block aspect-[16/9] w-full rounded-[var(--radius-panel)] shadow-[0_4px_16px_rgb(16_32_29_/_0.08)]"
+                  >
+                    <Image
+                      src={leadStory.hero.url}
+                      alt={leadStory.hero.alt || leadStory.title}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 720px"
+                      className="object-cover"
+                    />
+                  </Link>
+                ) : null}
+
+                <div className="mt-4">
+                  <h2 className="text-2xl font-black leading-tight tracking-[-0.025em] text-ink group-hover:text-accent transition-colors md:text-[2rem]">
+                    <Link href={`/${locale}/${leadStory.categorySlug}/${leadStory.slug}`}>
+                      {leadStory.title}
+                    </Link>
+                  </h2>
+                  {leadStory.deck ? (
+                    <p className="mt-2.5 max-w-[62ch] text-base leading-relaxed text-stone">
+                      {leadStory.deck}
+                    </p>
+                  ) : null}
+                  <div className="mt-3 flex items-center gap-3 text-xs font-semibold text-stone">
+                    <span className="font-bold text-ink">
+                      {leadStory.authorNames.join(', ') || dict.siteName}
+                    </span>
+                    <span>·</span>
+                    <RelativeTime iso={leadStory.publishedAt} locale={locale} />
+                  </div>
+                </div>
+              </article>
+            ) : null}
+
+            {/* Secondary Stories */}
+            <div className="flex flex-col justify-between gap-5 lg:col-span-5">
+              {[secondStory, thirdStory].filter(Boolean).map((story) => (
+                <article
+                  key={story.id}
+                  className="surface-card flex flex-col justify-between overflow-hidden p-4 group"
+                >
+                  <div>
+                    {story.hero ? (
+                      <Link
+                        href={`/${locale}/${story.categorySlug}/${story.slug}`}
+                        className="editorial-image relative block aspect-[16/10] rounded-[var(--radius-control)] mb-3 overflow-hidden"
+                      >
+                        <Image
+                          src={story.hero.url}
+                          alt={story.hero.alt || story.title}
+                          fill
+                          sizes="(max-width: 1024px) 100vw, 360px"
+                          className="object-cover"
+                        />
+                      </Link>
+                    ) : null}
+                    <h3 className="text-base font-bold leading-snug tracking-[-0.015em] text-ink group-hover:text-accent transition-colors md:text-lg">
+                      <Link href={`/${locale}/${story.categorySlug}/${story.slug}`}>
+                        {story.title}
+                      </Link>
+                    </h3>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between border-t border-line/60 pt-2 text-xs font-medium text-stone">
+                    <span>{story.authorNames.join(', ') || dict.siteName}</span>
+                    <RelativeTime iso={story.publishedAt} locale={locale} />
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-        </section>
-      ) : null}
 
-      {packagePeers.length ? (
-        <StoryRail title={dict.storyPackage} locale={locale} stories={packagePeers} dict={dict} />
-      ) : null}
+          {/* Chronological Stream */}
+          {streamStories.length ? (
+            <section className="mt-12 border-t-2 border-line pt-8" aria-label="More Stories">
+              <h2 className="mb-6 text-xl font-black text-ink">
+                {locale === 'ne' ? 'थप समाचार' : 'More Stories'}
+              </h2>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {streamStories.map((story) => (
+                  <article
+                    key={story.id}
+                    className="surface-card flex flex-col justify-between overflow-hidden group"
+                  >
+                    {story.hero ? (
+                      <Link
+                        href={`/${locale}/${story.categorySlug}/${story.slug}`}
+                        className="editorial-image relative block aspect-[16/10] w-full"
+                      >
+                        <Image
+                          src={story.hero.url}
+                          alt={story.hero.alt || story.title}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 33vw"
+                          className="object-cover"
+                        />
+                      </Link>
+                    ) : null}
 
-      <StoryRail title={dict.related} locale={locale} stories={restRelated} dict={dict} />
-    </>
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="text-base font-bold leading-snug tracking-[-0.015em] text-ink group-hover:text-accent transition-colors">
+                          <Link href={`/${locale}/${story.categorySlug}/${story.slug}`}>
+                            {story.title}
+                          </Link>
+                        </h3>
+                        {story.deck ? (
+                          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-stone">
+                            {story.deck}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between border-t border-line/60 pt-2 text-[0.72rem] font-semibold text-stone">
+                        <span>{story.authorNames.join(', ') || dict.siteName}</span>
+                        <RelativeTime iso={story.publishedAt} locale={locale} />
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Cross-Discovery Sections */}
+          <div className="mt-14">
+            <TrendingSection
+              locale={locale}
+              dict={dict}
+              stories={trendingCards}
+              title={dict.trending}
+            />
+          </div>
+
+          <div className="mt-8">
+            <LatestSection
+              locale={locale}
+              dict={dict}
+              stories={otherStories}
+              title={dict.latestUpdates}
+              variant="cards"
+            />
+          </div>
+        </>
+      ) : (
+        <div className="rounded-[var(--radius-panel)] border border-line bg-paper-elevated p-12 text-center">
+          <p className="text-lg font-bold text-ink">{dict.empty}</p>
+          <p className="mt-2 text-sm text-stone">
+            {locale === 'ne'
+              ? 'यस विभागमा हाल कुनै लेख प्रकाशित छैन।'
+              : 'No articles published in this category yet.'}
+          </p>
+          <Link
+            href={`/${locale}`}
+            className="mt-5 inline-flex items-center rounded-[var(--radius-control)] accent-solid px-4 py-2 text-xs font-bold"
+          >
+            ← {dict.home}
+          </Link>
+        </div>
+      )}
+    </main>
   )
 }

@@ -1,9 +1,40 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getContent } from '@/lib/content'
+import type { Metadata } from 'next'
+import { CaretRight, Newspaper, Users } from '@phosphor-icons/react/dist/ssr'
+import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
-export default async function AuthorsPage({ params }: { params: Promise<{ locale: string }> }) {
+export const revalidate = 60
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return {}
+  const locale = raw as AppLocale
+  const title = locale === 'ne' ? 'हाम्रा लेखक तथा पत्रकारहरू' : 'Our Authors & Journalists'
+  const description =
+    locale === 'ne'
+      ? 'द नागरिकका पत्रकार, स्तम्भकार र लेखकहरूको विवरण तथा प्रकाशित सामग्री।'
+      : 'Profiles and published stories from The Nagarik writers and correspondents.'
+
+  return {
+    title: `${title} | The Nagarik`,
+    description,
+    alternates: {
+      canonical: siteUrl(`/${locale}/authors`),
+    },
+  }
+}
+
+export default async function AuthorsDirectoryPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
   const { locale: raw } = await params
   if (!isLocale(raw)) notFound()
   const locale = raw as AppLocale
@@ -21,60 +52,106 @@ export default async function AuthorsPage({ params }: { params: Promise<{ locale
     }))
     .sort((a, b) => b.count - a.count || a.author.nameNe.localeCompare(b.author.nameNe, 'ne'))
 
-  const copy = locale === 'ne'
+  const isNe = locale === 'ne'
+  const copy = isNe
     ? {
-        kicker: 'समाचारकक्ष',
-        title: 'लेखक र पत्रकार',
-        intro: 'बाइलाइन पछाडिका पत्रकार र लेखकहरू। प्रत्येक प्रोफाइलबाट उनीहरूको प्रकाशित काम हेर्न सकिन्छ।',
+        kicker: 'समाचारकक्ष टिम',
+        title: 'लेखक तथा पत्रकारहरू',
+        intro: 'नागरिक सरोकार र निष्पक्ष पत्रकारिताका लागि अग्रपङ्क्तिमा खटिएका हाम्रा लेखक, संवाददाता र विश्लेषकहरू।',
         stories: 'प्रकाशित समाचार',
-        empty: 'अहिले सार्वजनिक लेखक प्रोफाइल उपलब्ध छैन।',
+        viewProfile: 'प्रोफाइल र लेखहरू',
+        empty: 'कुनै लेखक प्रोफाइल उपलब्ध छैन।',
       }
     : {
-        kicker: 'Newsroom',
-        title: 'Writers and journalists',
-        intro: 'The people behind our bylines. Each profile links to their published work.',
+        kicker: 'Newsroom team',
+        title: 'Our Writers & Journalists',
+        intro: 'The correspondents, analysts, and reporters behind our civic bylines and investigations.',
         stories: 'published stories',
-        empty: 'No public writer profiles are available yet.',
+        viewProfile: 'View profile & work',
+        empty: 'No author profiles available yet.',
       }
 
   return (
-    <main className="mx-auto max-w-[1100px] px-4 py-10 md:px-6 md:py-14">
-      <header className="max-w-[760px]">
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">{copy.kicker}</p>
-        <h1 className="mt-2 text-4xl font-bold tracking-[-0.035em] text-ink md:text-5xl">{copy.title}</h1>
-        <p className="mt-4 text-lg leading-relaxed text-stone">{copy.intro}</p>
+    <main className="mx-auto max-w-[1280px] px-4 py-8 md:px-6 md:py-12">
+      {/* Masthead */}
+      <header className="border-b-2 border-accent pb-6 mb-10">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="max-w-[760px]">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">
+              {copy.kicker}
+            </p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-ink md:text-5xl">
+              {copy.title}
+            </h1>
+            <p className="mt-3 text-base leading-relaxed text-stone md:text-lg">
+              {copy.intro}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-full bg-paper-elevated border border-line px-3.5 py-1.5 text-xs font-bold text-stone">
+            <Users size={16} weight="bold" className="text-accent" />
+            <span>
+              {authors.length} {dict.authors}
+            </span>
+          </div>
+        </div>
       </header>
 
+      {/* Authors Grid */}
       {rows.length ? (
-        <div className="mt-10 grid border-t border-line md:grid-cols-2 md:gap-x-10">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map(({ author, count }) => {
-            const name = locale === 'en' && author.nameEn ? author.nameEn : author.nameNe
-            const bio = locale === 'en' ? author.bioEn || author.bioNe : author.bioNe
+            const name = isNe ? author.nameNe : author.nameEn || author.nameNe
+            const bio = isNe ? author.bioNe : author.bioEn || author.bioNe
+
             return (
               <Link
                 key={author.id}
                 href={`/${locale}/author/${author.slug}`}
-                className="group border-b border-line py-6"
+                className="surface-card flex flex-col justify-between p-6 group hover:border-accent hover:shadow-md transition-all"
               >
-                <div className="flex items-start justify-between gap-5">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-[-0.02em] text-ink group-hover:text-accent">{name}</h2>
-                    {bio ? <p className="mt-2 line-clamp-3 max-w-[48ch] text-sm leading-relaxed text-stone">{bio}</p> : null}
+                <div>
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-accent-fg font-black text-xl group-hover:scale-105 transition-transform">
+                      {name.slice(0, 1)}
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-xl font-bold tracking-tight text-ink group-hover:text-accent transition-colors">
+                        {name}
+                      </h2>
+                      <p className="flex items-center gap-1 mt-0.5 text-xs font-bold text-accent">
+                        <Newspaper size={13} weight="bold" />
+                        <span>
+                          {count} {copy.stories}
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                  <span className="shrink-0 text-lg text-stone" aria-hidden="true">→</span>
+
+                  {bio ? (
+                    <p className="mt-4 line-clamp-3 text-xs leading-relaxed text-stone">
+                      {bio}
+                    </p>
+                  ) : null}
                 </div>
-                <p className="mt-4 text-xs font-semibold text-stone">{count} {copy.stories}</p>
+
+                <div className="mt-6 flex items-center justify-between border-t border-line/60 pt-3 text-xs font-bold text-accent">
+                  <span>{copy.viewProfile}</span>
+                  <CaretRight
+                    size={14}
+                    weight="bold"
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                </div>
               </Link>
             )
           })}
         </div>
       ) : (
-        <p className="mt-10 border-t border-line pt-6 text-stone">{copy.empty}</p>
+        <div className="rounded-[var(--radius-panel)] border border-line bg-paper-elevated p-12 text-center">
+          <p className="text-sm font-bold text-ink">{copy.empty}</p>
+        </div>
       )}
-
-      <p className="mt-10 text-sm text-stone">
-        <Link href={`/${locale}/about`} className="font-semibold text-accent hover:underline">← {dict.about}</Link>
-      </p>
     </main>
   )
 }

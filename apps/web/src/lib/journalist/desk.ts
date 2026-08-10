@@ -59,9 +59,9 @@ export async function listJournalistStories(
 
   return result.docs.map((doc) => {
     const category = doc.category
-    let categorySlug = '—'
+    let categorySlug = '-'
     if (category && typeof category === 'object' && 'slug' in category) {
-      categorySlug = String((category as { slug?: string }).slug ?? '—')
+      categorySlug = String((category as { slug?: string }).slug ?? '-')
     }
     return {
       id: String(doc.id),

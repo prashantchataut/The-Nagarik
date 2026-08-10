@@ -106,7 +106,7 @@ export function getLaunchChecks(): LaunchCheck[] {
       id: 'database',
       label: 'DATABASE_URL',
       ok: hasDb,
-      detail: hasDb ? 'configured' : 'missing — Neon or local:pg required',
+      detail: hasDb ? 'configured' : 'missing - Neon or local:pg required',
     },
     {
       id: 'payload-secret',
@@ -154,7 +154,7 @@ export function getLaunchChecks(): LaunchCheck[] {
       id: 'sentry',
       label: 'Sentry (optional)',
       ok: true,
-      detail: sentryReady ? 'DSN set' : 'not claimed — DSN empty',
+      detail: sentryReady ? 'DSN set' : 'not claimed - DSN empty',
     },
   ]
 }

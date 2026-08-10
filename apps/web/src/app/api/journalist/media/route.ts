@@ -7,6 +7,17 @@ import { payloadDeskAvailable } from '@/lib/admin/payload-desk'
 
 export const dynamic = 'force-dynamic'
 
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+  'image/gif',
+])
+
+const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15MB
+
 export async function POST(request: Request) {
   if (!payloadDeskAvailable()) {
     return NextResponse.json({ message: 'CMS offline', code: 'CMS_OFFLINE' }, { status: 503 })
@@ -29,6 +40,21 @@ export async function POST(request: Request) {
   if (!alt || !credit) {
     return NextResponse.json(
       { message: 'alt and credit are required', code: 'VALIDATION' },
+      { status: 400 },
+    )
+  }
+
+  const mime = (file.type || '').toLowerCase().trim()
+  if (!ALLOWED_MIME_TYPES.has(mime)) {
+    return NextResponse.json(
+      { message: 'Only JPEG, PNG, WebP, AVIF, and GIF image files are permitted.', code: 'INVALID_MIME_TYPE' },
+      { status: 400 },
+    )
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json(
+      { message: 'File exceeds maximum upload size limit of 15MB.', code: 'FILE_TOO_LARGE' },
       { status: 400 },
     )
   }

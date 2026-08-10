@@ -136,11 +136,12 @@ export function JournalistShell({ children, session }: { children: ReactNode; se
       }
     }
 
+    const menuButton = menuButtonRef.current
     document.addEventListener('keydown', onKeyDown)
     return () => {
       document.body.style.overflow = previousOverflow
       document.removeEventListener('keydown', onKeyDown)
-      menuButtonRef.current?.focus()
+      menuButton?.focus()
     }
   }, [open])
 

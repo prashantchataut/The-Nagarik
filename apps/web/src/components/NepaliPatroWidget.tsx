@@ -214,7 +214,7 @@ export function NepaliPatroWidget({
       setSelected(next)
     } catch {
       setConvertMsg(
-        locale === 'ne' ? 'मान्य BS मिति हाल्नुहोस् (२०७०–२०९०)' : 'Valid BS date required (2070–2090)',
+        locale === 'ne' ? 'मान्य BS मिति हाल्नुहोस् (२०७०-२०९०)' : 'Valid BS date required (2070-2090)',
       )
     }
   }
@@ -569,7 +569,7 @@ export function NepaliPatroWidget({
           </h2>
           <p className="mt-2 max-w-[70ch]">
             {locale === 'ne'
-              ? 'द नागरिक पात्रो नेपाली पात्रो (विक्रम संवत्), पर्व–बिदा, मिति रूपान्तरण, र दैनिक उपयोगी जानकारीको एक स्थान हो। क्यालेन्डर सेलमा ठूलो मिति BS, कुनामा AD, र तिथि देखिन्छ। आजको दिन ब्रान्ड रङले चिन्हित हुन्छ; शनिबार र बिदा रातोमा।'
+              ? 'द नागरिक पात्रो नेपाली पात्रो (विक्रम संवत्), पर्व-बिदा, मिति रूपान्तरण, र दैनिक उपयोगी जानकारीको एक स्थान हो। क्यालेन्डर सेलमा ठूलो मिति BS, कुनामा AD, र तिथि देखिन्छ। आजको दिन ब्रान्ड रङले चिन्हित हुन्छ; शनिबार र बिदा रातोमा।'
               : 'The Nagarik Patro is a Bikram Sambat calendar with festivals, date conversion, and daily utilities. Each cell shows a large BS date, AD in the corner, and tithi. Today is marked in brand teal; Saturdays and holidays use red.'}
           </p>
         </section>

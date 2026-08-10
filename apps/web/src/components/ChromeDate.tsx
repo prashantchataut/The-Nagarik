@@ -6,6 +6,14 @@ import { BS_MONTHS_EN, BS_MONTHS_NE, WEEKDAYS_NE, todayBs } from '@/lib/bs-calen
 
 const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
 
+const NEP_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९']
+function toNepDigit(n: number): string {
+  return String(n)
+    .split('')
+    .map((d) => NEP_DIGITS[parseInt(d, 10)] ?? d)
+    .join('')
+}
+
 /** Kathmandu BS date for chrome. */
 export function ChromeDate({ locale, className = '' }: { locale: AppLocale; className?: string }) {
   const [label, setLabel] = useState(() => formatBsChrome(locale))
@@ -31,7 +39,7 @@ function formatBsChrome(locale: AppLocale): string {
   const wdIndex = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekday)
   if (locale === 'ne') {
     const dayName = WEEKDAYS_NE[wdIndex >= 0 ? wdIndex : 0]
-    return `${dayName}बार, ${bs.day} ${BS_MONTHS_NE[bs.month - 1]} ${bs.year}`
+    return `${dayName}बार, ${toNepDigit(bs.day)} ${BS_MONTHS_NE[bs.month - 1]} ${toNepDigit(bs.year)}`
   }
   return `${WEEKDAYS_EN[wdIndex >= 0 ? wdIndex : 0]}, ${bs.day} ${BS_MONTHS_EN[bs.month - 1]} ${bs.year}`
 }

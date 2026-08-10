@@ -79,9 +79,9 @@ export async function getDeskEditorialQueue(limit = 40): Promise<DeskQueueItem[]
 
   return result.docs.map((doc) => {
     const category = doc.category
-    let categoryLabel = '—'
+    let categoryLabel = '-'
     if (category && typeof category === 'object' && 'nameNe' in category) {
-      categoryLabel = String((category as { nameNe?: string }).nameNe ?? '—')
+      categoryLabel = String((category as { nameNe?: string }).nameNe ?? '-')
     }
     return {
       id: String(doc.id),
@@ -168,9 +168,9 @@ export async function listDeskPublishedStories(limit = 100): Promise<DeskPublish
 
   return result.docs.map((doc) => {
     const category = doc.category
-    let categorySlug = '—'
+    let categorySlug = '-'
     if (category && typeof category === 'object' && 'slug' in category) {
-      categorySlug = String((category as { slug?: string }).slug ?? '—')
+      categorySlug = String((category as { slug?: string }).slug ?? '-')
     }
     return {
       id: String(doc.id),

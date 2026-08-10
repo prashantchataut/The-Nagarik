@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload/payload.config'
@@ -47,6 +48,17 @@ export async function POST(request: Request) {
       overrideAccess: true,
     })
     published.push(String(doc.slug ?? doc.id))
+  }
+
+  if (published.length > 0) {
+    try {
+      revalidatePath('/ne')
+      revalidatePath('/en')
+      revalidatePath('/ne/latest')
+      revalidatePath('/en/latest')
+    } catch {
+      // Ignore cache revalidation errors during offline tests
+    }
   }
 
   return NextResponse.json({
