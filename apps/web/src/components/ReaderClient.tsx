@@ -3,11 +3,14 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
+  BookmarkSimple,
   Check,
   Copy,
   FacebookLogo,
   LinkSimple,
-  ShareNetwork,
+  Printer,
+  SpeakerHigh,
+  SpeakerSlash,
   TextAa,
   WhatsappLogo,
   XLogo,
@@ -15,6 +18,7 @@ import {
 import type { Dictionary } from '@/lib/i18n'
 
 const TYPE_SCALE_KEY = 'tn_article_type_scale_v1'
+const BOOKMARKS_KEY = 'tn_saved_stories_v1'
 
 export function SocialShareButtons({
   dict,
@@ -35,7 +39,9 @@ export function SocialShareButtons({
   }, [url])
 
   const encodedUrl = encodeURIComponent(currentUrl)
-  const encodedTitle = encodeURIComponent(title ?? (typeof document !== 'undefined' ? document.title : 'The Nagarik'))
+  const encodedTitle = encodeURIComponent(
+    title ?? (typeof document !== 'undefined' ? document.title : 'The Nagarik'),
+  )
 
   const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
   const xShareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`
@@ -73,7 +79,7 @@ export function SocialShareButtons({
         aria-label={dict.shareOnX}
         title={dict.shareOnX}
       >
-        <XLogo size={17} weight="bold" />
+        <XLogo size={16} weight="bold" />
       </a>
 
       <a
@@ -130,17 +136,17 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
       const saved = localStorage.getItem(TYPE_SCALE_KEY) as 'sm' | 'md' | 'lg' | null
       if (saved === 'sm' || saved === 'md' || saved === 'lg') setSize(saved)
     } catch {
-      // Device preference is optional.
+      // Device preference optional
     }
   }, [])
 
   useEffect(() => {
-    const map = { sm: '0.95', md: '1', lg: '1.12' } as const
+    const map = { sm: '0.95', md: '1', lg: '1.14' } as const
     document.documentElement.style.setProperty('--article-type-scale', map[size])
     try {
       localStorage.setItem(TYPE_SCALE_KEY, size)
     } catch {
-      // Device preference is optional.
+      // Device preference optional
     }
   }, [size])
 
@@ -176,7 +182,7 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
         <div
           role="menu"
           aria-label={dict.textSize}
-          className="absolute left-0 top-[calc(100%+0.35rem)] z-50 min-w-36 rounded-[var(--radius-control)] border border-line bg-paper-elevated p-1 shadow-[0_12px_28px_rgb(16_32_29_/_0.15)]"
+          className="absolute right-0 top-[calc(100%+0.35rem)] z-50 min-w-36 rounded-[var(--radius-control)] border border-line bg-paper-elevated p-1 shadow-[0_12px_28px_rgb(16_32_29_/_0.15)]"
         >
           {([
             ['sm', dict.textSmall],
@@ -189,9 +195,7 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
               role="menuitemradio"
               aria-checked={size === value}
               className={`flex min-h-9 w-full items-center justify-between rounded-[var(--radius-sm)] px-3 text-xs font-semibold ${
-                size === value
-                  ? 'bg-accent-muted text-accent'
-                  : 'hover:bg-paper text-ink'
+                size === value ? 'bg-accent-muted text-accent' : 'hover:bg-paper text-ink'
               }`}
               onClick={() => {
                 setSize(value)
@@ -208,30 +212,181 @@ export function TextSizeControls({ dict }: { dict: Dictionary }) {
   )
 }
 
+export function BookmarkButton({
+  storyId,
+  title,
+  categorySlug,
+  slug,
+}: {
+  storyId: string
+  title: string
+  categorySlug: string
+  slug: string
+}) {
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    try {
+      const items = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]')
+      if (Array.isArray(items)) {
+        setSaved(items.some((i: { storyId: string }) => i.storyId === storyId))
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [storyId])
+
+  function toggleBookmark() {
+    try {
+      let items = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]')
+      if (!Array.isArray(items)) items = []
+
+      if (saved) {
+        items = items.filter((i: { storyId: string }) => i.storyId !== storyId)
+        setSaved(false)
+      } else {
+        items.unshift({
+          storyId,
+          title,
+          categorySlug,
+          slug,
+          savedAt: new Date().toISOString(),
+        })
+        setSaved(true)
+      }
+      localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(items.slice(0, 50)))
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggleBookmark}
+      className={`inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border px-2.5 text-xs font-semibold transition-colors ${
+        saved
+          ? 'bg-accent-muted border-accent text-accent'
+          : 'border-line bg-paper text-ink hover:border-accent hover:text-accent'
+      }`}
+      aria-label={saved ? 'कथा सुरक्षित भयो' : 'कथा सुरक्षित गर्नुहोस्'}
+      title={saved ? 'कथा सुरक्षित भयो' : 'कथा सुरक्षित गर्नुहोस्'}
+    >
+      <BookmarkSimple size={15} weight={saved ? 'fill' : 'bold'} />
+      <span className="hidden sm:inline">{saved ? 'सुरक्षित' : 'सेभ'}</span>
+    </button>
+  )
+}
+
+export function AudioListenButton({
+  textToRead,
+}: {
+  textToRead?: string
+}) {
+  const [playing, setPlaying] = useState(false)
+
+  function toggleAudio() {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+
+    if (playing) {
+      window.speechSynthesis.cancel()
+      setPlaying(false)
+    } else {
+      const text = textToRead || document.querySelector('article')?.textContent || ''
+      const utterance = new SpeechSynthesisUtterance(text.slice(0, 1000))
+      utterance.rate = 0.95
+      utterance.onend = () => setPlaying(false)
+      utterance.onerror = () => setPlaying(false)
+      window.speechSynthesis.speak(utterance)
+      setPlaying(true)
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggleAudio}
+      className={`inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border px-2.5 text-xs font-semibold transition-colors ${
+        playing
+          ? 'bg-accent-muted border-accent text-accent animate-pulse'
+          : 'border-line bg-paper text-ink hover:border-accent hover:text-accent'
+      }`}
+      aria-label={playing ? 'अडियो रोक्नुहोस्' : 'समाचार सुन्नुहोस्'}
+      title={playing ? 'अडियो रोक्नुहोस्' : 'समाचार सुन्नुहोस्'}
+    >
+      {playing ? (
+        <SpeakerSlash size={15} weight="bold" />
+      ) : (
+        <SpeakerHigh size={15} weight="bold" />
+      )}
+      <span className="hidden sm:inline">{playing ? 'बन्द' : 'सुन्नुहोस्'}</span>
+    </button>
+  )
+}
+
+export function PrintButton() {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (typeof window !== 'undefined') window.print()
+      }}
+      className="inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-semibold text-ink hover:border-accent hover:text-accent transition-colors"
+      aria-label="प्रिन्ट गर्नुहोस्"
+      title="प्रिन्ट गर्नुहोस्"
+    >
+      <Printer size={15} weight="bold" />
+      <span className="hidden sm:inline">प्रिन्ट</span>
+    </button>
+  )
+}
+
 export function ArticleToolbar({
   dict,
   bilingualHref,
   bilingualLabel,
   title,
+  storyId,
+  categorySlug,
+  slug,
+  deck,
 }: {
   dict: Dictionary
   bilingualHref?: string
   bilingualLabel?: string
   title?: string
+  storyId?: string
+  categorySlug?: string
+  slug?: string
+  deck?: string
 }) {
   return (
     <div className="sticky top-11 z-30 border-y border-line bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex min-h-12 max-w-[840px] flex-wrap items-center justify-between gap-3 px-4 md:px-6">
+      <div className="mx-auto flex min-h-12 max-w-[840px] flex-wrap items-center justify-between gap-2.5 px-4 md:px-6">
         <SocialShareButtons dict={dict} title={title} />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {storyId && title && categorySlug && slug ? (
+            <BookmarkButton
+              storyId={storyId}
+              title={title}
+              categorySlug={categorySlug}
+              slug={slug}
+            />
+          ) : null}
+
+          <AudioListenButton textToRead={deck ? `${title}. ${deck}` : title} />
+
+          <PrintButton />
+
           <TextSizeControls dict={dict} />
+
           {bilingualHref && bilingualLabel ? (
             <Link
               href={bilingualHref}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-bold text-accent hover:border-accent"
+              className="inline-flex min-h-9 items-center gap-1 rounded-[var(--radius-control)] border border-line bg-paper px-2.5 text-xs font-bold text-accent hover:border-accent"
             >
-              <LinkSimple size={14} weight="bold" aria-hidden="true" />
+              <LinkSimple size={13} weight="bold" aria-hidden="true" />
               <span>{bilingualLabel}</span>
             </Link>
           ) : null}

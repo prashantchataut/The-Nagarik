@@ -257,6 +257,10 @@ export default async function ArticlePage({
           bilingualHref={bilingualHref}
           bilingualLabel={bilingualLabel}
           title={title}
+          storyId={article.id}
+          categorySlug={category}
+          slug={slug}
+          deck={deck}
         />
 
         {/* Hero Figure */}

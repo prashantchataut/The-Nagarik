@@ -1,21 +1,47 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { MagnifyingGlass } from '@phosphor-icons/react/dist/ssr'
+import type { Metadata } from 'next'
+import { MagnifyingGlass, Clock, CaretRight } from '@phosphor-icons/react/dist/ssr'
 import { buildSearchIndex } from '@thenagarik/algorithms'
 import { localizeBody, localizeDeck, localizeTitle } from '@thenagarik/content'
-import { getContent } from '@/lib/content'
+import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
+import { CategoryIcon } from '@/components/CategoryIcon'
+import { RelativeTime } from '@/components/RelativeTime'
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ q?: string }>
+}): Promise<Metadata> {
+  const { locale: raw } = await params
+  const { q = '' } = await searchParams
+  if (!isLocale(raw)) return {}
+  const locale = raw as AppLocale
+  const title = q.trim()
+    ? `${q.trim()} - खोज | The Nagarik`
+    : `${locale === 'ne' ? 'समाचार खोज' : 'Search News'} | The Nagarik`
+
+  return {
+    title,
+    alternates: {
+      canonical: siteUrl(`/${locale}/search`),
+    },
+  }
+}
 
 export default async function SearchPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; category?: string }>
 }) {
   const { locale: raw } = await params
-  const { q = '' } = await searchParams
+  const { q = '', category: selectedCat = '' } = await searchParams
   if (!isLocale(raw)) notFound()
 
   const locale = raw as AppLocale
@@ -35,6 +61,7 @@ export default async function SearchPage({
       title: localizeTitle(article, locale),
       deck: localizeDeck(article, locale),
       category: locale === 'en' ? category?.nameEn ?? '' : category?.nameNe ?? '',
+      categorySlug: category?.slug ?? '',
       author: author ? (locale === 'en' && author.nameEn ? author.nameEn : author.nameNe) : '',
       body: localizeBody(article, locale)
         .map((block) => ('text' in block ? block.text : ''))
@@ -44,52 +71,67 @@ export default async function SearchPage({
 
   const query = q.trim()
   const index = buildSearchIndex(docs)
-  const results = query ? index.search(query, 30) : []
+  let results = query ? index.search(query, 40) : []
+
+  const targetCategory = selectedCat ? categories.find((c) => c.slug === selectedCat) : undefined
+  if (targetCategory) {
+    results = results.filter((r) => byId.get(r.id)?.categoryId === targetCategory.id)
+  }
+
   const byId = new Map(articles.map((article) => [article.id, article]))
   const cards = await Promise.all(articles.map((article) => content.toStoryCard(article, locale)))
   const cardById = new Map(cards.map((card) => [card.id, card]))
-  const currentStories = cards.slice(0, 8)
-  const sectionLinks = categories.slice(0, 8)
+  const currentStories = cards.slice(0, 6)
 
-  const copy =
-    locale === 'ne'
-      ? {
-          kicker: 'समाचार अभिलेख',
-          title: 'खोज',
-          helper: 'शीर्षक, विषय, लेखक वा समाचारभित्रको शब्दबाट खोज्नुहोस्।',
-          button: 'खोज्नुहोस्',
-          browse: 'समाचार खण्डहरू',
-          recent: 'अहिलेका समाचार',
-          noResults: 'यो खोजसँग मिल्ने समाचार भेटिएन।',
-          noResultsHelp: 'हिज्जे छोट्याएर वा फरक शब्द प्रयोग गरेर फेरि खोज्नुहोस्।',
-          resultFor: 'खोज नतिजा',
-        }
-      : {
-          kicker: 'News archive',
-          title: 'Search',
-          helper: 'Search by headline, topic, author, or words inside a story.',
-          button: 'Search',
-          browse: 'Browse sections',
-          recent: 'Current stories',
-          noResults: 'No stories matched this search.',
-          noResultsHelp: 'Try a shorter phrase, different spelling, or another topic.',
-          resultFor: 'Search results',
-        }
+  const isNe = locale === 'ne'
+  const copy = isNe
+    ? {
+        kicker: 'समाचार खोज तथा अभिलेख',
+        title: 'समाचार खोज्नुहोस्',
+        helper: 'शीर्षक, मुख्य घटना, विषय, लेखक वा समाचारभित्रका शब्दबाट छिटो खोज्नुहोस्।',
+        button: 'खोज्नुहोस्',
+        browse: 'प्रमुख समाचार विभागहरू',
+        recent: 'ताजा मुख्य समाचार',
+        noResults: 'यो खोजसँग मिल्ने कुनै समाचार फेला परेन।',
+        noResultsHelp: 'हिज्जे छोट्याएर वा फरक शब्द प्रयोग गरी पुनः खोज्नुहोस्।',
+        resultFor: 'खोज नतिजा',
+        allCategories: 'सबै विभाग',
+      }
+    : {
+        kicker: 'News search & archive',
+        title: 'Search the News',
+        helper: 'Search quickly by headline, topic, reporter byline, or words inside stories.',
+        button: 'Search',
+        browse: 'Browse Sections',
+        recent: 'Current top stories',
+        noResults: 'No stories matched this search query.',
+        noResultsHelp: 'Try a broader keyword, different spelling, or another topic.',
+        resultFor: 'Search results for',
+        allCategories: 'All Sections',
+      }
 
   return (
-    <main className="mx-auto max-w-[1240px] px-4 py-8 md:px-6 md:py-12">
+    <main className="mx-auto max-w-[1280px] px-4 py-8 md:px-6 md:py-12">
+      {/* Masthead */}
       <header className="max-w-[760px]">
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">{copy.kicker}</p>
-        <h1 className="mt-2 text-4xl font-bold tracking-[-0.035em] text-ink md:text-5xl">{copy.title}</h1>
-        <p className="mt-3 max-w-[58ch] text-base leading-relaxed text-stone">{copy.helper}</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-accent">
+          {copy.kicker}
+        </p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-ink md:text-5xl">
+          {copy.title}
+        </h1>
+        <p className="mt-3 text-base leading-relaxed text-stone md:text-lg">
+          {copy.helper}
+        </p>
       </header>
 
-      <form className="mt-7 max-w-[820px]" role="search">
+      {/* Search Bar Form */}
+      <form className="mt-8 max-w-[840px]" role="search">
         <label className="sr-only" htmlFor="q">
           {dict.searchPlaceholder}
         </label>
-        <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-          <div className="relative">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
             <MagnifyingGlass
               aria-hidden="true"
               size={20}
@@ -102,97 +144,71 @@ export default async function SearchPage({
               type="search"
               defaultValue={q}
               autoFocus
-              className="h-12 w-full rounded-[var(--radius-control)] border border-line bg-field pl-11 pr-4 text-base text-ink outline-none placeholder:text-stone focus:border-accent"
+              className="h-12 w-full rounded-[var(--radius-control)] border border-line bg-field pl-12 pr-4 text-base text-ink outline-none placeholder:text-stone/70 focus:border-accent focus:shadow-sm"
               placeholder={dict.searchPlaceholder}
             />
           </div>
           <button
             type="submit"
-            className="inline-flex h-12 items-center justify-center rounded-[var(--radius-control)] accent-solid px-5 text-sm font-bold  hover:opacity-90"
+            className="inline-flex h-12 items-center justify-center rounded-[var(--radius-control)] accent-solid px-6 text-sm font-bold shadow-sm hover:opacity-95 transition-opacity"
           >
             {copy.button}
           </button>
         </div>
+
+        {/* Quick Category Filter Pills */}
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          <Link
+            href={`/${locale}/search?q=${encodeURIComponent(query)}`}
+            className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+              !selectedCat
+                ? 'accent-solid'
+                : 'bg-paper-elevated border border-line text-stone hover:border-accent hover:text-accent'
+            }`}
+          >
+            {copy.allCategories}
+          </Link>
+          {categories.map((cat) => {
+            const isCatActive = selectedCat === cat.slug
+            return (
+              <Link
+                key={cat.id}
+                href={`/${locale}/search?q=${encodeURIComponent(query)}&category=${cat.slug}`}
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                  isCatActive
+                    ? 'accent-solid'
+                    : 'bg-paper-elevated border border-line text-stone hover:border-accent hover:text-accent'
+                }`}
+              >
+                <CategoryIcon slug={cat.slug} size={12} weight="bold" />
+                <span>{isNe ? cat.nameNe : cat.nameEn}</span>
+              </Link>
+            )
+          })}
+        </div>
       </form>
 
-      {!query ? (
-        <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
-          <section>
-            <div className="flex items-end justify-between border-b border-line pb-3">
-              <h2 className="text-2xl font-bold tracking-[-0.025em] text-ink">{copy.recent}</h2>
-              <Link href={`/${locale}/latest`} className="text-sm font-semibold text-accent hover:underline">
-                {dict.seeAll}
-              </Link>
+      {/* Results View */}
+      {query ? (
+        <section className="mt-10" aria-label={copy.resultFor}>
+          <div className="flex flex-wrap items-baseline justify-between gap-3 border-b-2 border-accent pb-3">
+            <div className="flex items-baseline gap-2">
+              <h2 className="text-xl font-black text-ink md:text-2xl">
+                {copy.resultFor} &ldquo;{query}&rdquo;
+              </h2>
+              {selectedCat ? (
+                <span className="text-xs font-bold text-accent capitalize">
+                  ({selectedCat})
+                </span>
+              ) : null}
             </div>
-            <div className="mt-5 grid gap-x-5 gap-y-7 sm:grid-cols-2">
-              {currentStories.map((story) => (
-                <Link
-                  key={story.id}
-                  href={`/${locale}/${story.categorySlug}/${story.slug}`}
-                  className="group border-b border-line pb-5"
-                >
-                  {story.hero ? (
-                    <span className="editorial-image relative block aspect-[16/9] overflow-hidden bg-paper-elevated">
-                      <Image src={story.hero.url} alt={story.hero.alt} fill sizes="(min-width:640px) 360px, 100vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.018]" />
-                    </span>
-                  ) : null}
-                  <span className="mt-3 block text-xs font-semibold text-stone">
-                    {story.authorNames.join(', ')}
-                    {story.publishedAt ? ` · ${new Intl.DateTimeFormat(locale === 'ne' ? 'ne-NP' : 'en-NP', { dateStyle: 'medium' }).format(new Date(story.publishedAt))}` : ''}
-                  </span>
-                  <span className="mt-1.5 block text-xl font-bold leading-[1.42] tracking-[-0.018em] text-ink group-hover:text-accent">
-                    {story.title}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          <aside className="lg:border-l lg:border-line lg:pl-6">
-            <h2 className="text-sm font-bold uppercase tracking-[0.1em] text-stone">{copy.browse}</h2>
-            <nav className="mt-3 divide-y divide-line" aria-label={dict.categories}>
-              {sectionLinks.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/${locale}/${category.slug}`}
-                  className="flex min-h-11 items-center justify-between py-2 text-base font-semibold text-ink hover:text-accent"
-                >
-                  <span>{locale === 'en' ? category.nameEn : category.nameNe}</span>
-                  <span aria-hidden="true">→</span>
-                </Link>
-              ))}
-            </nav>
-          </aside>
-        </div>
-      ) : (
-        <section className="mt-10 max-w-[900px]">
-          <div className="border-b border-line pb-3">
-            <p className="text-sm font-semibold text-stone">{copy.resultFor}</p>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-2xl font-bold tracking-[-0.025em] text-ink">“{query}”</h2>
-              <span className="text-sm text-stone">
-                {results.length} {dict.searchResults.toLowerCase()}
-              </span>
-            </div>
+            <span className="rounded-full bg-paper-elevated border border-line px-3 py-0.5 text-xs font-bold text-stone">
+              {results.length} {dict.searchResults}
+            </span>
           </div>
 
-          {!results.length ? (
-            <div className="py-10">
-              <h3 className="text-xl font-bold text-ink">{copy.noResults}</h3>
-              <p className="mt-2 max-w-[52ch] leading-relaxed text-stone">{copy.noResultsHelp}</p>
-              <div className="mt-7 border-t border-line pt-6">
-                <h3 className="text-base font-bold text-ink">{copy.browse}</h3>
-                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
-                  {sectionLinks.map((category) => (
-                    <Link key={category.id} href={`/${locale}/${category.slug}`} className="font-semibold text-accent hover:underline">
-                      {locale === 'en' ? category.nameEn : category.nameNe}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <ul className="divide-y divide-line">
+          {results.length ? (
+            <div className="mt-6 divide-y divide-line">
               {results.map((result) => {
                 const article = byId.get(result.id)
                 const card = cardById.get(result.id)
@@ -201,37 +217,143 @@ export default async function SearchPage({
                 if (!category) return null
 
                 return (
-                  <li key={result.id}>
+                  <article key={result.id} className="py-5 first:pt-2 group">
                     <Link
                       href={`/${locale}/${category.slug}/${article.slug}`}
-                      className={`grid gap-4 py-5 hover:text-accent ${card.hero ? 'sm:grid-cols-[9rem_1fr] sm:gap-5' : ''}`}
+                      className={`grid gap-4 ${card.hero ? 'sm:grid-cols-[10rem_1fr] sm:items-center sm:gap-6' : ''}`}
                     >
                       {card.hero ? (
-                        <span className="relative aspect-[4/3] overflow-hidden bg-paper-elevated">
-                          <Image src={card.hero.url} alt={card.hero.alt} fill sizes="144px" className="object-cover" />
-                        </span>
+                        <div className="editorial-image relative aspect-[16/10] rounded-[var(--radius-control)] overflow-hidden shadow-sm">
+                          <Image
+                            src={card.hero.url}
+                            alt={card.hero.alt || card.title}
+                            fill
+                            sizes="160px"
+                            className="object-cover"
+                          />
+                        </div>
                       ) : null}
-                      <span className="min-w-0">
-                        <span className="text-xs font-bold text-accent">{result.doc.category}</span>
-                        <span className="mt-1 block text-xl font-bold leading-[1.42] tracking-[-0.02em] text-ink md:text-2xl">
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 text-xs font-bold text-accent">
+                          <CategoryIcon slug={category.slug} size={13} weight="bold" />
+                          <span>{isNe ? category.nameNe : category.nameEn}</span>
+                        </div>
+
+                        <h3 className="mt-1.5 text-xl font-bold leading-snug tracking-[-0.018em] text-ink group-hover:text-accent transition-colors md:text-2xl">
                           {result.doc.title}
-                        </span>
+                        </h3>
+
                         {result.doc.deck ? (
-                          <span className="mt-2 block line-clamp-2 text-sm leading-relaxed text-stone">{result.doc.deck}</span>
+                          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-stone">
+                            {result.doc.deck}
+                          </p>
                         ) : null}
-                        <span className="mt-3 block text-xs font-medium text-stone">
-                          {result.doc.author}
-                          {result.doc.author ? ' · ' : ''}
-                          {card.readTimeMinutes} {dict.minutesRead}
-                        </span>
-                      </span>
+
+                        <div className="mt-3 flex items-center gap-3 text-xs font-medium text-stone">
+                          {result.doc.author ? (
+                            <span className="font-semibold text-ink">{result.doc.author}</span>
+                          ) : null}
+                          <span>·</span>
+                          <RelativeTime iso={article.publishedAt} locale={locale} />
+                          <span>·</span>
+                          <div className="inline-flex items-center gap-1">
+                            <Clock size={12} weight="bold" />
+                            <span>
+                              {card.readTimeMinutes} {dict.minutesRead}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </Link>
-                  </li>
+                  </article>
                 )
               })}
-            </ul>
+            </div>
+          ) : (
+            <div className="mt-8 rounded-[var(--radius-panel)] border border-line bg-paper-elevated p-12 text-center">
+              <p className="text-lg font-bold text-ink">{copy.noResults}</p>
+              <p className="mt-2 text-xs text-stone max-w-[48ch] mx-auto leading-relaxed">
+                {copy.noResultsHelp}
+              </p>
+            </div>
           )}
         </section>
+      ) : (
+        /* Empty Query State: Show Recent Stories & Category Hubs */
+        <div className="mt-12 grid gap-10 lg:grid-cols-12 lg:gap-12">
+          {/* Recent Stories (8 cols) */}
+          <section className="lg:col-span-8">
+            <div className="flex items-center justify-between border-b-2 border-accent pb-3 mb-6">
+              <h2 className="text-xl font-black text-ink">{copy.recent}</h2>
+              <Link href={`/${locale}/latest`} className="text-xs font-bold text-accent hover:underline">
+                {dict.seeAll} →
+              </Link>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {currentStories.map((story) => (
+                <article key={story.id} className="surface-card flex flex-col justify-between overflow-hidden p-4 group">
+                  <div>
+                    {story.hero ? (
+                      <Link
+                        href={`/${locale}/${story.categorySlug}/${story.slug}`}
+                        className="editorial-image relative block aspect-[16/10] rounded-[var(--radius-control)] mb-3 overflow-hidden"
+                      >
+                        <Image
+                          src={story.hero.url}
+                          alt={story.hero.alt || story.title}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 360px"
+                          className="object-cover"
+                        />
+                      </Link>
+                    ) : null}
+                    <h3 className="text-base font-bold leading-snug tracking-[-0.015em] text-ink group-hover:text-accent transition-colors">
+                      <Link href={`/${locale}/${story.categorySlug}/${story.slug}`}>
+                        {story.title}
+                      </Link>
+                    </h3>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between border-t border-line/60 pt-2 text-[0.72rem] font-semibold text-stone">
+                    <span className="capitalize text-accent font-bold">{story.categorySlug}</span>
+                    <RelativeTime iso={story.publishedAt} locale={locale} />
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* Browse Categories (4 cols) */}
+          <aside className="lg:col-span-4 lg:border-l lg:border-line lg:pl-8">
+            <div className="border-b-2 border-accent pb-3 mb-6">
+              <h2 className="text-base font-black text-ink uppercase tracking-wide">
+                {copy.browse}
+              </h2>
+            </div>
+
+            <nav className="divide-y divide-line" aria-label={dict.categories}>
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/${locale}/${category.slug}`}
+                  className="flex items-center justify-between py-3 text-sm font-bold text-ink hover:text-accent group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <CategoryIcon slug={category.slug} size={16} weight="bold" />
+                    <span>{isNe ? category.nameNe : category.nameEn}</span>
+                  </div>
+                  <CaretRight
+                    size={14}
+                    weight="bold"
+                    className="text-stone group-hover:text-accent group-hover:translate-x-1 transition-all"
+                  />
+                </Link>
+              ))}
+            </nav>
+          </aside>
+        </div>
       )}
     </main>
   )
