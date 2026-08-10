@@ -1,4 +1,4 @@
-/* Payload admin root layout — keep lean; regenerate importMap via `payload generate:importmap` when needed. */
+/* Payload admin root layout - keep lean; regenerate importMap via `payload generate:importmap` when needed. */
 import type { Metadata } from 'next'
 import config from '@payload-config'
 import { RootLayout, handleServerFunctions } from '@payloadcms/next/layouts'
