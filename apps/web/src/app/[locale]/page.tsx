@@ -15,6 +15,7 @@ import { LatestSection } from '@/components/home/LatestSection'
 import { HomeProvinceTabs } from '@/components/home/HomeProvinceTabs'
 import { HomeCategoryBand } from '@/components/news/HomeCategoryBand'
 import { HomeOpinion, HomeVisual } from '@/components/HomeFront'
+import { ContinueReadingRail } from '@/components/ContinueReading'
 
 export const revalidate = 60
 
@@ -213,6 +214,8 @@ export default async function HomePage({
           {opinion.length ? (
             <HomeOpinion locale={locale} dict={dict} stories={opinion} />
           ) : null}
+
+          <ContinueReadingRail locale={locale} dict={dict} stories={cards} />
 
           {visual.length ? (
             <HomeVisual locale={locale} dict={dict} stories={visual} />

@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
 }
 
-const themeInitScript = `(function(){try{var t=localStorage.getItem('tn_theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}else{document.documentElement.setAttribute('data-theme','light');}}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`
+const themeInitScript = `(function(){try{var t=localStorage.getItem('tn_theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);document.documentElement.setAttribute('data-theme-mode',t);}else{var dark=window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',dark?'dark':'light');document.documentElement.setAttribute('data-theme-mode','system');}}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
