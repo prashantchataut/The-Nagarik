@@ -296,3 +296,30 @@ a:hover .editorial-image img,
     transform: none;
   }
 }
+
+@media print {
+  header,
+  footer,
+  nav,
+  aside,
+  .sticky,
+  button,
+  form {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt !important;
+    line-height: 1.6 !important;
+  }
+  main article {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .editorial-image img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}

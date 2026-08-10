@@ -6,6 +6,21 @@ import { CircleNotch, Eye, EyeSlash } from '@phosphor-icons/react'
 
 type FieldErrors = { email?: string; password?: string }
 
+function sanitizeRedirect(path: string | undefined): string {
+  if (!path || typeof path !== 'string') return '/admin'
+  const trimmed = path.trim()
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.startsWith('/\\')) return '/admin'
+  if (
+    trimmed.startsWith('/admin') ||
+    trimmed.startsWith('/journalist') ||
+    trimmed.startsWith('/ne') ||
+    trimmed.startsWith('/en')
+  ) {
+    return trimmed
+  }
+  return '/admin'
+}
+
 export function StaffLoginForm({
   nextPath = '/admin',
   authReady = true,
@@ -69,8 +84,7 @@ export function StaffLoginForm({
           return
         }
 
-        const safeNext =
-          nextPath.startsWith('/admin') || nextPath.startsWith('/journalist') ? nextPath : '/admin'
+        const safeNext = sanitizeRedirect(nextPath)
         router.replace(safeNext)
         router.refresh()
       } catch {

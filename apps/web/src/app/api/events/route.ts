@@ -4,9 +4,9 @@ import { recordEvent } from '@/lib/engagement'
 
 const EventSchema = z.object({
   type: z.enum(['impression', 'click', 'dwell', 'complete', 'share', 'search']),
-  storyId: z.string().optional(),
-  query: z.string().optional(),
-  dwellMs: z.number().optional(),
+  storyId: z.string().max(128).optional(),
+  query: z.string().max(256).optional(),
+  dwellMs: z.number().min(0).max(86400000).optional(),
   consent: z.literal(true),
 })
 

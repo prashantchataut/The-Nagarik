@@ -417,72 +417,109 @@ export function ArticleEngagement({
   slug: string
   title: string
 }) {
-  return (
-    <script
-      dangerouslySetInnerHTML={{
-        __html: `
-(function(){
-  try {
-    var storyId = ${JSON.stringify(storyId)};
-    var categorySlug = ${JSON.stringify(categorySlug)};
-    var slug = ${JSON.stringify(slug)};
-    var title = ${JSON.stringify(title)};
-    var KEY = 'tn_reading_progress_v1';
-    var saveProgress = function(p){
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const KEY = 'tn_reading_progress_v1'
+    function saveProgress(p: number) {
       try {
-        var list = [];
-        try { list = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { list = []; }
-        if (!Array.isArray(list)) list = [];
-        list = list.filter(function(x){ return x && x.storyId !== storyId; });
+        let list: Array<{
+          storyId: string
+          progress: number
+          updatedAt: string
+          categorySlug: string
+          slug: string
+          title: string
+        }> = []
+        try {
+          list = JSON.parse(localStorage.getItem(KEY) || '[]')
+        } catch {
+          list = []
+        }
+        if (!Array.isArray(list)) list = []
+        list = list.filter((x) => x && x.storyId !== storyId)
         list.unshift({
-          storyId: storyId,
+          storyId,
           progress: Math.max(0, Math.min(1, p)),
           updatedAt: new Date().toISOString(),
-          categorySlug: categorySlug,
-          slug: slug,
-          title: title
-        });
-        localStorage.setItem(KEY, JSON.stringify(list.slice(0, 40)));
-      } catch (e) {}
-    };
-    var ticking = false;
-    var lastSaved = 0;
-    var updateProgress = function(){
-      ticking = false;
-      var el = document.documentElement;
-      var max = el.scrollHeight - el.clientHeight;
-      var p = max > 0 ? el.scrollTop / max : 0;
-      document.documentElement.style.setProperty('--read-progress', String(p));
-      var now = Date.now();
-      if (now - lastSaved > 1500) { saveProgress(p); lastSaved = now; }
-    };
-    var onScroll = function(){
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(updateProgress);
-    };
-    window.addEventListener('scroll', onScroll, {passive:true});
-    updateProgress();
-    window.addEventListener('pagehide', function(){
-      var el = document.documentElement;
-      var max = el.scrollHeight - el.clientHeight;
-      saveProgress(max > 0 ? el.scrollTop / max : 0);
-    }, {once:true});
+          categorySlug,
+          slug,
+          title,
+        })
+        localStorage.setItem(KEY, JSON.stringify(list.slice(0, 40)))
+      } catch {
+        // Ignore quota/private browsing errors
+      }
+    }
 
-    var consent = document.cookie.split('; ').find(function(r){return r.indexOf('tn_consent_analytics=')===0});
-    if (!consent || consent.split('=')[1] !== '1') return;
-    var start = Date.now();
-    fetch('/api/events', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({type:'impression', storyId:storyId, consent:true})});
-    window.addEventListener('pagehide', function(){
-      var dwellMs = Date.now() - start;
-      navigator.sendBeacon('/api/events', new Blob([JSON.stringify({type:'dwell', storyId:storyId, dwellMs:dwellMs, consent:true})], {type:'application/json'}));
-    });
-  } catch (e) {}
-})();
-`,
-      }}
-    />
-  )
+    let ticking = false
+    let lastSaved = 0
+    function updateProgress() {
+      ticking = false
+      const el = document.documentElement
+      const max = el.scrollHeight - el.clientHeight
+      const p = max > 0 ? el.scrollTop / max : 0
+      document.documentElement.style.setProperty('--read-progress', String(p))
+      const now = Date.now()
+      if (now - lastSaved > 1500) {
+        saveProgress(p)
+        lastSaved = now
+      }
+    }
+
+    function onScroll() {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(updateProgress)
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    updateProgress()
+
+    function onPageHide() {
+      const el = document.documentElement
+      const max = el.scrollHeight - el.clientHeight
+      saveProgress(max > 0 ? el.scrollTop / max : 0)
+    }
+    window.addEventListener('pagehide', onPageHide, { once: true })
+
+    const consentCookie = document.cookie
+      .split('; ')
+      .find((r) => r.startsWith('tn_consent_analytics='))
+    if (!consentCookie || consentCookie.split('=')[1] !== '1') {
+      return () => {
+        window.removeEventListener('scroll', onScroll)
+        window.removeEventListener('pagehide', onPageHide)
+      }
+    }
+
+    const start = Date.now()
+    fetch('/api/events', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ type: 'impression', storyId, consent: true }),
+    }).catch(() => {})
+
+    function sendDwell() {
+      const dwellMs = Date.now() - start
+      navigator.sendBeacon(
+        '/api/events',
+        new Blob(
+          [JSON.stringify({ type: 'dwell', storyId, dwellMs, consent: true })],
+          { type: 'application/json' },
+        ),
+      )
+    }
+    window.addEventListener('pagehide', sendDwell, { once: true })
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('pagehide', onPageHide)
+      window.removeEventListener('pagehide', sendDwell)
+    }
+  }, [storyId, categorySlug, slug, title])
+
+  return null
 }
 
 export function ConsentBanner({ dict }: { dict: Dictionary }) {
