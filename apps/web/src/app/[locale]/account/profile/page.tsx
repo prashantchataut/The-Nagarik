@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ReaderProfileForm } from '@/components/account/ReaderProfileForm'
+import { getReaderSession } from '@/lib/auth/reader-session'
 import { getContent } from '@/lib/content'
 import { isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -20,16 +21,21 @@ export default async function ReaderProfilePage({
   const locale = raw as AppLocale
 
   const content = getContent()
-  const categories = (await content.listCategories()).map((category) => ({
-    slug: category.slug,
-    ne: category.nameNe,
-    en: category.nameEn,
-  }))
+  const [categories, reader] = await Promise.all([
+    content.listCategories().then((list) =>
+      list.map((category) => ({
+        slug: category.slug,
+        ne: category.nameNe,
+        en: category.nameEn,
+      })),
+    ),
+    getReaderSession(),
+  ])
 
   return (
     <>
       <h2 className="sr-only">{locale === 'ne' ? 'पाठक प्रोफाइल' : 'Reader profile'}</h2>
-      <ReaderProfileForm locale={locale} categories={categories} />
+      <ReaderProfileForm locale={locale} categories={categories} account={reader} />
     </>
   )
 }

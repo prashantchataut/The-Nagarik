@@ -1,17 +1,22 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   CheckCircle,
   Desktop,
   DownloadSimple,
   Moon,
   Palette,
+  SealCheck,
+  SignOut,
   Sun,
   TextAa,
   Trash,
   UserCircle,
+  WarningCircle,
 } from '@phosphor-icons/react'
+import type { ReaderAccount } from './ReaderIdentityCard'
 import {
   PROFILE_SWATCHES,
   eraseReaderData,
@@ -33,7 +38,12 @@ const COPY = {
   ne: {
     identity: 'पाठक परिचय',
     nameLabel: 'प्रदर्शन नाम',
-    nameHint: 'यो नाम प्रतिक्रिया फारममा स्वतः भरिन्छ; उपकरण बाहिर जाँदैन।',
+    nameHint: 'यो नाम प्रतिक्रिया फारममा स्वतः भरिन्छ।',
+    accountBadge: 'पाठक खाता',
+    accountHint: 'यी विवरण तपाईंको खातामा सुरक्षित हुन्छन् र सबै उपकरणमा उपलब्ध रहन्छन्।',
+    devicePrefsTitle: 'यस उपकरणका प्राथमिकता',
+    logout: 'लगआउट',
+    saveError: 'सुरक्षित हुन सकेन। पुनः प्रयास गर्नुहोस्।',
     colorLabel: 'प्रोफाइल रङ',
     interests: 'रुचिका विषय',
     interestsHint: 'तपाईंले रोजेका विभागहरू; भविष्यका सिफारिसका लागि आधार।',
@@ -53,7 +63,7 @@ const COPY = {
     tintNight: 'रात',
     tintWhite: 'सेतो',
     data: 'मेरो डाटा',
-    dataNote: 'सबै डाटा यही उपकरणमा रहन्छ। जुनसुकै बेला डाउनलोड वा मेटाउन सकिन्छ।',
+    dataNote: 'सुरक्षित समाचार, पढाइ इतिहास र प्राथमिकता यही उपकरणमा भण्डारण हुन्छन्। जुनसुकै बेला डाउनलोड वा मेटाउन सकिन्छ।',
     export: 'डाटा डाउनलोड (JSON)',
     erase: 'सबै डाटा मेटाउनुहोस्',
     confirmErase:
@@ -63,7 +73,12 @@ const COPY = {
   en: {
     identity: 'Reader identity',
     nameLabel: 'Display name',
-    nameHint: 'Pre-fills the comment form; never leaves this device.',
+    nameHint: 'Pre-fills the comment form.',
+    accountBadge: 'Reader account',
+    accountHint: 'These details are stored in your account and follow you across devices.',
+    devicePrefsTitle: 'Preferences on this device',
+    logout: 'Log out',
+    saveError: 'Could not save. Please retry.',
     colorLabel: 'Profile color',
     interests: 'Topics you follow',
     interestsHint: 'Sections you care about; the base for future recommendations.',
@@ -83,7 +98,7 @@ const COPY = {
     tintNight: 'Night',
     tintWhite: 'Pure white',
     data: 'My data',
-    dataNote: 'Everything stays on this device. Download or erase it anytime.',
+    dataNote: 'Saved stories, reading history, and preferences are stored on this device. Download or erase them anytime.',
     export: 'Download data (JSON)',
     erase: 'Erase all data',
     confirmErase:
@@ -106,25 +121,31 @@ function applyTheme(mode: ThemeMode) {
 export function ReaderProfileForm({
   locale = 'ne',
   categories = [],
+  account = null,
 }: {
   locale?: 'ne' | 'en'
   categories?: CategoryOption[]
+  account?: ReaderAccount | null
 }) {
   const copy = COPY[locale]
-  const [name, setName] = useState('')
-  const [color, setColor] = useState('teal')
-  const [interests, setInterests] = useState<string[]>([])
-  const [status, setStatus] = useState<'idle' | 'saved' | 'erased'>('idle')
+  const router = useRouter()
+  const [name, setName] = useState(account?.name ?? '')
+  const [color, setColor] = useState(account?.avatarColor ?? 'teal')
+  const [interests, setInterests] = useState<string[]>(account?.interests ?? [])
+  const [status, setStatus] = useState<'idle' | 'saved' | 'erased' | 'error'>('idle')
+  const [busy, setBusy] = useState(false)
 
   const [theme, setTheme] = useState<ThemeMode>('system')
   const [scale, setScale] = useState<TypeScale>('md')
   const [tint, setTint] = useState<Tint>('paper')
 
   useEffect(() => {
-    const profile = readProfile()
-    setName(profile.name)
-    setColor(profile.color)
-    setInterests(profile.interests)
+    if (!account) {
+      const profile = readProfile()
+      setName(profile.name)
+      setColor(profile.color)
+      setInterests(profile.interests)
+    }
     try {
       const storedTheme = localStorage.getItem(THEME_KEY)
       if (storedTheme === 'light' || storedTheme === 'dark') setTheme(storedTheme)
@@ -135,19 +156,51 @@ export function ReaderProfileForm({
     } catch {
       // Preferences are optional
     }
+    // Mount-only hydration: `account` is server-provided and stable per render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function saveProfile(event: React.FormEvent) {
+  async function saveProfile(event: React.FormEvent) {
     event.preventDefault()
-    writeProfile({ name: name.trim().slice(0, 40), color, interests })
     // Convenience: pre-fill the comment form with the same name.
     try {
       if (name.trim()) localStorage.setItem('tn_comment_name_v1', name.trim())
     } catch {
       // optional
     }
+
+    if (account) {
+      setBusy(true)
+      try {
+        const res = await fetch('/api/reader/me', {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ name: name.trim().slice(0, 60), avatarColor: color, interests }),
+        })
+        if (!res.ok) throw new Error(String(res.status))
+        setStatus('saved')
+        router.refresh()
+      } catch {
+        setStatus('error')
+      } finally {
+        setBusy(false)
+        window.setTimeout(() => setStatus('idle'), 2600)
+      }
+      return
+    }
+
+    writeProfile({ name: name.trim().slice(0, 40), color, interests })
     setStatus('saved')
     window.setTimeout(() => setStatus('idle'), 2200)
+  }
+
+  async function logout() {
+    try {
+      await fetch('/api/reader/logout', { method: 'POST' })
+    } catch {
+      // best effort
+    }
+    router.refresh()
   }
 
   function toggleInterest(slug: string) {
@@ -222,12 +275,32 @@ export function ReaderProfileForm({
     <div className="space-y-8">
       {/* Identity */}
       <form onSubmit={saveProfile} className="surface-card p-6" aria-labelledby="reader-identity-title">
-        <div className="flex items-center gap-2 border-b-2 border-accent pb-3 text-accent">
+        <div className="flex flex-wrap items-center gap-2 border-b-2 border-accent pb-3 text-accent">
           <UserCircle size={20} weight="bold" aria-hidden="true" />
           <h2 id="reader-identity-title" className="text-base font-black text-ink">
             {copy.identity}
           </h2>
+          {account ? (
+            <>
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent-muted px-2.5 py-0.5 text-[0.68rem] font-bold text-accent">
+                <SealCheck size={13} weight="fill" aria-hidden="true" />
+                {copy.accountBadge}
+              </span>
+              <span className="text-xs font-normal text-stone">{account.email}</span>
+              <button
+                type="button"
+                onClick={logout}
+                className="ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-paper px-3 text-xs font-bold text-stone hover:border-danger hover:text-danger"
+              >
+                <SignOut size={13} weight="bold" aria-hidden="true" />
+                {copy.logout}
+              </button>
+            </>
+          ) : null}
         </div>
+        {account ? (
+          <p className="mt-3 text-xs leading-relaxed text-stone">{copy.accountHint}</p>
+        ) : null}
 
         <div className="mt-5 grid gap-6 md:grid-cols-2">
           <label className="grid gap-1 text-xs font-bold text-ink">
@@ -298,7 +371,8 @@ export function ReaderProfileForm({
         <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-line pt-4">
           <button
             type="submit"
-            className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-5 text-sm font-bold transition-opacity hover:opacity-90"
+            disabled={busy}
+            className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-5 text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {copy.save}
           </button>
@@ -310,6 +384,11 @@ export function ReaderProfileForm({
               </p>
             ) : status === 'erased' ? (
               <p className="text-sm font-semibold text-success">{copy.erased}</p>
+            ) : status === 'error' ? (
+              <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-danger">
+                <WarningCircle size={16} weight="bold" aria-hidden="true" />
+                {copy.saveError}
+              </p>
             ) : null}
           </div>
         </div>
@@ -320,7 +399,7 @@ export function ReaderProfileForm({
         <div className="flex items-center gap-2 border-b-2 border-accent pb-3 text-accent">
           <Palette size={20} weight="bold" aria-hidden="true" />
           <h2 id="reader-prefs-title" className="text-base font-black text-ink">
-            {copy.prefs}
+            {account ? copy.devicePrefsTitle : copy.prefs}
           </h2>
         </div>
 

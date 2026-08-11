@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { PencilSimple } from '@phosphor-icons/react'
+import { PencilSimple, SealCheck, SignOut, UserPlus } from '@phosphor-icons/react'
 import {
   PROFILE_EVENT,
   readBookmarks,
@@ -12,30 +13,56 @@ import {
   type ReaderProfile,
 } from './reader-store'
 
+export type ReaderAccount = {
+  id: string
+  email: string
+  name: string
+  avatarColor: string
+  interests: string[]
+}
+
 const COPY = {
   ne: {
     guest: 'नागरिक पाठक',
+    accountBadge: 'पाठक खाता',
     edit: 'प्रोफाइल सम्पादन',
+    logout: 'लगआउट',
     saved: 'सुरक्षित',
     read: 'पढाइ',
     interests: 'रुचि',
-    localNote: 'तपाईंको प्रोफाइल यही उपकरणमा मात्र सुरक्षित छ। खाता वा ट्र्याकिङ आवश्यक छैन।',
+    signupTitle: 'आफ्नो पाठक खाता खोल्नुहोस्',
+    signupBody: 'रुचिअनुसारको समाचार, प्रोफाइल र प्राथमिकता एकै ठाउँमा।',
+    signupCta: 'खाता खोल्नुहोस्',
+    loginCta: 'लगइन',
   },
   en: {
     guest: 'Nagarik Reader',
+    accountBadge: 'Reader account',
     edit: 'Edit profile',
+    logout: 'Log out',
     saved: 'Saved',
     read: 'Reading',
     interests: 'Interests',
-    localNote: 'Your profile lives on this device only. No account, no tracking.',
+    signupTitle: 'Create your reader account',
+    signupBody: 'Personalised news, profile, and preferences in one place.',
+    signupCta: 'Create account',
+    loginCta: 'Log in',
   },
 } as const
 
-export function ReaderIdentityCard({ locale = 'ne' }: { locale?: 'ne' | 'en' }) {
+export function ReaderIdentityCard({
+  locale = 'ne',
+  account = null,
+}: {
+  locale?: 'ne' | 'en'
+  account?: ReaderAccount | null
+}) {
   const copy = COPY[locale]
+  const router = useRouter()
   const [profile, setProfile] = useState<ReaderProfile>({ name: '', color: 'teal', interests: [] })
   const [counts, setCounts] = useState({ saved: 0, history: 0 })
   const [hydrated, setHydrated] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     const sync = () => {
@@ -48,47 +75,108 @@ export function ReaderIdentityCard({ locale = 'ne' }: { locale?: 'ne' | 'en' }) 
     return () => window.removeEventListener(PROFILE_EVENT, sync)
   }, [])
 
-  const displayName = profile.name.trim() || copy.guest
+  async function logout() {
+    setSigningOut(true)
+    try {
+      await fetch('/api/reader/logout', { method: 'POST' })
+    } catch {
+      // Cookie clearing is best-effort; refresh regardless.
+    }
+    router.refresh()
+  }
+
+  const displayName = account?.name || profile.name.trim() || copy.guest
+  const color = account?.avatarColor || profile.color
+  const interestsCount = account ? account.interests.length : profile.interests.length
   const initial = displayName.slice(0, 1).toUpperCase()
 
   return (
-    <section className="surface-card flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
-      <span
-        aria-hidden="true"
-        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-3xl font-black text-white shadow-md"
-        style={{ background: swatchBg(profile.color) }}
-      >
-        {hydrated ? initial : '·'}
-      </span>
+    <section className="surface-card p-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+        <span
+          aria-hidden="true"
+          className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-3xl font-black text-white shadow-md"
+          style={{ background: swatchBg(color) }}
+        >
+          {hydrated || account ? initial : '·'}
+        </span>
 
-      <div className="min-w-0 flex-1">
-        <h2 className="text-2xl font-black tracking-tight text-ink">
-          {hydrated ? displayName : '...'}
-        </h2>
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-stone">
-          <span>
-            {copy.saved}: <strong className="tabular-nums text-ink">{counts.saved}</strong>
-          </span>
-          <span>
-            {copy.read}: <strong className="tabular-nums text-ink">{counts.history}</strong>
-          </span>
-          {profile.interests.length ? (
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-2xl font-black tracking-tight text-ink">
+              {hydrated || account ? displayName : '...'}
+            </h2>
+            {account ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent-muted px-2.5 py-0.5 text-[0.68rem] font-bold text-accent">
+                <SealCheck size={13} weight="fill" aria-hidden="true" />
+                {copy.accountBadge}
+              </span>
+            ) : null}
+          </div>
+          {account ? <p className="mt-1 text-xs text-stone">{account.email}</p> : null}
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-stone">
             <span>
-              {copy.interests}:{' '}
-              <strong className="tabular-nums text-ink">{profile.interests.length}</strong>
+              {copy.saved}: <strong className="tabular-nums text-ink">{counts.saved}</strong>
             </span>
+            <span>
+              {copy.read}: <strong className="tabular-nums text-ink">{counts.history}</strong>
+            </span>
+            {interestsCount ? (
+              <span>
+                {copy.interests}: <strong className="tabular-nums text-ink">{interestsCount}</strong>
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap gap-2 self-start sm:flex-col sm:self-center">
+          <Link
+            href={`/${locale}/account/profile`}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] border border-line bg-paper px-4 text-xs font-bold text-ink hover:border-accent hover:text-accent"
+          >
+            <PencilSimple size={15} weight="bold" aria-hidden="true" />
+            {copy.edit}
+          </Link>
+          {account ? (
+            <button
+              type="button"
+              onClick={logout}
+              disabled={signingOut}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] border border-line bg-paper px-4 text-xs font-bold text-stone hover:border-danger hover:text-danger disabled:opacity-60"
+            >
+              <SignOut size={15} weight="bold" aria-hidden="true" />
+              {copy.logout}
+            </button>
           ) : null}
         </div>
-        <p className="mt-2 max-w-[52ch] text-[0.7rem] leading-relaxed text-stone">{copy.localNote}</p>
       </div>
 
-      <Link
-        href={`/${locale}/account/profile`}
-        className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-[var(--radius-control)] border border-line bg-paper px-4 text-xs font-bold text-ink hover:border-accent hover:text-accent sm:self-center"
-      >
-        <PencilSimple size={15} weight="bold" aria-hidden="true" />
-        {copy.edit}
-      </Link>
+      {/* Signup call-to-action: readers without an account */}
+      {!account ? (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-panel)] border border-accent/30 bg-accent-muted/40 p-4">
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-2 text-sm font-black text-ink">
+              <UserPlus size={18} weight="bold" className="text-accent" aria-hidden="true" />
+              {copy.signupTitle}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-stone">{copy.signupBody}</p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Link
+              href={`/${locale}/register`}
+              className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] accent-solid px-4 text-xs font-bold transition-opacity hover:opacity-90"
+            >
+              {copy.signupCta}
+            </Link>
+            <Link
+              href={`/${locale}/login`}
+              className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line bg-paper px-4 text-xs font-bold text-ink hover:border-accent hover:text-accent"
+            >
+              {copy.loginCta}
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

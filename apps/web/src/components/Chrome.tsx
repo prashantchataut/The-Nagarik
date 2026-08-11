@@ -657,6 +657,9 @@ export function SiteFooter({
               <Link href={`/${locale}/login`} className="text-ink hover:text-accent">
                 {dict.login}
               </Link>
+              <Link href={`/${locale}/register`} className="text-ink hover:text-accent">
+                {locale === 'ne' ? 'खाता खोल्नुहोस्' : 'Create account'}
+              </Link>
               <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="text-ink hover:text-accent">
                 RSS
               </Link>

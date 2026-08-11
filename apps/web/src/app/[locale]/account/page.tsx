@@ -7,6 +7,7 @@ import { ReaderIdentityCard } from '@/components/account/ReaderIdentityCard'
 import { SavedStoriesPanel } from '@/components/account/SavedStoriesPanel'
 import { StaffLogoutButton } from '@/components/auth/StaffLogoutButton'
 import { primaryRole } from '@/lib/auth/staff-roles'
+import { getReaderSession } from '@/lib/auth/reader-session'
 import { getStaffSession } from '@/lib/auth/staff-session'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -26,13 +27,13 @@ export default async function LocaleAccountPage({
 
   const locale = raw as AppLocale
   const dict = getDictionary(locale)
-  const session = await getStaffSession()
+  const [session, reader] = await Promise.all([getStaffSession(), getReaderSession()])
   const isNe = locale === 'ne'
 
   return (
     <div className="space-y-8">
       {/* Reader identity */}
-      <ReaderIdentityCard locale={locale} />
+      <ReaderIdentityCard locale={locale} account={reader} />
 
       {/* Compact previews */}
       <div className="grid gap-8 lg:grid-cols-2">
@@ -90,16 +91,22 @@ export default async function LocaleAccountPage({
           <div className="mt-4">
             <p className="max-w-[62ch] text-xs leading-relaxed text-stone">
               {isNe
-                ? 'पत्रकार, सम्पादक र प्रकाशकहरूले आफ्नो आधिकारिक खाताबाट समाचारकक्षमा सुरक्षित प्रवेश गर्न सक्नुहुन्छ। पाठकलाई खाता आवश्यक छैन।'
-                : 'Journalists, editors, and publishers sign in here to compose stories, review queues, and publish news. Readers never need an account.'}
+                ? 'यो खण्ड समाचारकक्ष स्टाफ (पत्रकार, सम्पादक, प्रकाशक) का लागि मात्र हो र पाठक खाताबाट अलग छ। पत्रकार बन्न सम्पादकीय प्रमाणीकरणसहितको आवेदन आवश्यक हुन्छ।'
+                : 'This section is for newsroom staff only (journalists, editors, publishers) and is fully separate from reader accounts. Becoming a journalist requires an editorially verified application.'}
             </p>
-            <div className="mt-5">
+            <div className="mt-5 flex flex-wrap gap-2.5">
               <Link
-                href={`/${locale}/login`}
+                href="/admin/login"
                 className="inline-flex min-h-10 items-center gap-1.5 rounded-[var(--radius-control)] accent-solid px-5 text-xs font-bold shadow-sm"
               >
-                <span>{dict.login}</span>
+                <span>{isNe ? 'स्टाफ लगइन' : 'Staff login'}</span>
                 <ArrowRight size={14} weight="bold" aria-hidden="true" />
+              </Link>
+              <Link
+                href={`/${locale}/register`}
+                className="inline-flex min-h-10 items-center rounded-[var(--radius-control)] border border-line bg-paper px-4 text-xs font-bold text-ink hover:border-accent"
+              >
+                {isNe ? 'पत्रकार बन्न आवेदन दिनुहोस्' : 'Apply to become a journalist'}
               </Link>
             </div>
           </div>

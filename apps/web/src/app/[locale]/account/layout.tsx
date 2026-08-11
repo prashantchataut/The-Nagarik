@@ -31,8 +31,8 @@ export default async function AccountLayout({
         </h1>
         <p className="mt-2 max-w-[64ch] text-sm leading-relaxed text-stone">
           {isNe
-            ? 'पाठक प्रोफाइल, सुरक्षित समाचार, पढाइ इतिहास र प्राथमिकता। सबै डाटा तपाईंकै उपकरणमा रहन्छ।'
-            : 'Reader profile, saved stories, reading history, and preferences. Everything stays on your device.'}
+            ? 'पाठक प्रोफाइल, सुरक्षित समाचार, पढाइ इतिहास र प्राथमिकता।'
+            : 'Reader profile, saved stories, reading history, and preferences.'}
         </p>
       </header>
 
