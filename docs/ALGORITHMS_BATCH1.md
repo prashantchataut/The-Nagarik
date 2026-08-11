@@ -1,4 +1,4 @@
-# Algorithms - Batch 1 (Implemented) + Batch 2 (Roadmap)
+# Algorithms - Batch 1 + Batch 2 (Implemented)
 
 Date: 2026-08-11 · Package: `@thenagarik/algorithms` · Tests: 60 passing (54 new)
 Registry: every entry below is listed in `registry.ts` with an HONEST status -
@@ -109,7 +109,39 @@ tested and awaiting its consumer.
 3. Search tokenization: Devanagari mark-safe (production bug fixed).
 4. `/admin/algorithms` transparency desk: all 62 entries with honest statuses.
 
-## Batch 2: the next 50 (proposed order)
+## Batch 2: IMPLEMENTED 2026-08-11 (all 50, 111 tests passing)
+
+Modules: `trending-advanced.ts` (Kleinberg burst automaton, Poisson surprise
+with Lanczos lnGamma, per-category baselines, topic clustering, province
+trending, 168-bucket seasonality, lifecycle phases, half-life fitting),
+`search-advanced.ts` (prefix trie, Roman->Devanagari transliteration with
+vowel alternates, banded Levenshtein, zero-result rewrite, minimal-window
+proximity, xQuAD-lite, trending queries), `personalize-advanced.ts` (ALS-lite
+matrix factorization, order-2 Markov, author affinity, negative feedback,
+onboarding optimizer, locale transfer, time-slot preferences, push
+propensity), `editorial-intel.ts` (dual-detector wire clustering, publish-hour
+optimization, Thompson headline A/B, story-gap detection, evergreen
+resurfacing, correction propagation BFS, tag suggestions, related gate),
+`community.ts` (Wilson comment ranking, tiered toxicity, thread collapse,
+reputation, brigading detection, queue prioritization), 
+`experiments-advanced.ts` (ITT exposure joins, exact Bayesian early stopping,
+CUPED, chi-square SRM via incomplete gamma, guardrail monitor),
+`retention.ts` (newsletter selection, send-time optimization, digest dedupe,
+social-card feedback, streaks, churn risk).
+
+Wired in batch 2: `com.queue_priority` -> GET /api/admin/comments now orders
+the moderation queue by hot-article visibility, borderline uncertainty, and
+staleness. Everything else ships `shadow` in the registry (implemented +
+tested, awaiting surface).
+
+Engineering notes from the cautious pass:
+- Headline-length simhash is noisy (one token flips ~6/32 bits) -> wire
+  clustering uses dual detectors (simhash OR token Jaccard).
+- Roman `a` is added as a long-vowel alternate so `nepal` -> नेपाल resolves.
+- Chi-square p-values use a real regularized incomplete gamma (series +
+  continued fraction), verified against classic critical values.
+
+### Original roadmap (for reference - all now implemented)
 
 **Trending/velocity depth (needs multi-window events - the engagement store now supports it)**
 1. Kleinberg burst automaton (2-state HMM over event gaps)

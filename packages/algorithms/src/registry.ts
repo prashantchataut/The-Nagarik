@@ -383,6 +383,68 @@ CAPABILITIES.push(
   cap('quality.profanity', 'Profanity matcher', 'moderation', 'shadow', 'Normalized wordlist engine, CMS-fed lists'),
 )
 
+
+// ---------------------------------------------------------------------------
+// Algorithm library batch 2 (2026-08-11) - implemented + unit-tested.
+// ---------------------------------------------------------------------------
+CAPABILITIES.push(
+  // trending depth
+  cap('trend.kleinberg', 'Kleinberg burst automaton', 'ranking', 'shadow', 'Two-state Viterbi over event gaps'),
+  cap('trend.poisson_surprise', 'Poisson surprise', 'ranking', 'shadow', '-log10 tail probability of observed spikes'),
+  cap('trend.category_baseline', 'Per-category baselines', 'ranking', 'shadow', 'Politics judged against politics'),
+  cap('trend.topic_cluster', 'Trending topic clustering', 'discovery', 'shadow', 'Keyword co-occurrence agglomeration'),
+  cap('trend.geo', 'Province trending', 'discovery', 'shadow', 'Regional velocity splits with honest minimums'),
+  cap('trend.hour_of_week', 'Seasonality normalization', 'ranking', 'shadow', '168-bucket hour-of-week baselines'),
+  cap('trend.lifecycle', 'Story lifecycle phases', 'editorial', 'shadow', 'rising / peak / decaying / dormant'),
+  cap('trend.half_life_fit', 'Half-life estimation', 'ranking', 'shadow', 'Log-linear decay fitting per category'),
+  // search upgrades
+  cap('search.trie_autocomplete', 'Prefix trie autocomplete', 'search', 'shadow', 'Devanagari + Latin weighted completions'),
+  cap('search.transliterate', 'Roman->Devanagari matching', 'search', 'shadow', 'Syllable parser with vowel alternates'),
+  cap('search.levenshtein', 'Typo tolerance', 'search', 'shadow', 'Banded edit distance, length-scaled budget'),
+  cap('search.zero_result_rewrite', 'Zero-result rescue', 'search', 'shadow', 'Closest successful query suggestion'),
+  cap('search.proximity', 'Phrase proximity scoring', 'search', 'shadow', 'Minimal window span boost'),
+  cap('search.xquad', 'Result diversification', 'search', 'shadow', 'xQuAD-lite category coverage'),
+  cap('search.trending_queries', 'Trending queries', 'search', 'shadow', 'Burst-scored query suggestions'),
+  // personalization depth
+  cap('pers.mf_als', 'Matrix factorization (ALS-lite)', 'recommend', 'shadow', 'Implicit-feedback latent factors, deterministic'),
+  cap('pers.markov2', 'Order-2 Markov next-read', 'recommend', 'shadow', 'Bigram transitions with order-1 fallback'),
+  cap('pers.author_affinity', 'Author affinity profiles', 'recommend', 'shadow', 'Decayed byline vectors'),
+  cap('pers.negative_feedback', 'Negative feedback', 'recommend', 'shadow', 'Hide stories, damp categories/authors'),
+  cap('pers.onboarding', 'Interest onboarding optimizer', 'retention', 'shadow', 'Greedy max-coverage pick-3'),
+  cap('pers.locale_transfer', 'Cross-locale transfer', 'recommend', 'shadow', 'ne<->en interests at 0.7 confidence'),
+  cap('pers.time_slot', 'Time-slot preferences', 'recommend', 'shadow', 'Daypart length preferences from history'),
+  cap('pers.push_propensity', 'Push propensity', 'notify', 'shadow', 'Logistic send/skip with hard gates'),
+  // editorial intelligence
+  cap('ed.wire_cluster', 'Wire-copy cluster collapse', 'editorial', 'shadow', 'Dual-detector headline clustering'),
+  cap('ed.publish_time', 'Optimal publish hours', 'editorial', 'shadow', 'Engagement-weighted hour histogram'),
+  cap('ed.headline_ab', 'Headline A/B testing', 'editorial', 'shadow', 'Thompson sampling with 95% posterior stop'),
+  cap('ed.story_gap', 'Coverage gap detection', 'editorial', 'shadow', 'Bursting queries missing from the corpus'),
+  cap('ed.evergreen', 'Evergreen resurfacing', 'discovery', 'shadow', 'Old stories with fresh bursts'),
+  cap('ed.correction_propagation', 'Correction propagation', 'trust', 'shadow', 'BFS over the citation graph'),
+  cap('ed.tag_suggest', 'Composer tag suggestions', 'editorial', 'shadow', 'TF-IDF keywords onto tag vocabulary'),
+  cap('ed.related_gate', 'Related-story quality gate', 'discovery', 'shadow', 'Similarity floor - empty beats misleading'),
+  // community
+  cap('com.rank', 'Comment ranking', 'community', 'shadow', 'Wilson bound x freshness blend'),
+  cap('com.toxicity', 'Tiered toxicity scoring', 'moderation', 'shadow', 'CMS-fed weighted wordlists ne+en'),
+  cap('com.thread_collapse', 'Thread collapse', 'community', 'shadow', 'Low-value chain folding'),
+  cap('com.reputation', 'Commenter reputation', 'moderation', 'shadow', 'Beta-smoothed accept rate'),
+  cap('com.brigading', 'Brigading detection', 'moderation', 'shadow', 'Volume x concentration x new-source composite'),
+  cap('com.queue_priority', 'Moderation queue priority', 'moderation', 'production', 'Hot-article, borderline-first review order', { surface: 'admin-queue' }),
+  // experiments depth
+  cap('exp.exposure_join', 'Exposure-metric join', 'experiments', 'shadow', 'Intent-to-treat per-variant metrics'),
+  cap('exp.bayes_stop', 'Bayesian early stopping', 'experiments', 'shadow', 'Exact P(B>A) via log-Beta summation'),
+  cap('exp.cuped', 'CUPED variance reduction', 'experiments', 'shadow', 'Pre-period covariate adjustment'),
+  cap('exp.srm_chi2', 'Multi-variant SRM', 'experiments', 'shadow', 'Chi-square GOF with incomplete-gamma p-values'),
+  cap('exp.guardrail', 'Guardrail monitor', 'experiments', 'shadow', 'One-sided degradation test, auto-halt'),
+  // distribution & retention
+  cap('ret.newsletter_select', 'Newsletter story selection', 'retention', 'shadow', 'Interest-ranked, deduped, quota-bound'),
+  cap('ret.send_time', 'Send-time optimization', 'retention', 'shadow', 'Laplace-smoothed open-hour histogram'),
+  cap('ret.digest_dedupe', 'Digest dedupe', 'retention', 'shadow', 'Read + recently-sent removal'),
+  cap('ret.card_ctr_feedback', 'Social card feedback', 'distribution', 'shadow', 'Wilson-bound conservative winner'),
+  cap('ret.streak_engine', 'Reading streaks', 'retention', 'shadow', 'Consecutive-day chains + milestones'),
+  cap('ret.churn_risk', 'Churn risk scoring', 'retention', 'shadow', 'Recency/frequency decay buckets'),
+)
+
 // Fill to ~232 with numbered planned infra/ops jobs (still honest: status=planned)
 while (CAPABILITIES.length < 232) {
   const n = CAPABILITIES.length + 1

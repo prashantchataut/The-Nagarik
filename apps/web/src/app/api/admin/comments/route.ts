@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
+import { prioritizeModerationQueue } from '@thenagarik/algorithms'
 import { z } from 'zod'
 import { apiError, apiOk } from '@/lib/api/http'
 import { getStaffSession, staffAuthReady } from '@/lib/auth/staff-session'
 import { editorRoles } from '@/payload/access/rbac'
 import { listPendingComments, moderateComment } from '@/lib/comments'
+import { getEngagementSnapshot } from '@/lib/engagement'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +34,22 @@ export async function GET(): Promise<NextResponse> {
     return apiError('unauthorized', 'Editor session required for moderation.')
   }
   const comments = await listPendingComments(100)
-  return apiOk({ comments })
+
+  // ALGO com.queue_priority - review order: hot articles and borderline
+  // content first, stale items float up before they rot in the queue.
+  const snapshot = await getEngagementSnapshot().catch(() => null)
+  const viewsByStory = new Map(
+    (snapshot?.trendingSamples ?? []).map((s) => [s.storyId, s.impressions15m]),
+  )
+  const prioritized = prioritizeModerationQueue(
+    comments.map((comment) => ({
+      ...comment,
+      body: comment.body,
+      articleViews15m: viewsByStory.get(comment.articleId) ?? 0,
+      createdAt: comment.createdAt,
+    })),
+  )
+  return apiOk({ comments: prioritized })
 }
 
 export async function POST(request: Request): Promise<NextResponse> {

@@ -193,3 +193,38 @@ export function winsorize(values: number[], lowerP = 5, upperP = 95): number[] {
   const hi = percentile(values, upperP)
   return values.map((v) => Math.min(hi, Math.max(lo, v)))
 }
+
+/**
+ * Lanczos log-gamma (g=7, n=9), |err| < 1e-13 for x > 0.
+ * Shared by Poisson surprise scoring and Bayesian early stopping.
+ */
+export function lnGamma(x: number): number {
+  if (x <= 0) return Number.POSITIVE_INFINITY
+  const g = 7
+  const coefficients = [
+    0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+    -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6,
+    1.5056327351493116e-7,
+  ]
+  if (x < 0.5) {
+    // Reflection formula.
+    return Math.log(Math.PI / Math.sin(Math.PI * x)) - lnGamma(1 - x)
+  }
+  const z = x - 1
+  let sum = coefficients[0]
+  for (let i = 1; i < g + 2; i++) sum += coefficients[i] / (z + i)
+  const t = z + g + 0.5
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(sum)
+}
+
+/** ALGO stats.poisson_tail - P(X >= k) for X ~ Poisson(lambda), log-space stable. */
+export function poissonTail(k: number, lambda: number): number {
+  if (lambda <= 0) return k <= 0 ? 1 : 0
+  if (k <= 0) return 1
+  // Sum pmf from 0..k-1, subtract from 1; log-space per term.
+  let cdf = 0
+  for (let i = 0; i < k; i++) {
+    cdf += Math.exp(i * Math.log(lambda) - lambda - lnGamma(i + 1))
+  }
+  return Math.min(1, Math.max(0, 1 - cdf))
+}
