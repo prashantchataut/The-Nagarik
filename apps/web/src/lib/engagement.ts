@@ -106,6 +106,10 @@ async function loadRecentEvents(): Promise<EngagementEvent[]> {
   return store.events
 }
 
+/** 15-minute impression buckets per story over the last 2 hours (oldest first). */
+const WINDOW_MINUTES = 15
+const WINDOW_COUNT = 8
+
 export async function getEngagementSnapshot() {
   const events = await loadRecentEvents()
   const now = Date.now()
@@ -139,9 +143,29 @@ export async function getEngagementSnapshot() {
     byStory.set(e.storyId, row)
   }
 
+  // ALGO vel.* feed: bucket impressions into fixed windows for velocity
+  // ranking, burst detection, and lifecycle classification.
+  const windowsByStory = new Map<string, number[]>()
+  const windowSpanMs = WINDOW_MINUTES * 60_000
+  for (const e of events) {
+    if (e.type !== 'impression' || !e.storyId) continue
+    const ageMs = now - new Date(e.at).getTime()
+    if (ageMs < 0 || ageMs >= WINDOW_COUNT * windowSpanMs) continue
+    const bucketFromNow = Math.floor(ageMs / windowSpanMs) // 0 = newest
+    const index = WINDOW_COUNT - 1 - bucketFromNow // oldest first
+    const row = windowsByStory.get(e.storyId) ?? new Array<number>(WINDOW_COUNT).fill(0)
+    row[index] += 1
+    windowsByStory.set(e.storyId, row)
+  }
+
   return {
     sampleN: events.length,
     lastEventAgeSec: lastAge,
+    windowSeries: [...windowsByStory.entries()].map(([storyId, windows]) => ({
+      storyId,
+      windows,
+    })),
+    windowMinutes: WINDOW_MINUTES,
     trendingSamples: [...byStory.entries()].map(([storyId, v]) => ({
       storyId,
       impressions15m: v.impressions15m,

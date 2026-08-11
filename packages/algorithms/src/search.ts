@@ -1,3 +1,5 @@
+import { romanToDevanagari } from './search-advanced'
+
 export type SearchDoc = {
   id: string
   title: string
@@ -35,6 +37,10 @@ function expandQuery(tokens: string[]): string[] {
   const out = new Set(tokens)
   for (const t of tokens) {
     for (const alt of LEXICON[t] ?? []) out.add(alt.toLowerCase())
+    // ALGO search.transliterate - Roman tokens also search as Devanagari.
+    if (/^[a-z]{3,}$/.test(t)) {
+      for (const candidate of romanToDevanagari(t).slice(0, 8)) out.add(candidate)
+    }
   }
   return [...out]
 }

@@ -1,3 +1,4 @@
+import { romanToDevanagari } from '@thenagarik/algorithms'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { payloadDeskAvailable } from '@/lib/admin/payload-desk'
@@ -39,15 +40,24 @@ export async function searchArticlesDb(
   if (!q) return []
   const payload = await getPayload({ config })
 
-  const textMatch = {
-    or: [
-      { titleNe: { like: q } },
-      { titleEn: { like: q } },
-      { deckNe: { like: q } },
-      { deckEn: { like: q } },
-      { slug: { like: q } },
-    ],
+  const clauses: unknown[] = [
+    { titleNe: { like: q } },
+    { titleEn: { like: q } },
+    { deckNe: { like: q } },
+    { deckEn: { like: q } },
+    { slug: { like: q } },
+  ]
+
+  // ALGO search.transliterate - Roman queries also match Devanagari text:
+  // "nagarik" finds नागरिक. Candidates are bounded (4 per token, 2 tokens).
+  for (const token of q.split(/\s+/).filter((t) => /^[a-zA-Z]{3,}$/.test(t)).slice(0, 2)) {
+    for (const candidate of romanToDevanagari(token).slice(0, 8)) {
+      clauses.push({ titleNe: { like: candidate } })
+      clauses.push({ deckNe: { like: candidate } })
+    }
   }
+
+  const textMatch = { or: clauses }
 
   const filters: unknown[] = [
     { status: { equals: 'published' } },

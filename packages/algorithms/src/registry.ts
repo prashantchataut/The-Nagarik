@@ -327,11 +327,11 @@ CAPABILITIES.push(
   // velocity & burst
   cap('vel.velocity', 'Velocity (events/min)', 'ranking', 'shadow', 'Newest-window event rate'),
   cap('vel.acceleration', 'Acceleration', 'ranking', 'shadow', 'Velocity delta between windows'),
-  cap('vel.burst_z', 'Burst detection', 'ranking', 'shadow', 'Robust z outlier vs baseline windows, flat-floor fallback'),
+  cap('vel.burst_z', 'Burst detection', 'ranking', 'production', 'Robust z outlier vs baseline windows, flat-floor fallback', { surface: 'homepage' }),
   cap('vel.burst_hysteresis', 'Burst hysteresis', 'ranking', 'shadow', 'Enter/exit thresholds against flapping'),
-  cap('vel.ewma_velocity', 'Smoothed velocity', 'ranking', 'shadow', 'EWMA of per-window rates'),
-  cap('vel.spike_guard', 'Spike guard', 'ranking', 'shadow', 'Winsorized windows against bot spikes'),
-  cap('vel.velocity_rank', 'Velocity ranking', 'ranking', 'shadow', 'Velocity x freshness x burst composite'),
+  cap('vel.ewma_velocity', 'Smoothed velocity', 'ranking', 'production', 'EWMA of per-window rates', { surface: 'homepage' }),
+  cap('vel.spike_guard', 'Spike guard', 'ranking', 'production', 'Winsorized windows against bot spikes', { surface: 'homepage' }),
+  cap('vel.velocity_rank', 'Velocity ranking', 'ranking', 'production', 'Velocity x freshness x burst composite', { surface: 'homepage' }),
   cap('rank.half_life', 'Half-life decay factory', 'ranking', 'production', 'Configurable exponential freshness'),
   // scoring
   cap('score.hn_gravity', 'Hacker News gravity', 'ranking', 'shadow', '(p-1)/(age+2)^1.8 reference ranker'),
@@ -399,7 +399,7 @@ CAPABILITIES.push(
   cap('trend.half_life_fit', 'Half-life estimation', 'ranking', 'shadow', 'Log-linear decay fitting per category'),
   // search upgrades
   cap('search.trie_autocomplete', 'Prefix trie autocomplete', 'search', 'shadow', 'Devanagari + Latin weighted completions'),
-  cap('search.transliterate', 'Roman->Devanagari matching', 'search', 'shadow', 'Syllable parser with vowel alternates'),
+  cap('search.transliterate', 'Roman->Devanagari matching', 'search', 'production', 'Syllable parser with vowel alternates, substitution-ordered candidates', { surface: 'search' }),
   cap('search.levenshtein', 'Typo tolerance', 'search', 'shadow', 'Banded edit distance, length-scaled budget'),
   cap('search.zero_result_rewrite', 'Zero-result rescue', 'search', 'shadow', 'Closest successful query suggestion'),
   cap('search.proximity', 'Phrase proximity scoring', 'search', 'shadow', 'Minimal window span boost'),
@@ -441,7 +441,7 @@ CAPABILITIES.push(
   cap('ret.send_time', 'Send-time optimization', 'retention', 'shadow', 'Laplace-smoothed open-hour histogram'),
   cap('ret.digest_dedupe', 'Digest dedupe', 'retention', 'shadow', 'Read + recently-sent removal'),
   cap('ret.card_ctr_feedback', 'Social card feedback', 'distribution', 'shadow', 'Wilson-bound conservative winner'),
-  cap('ret.streak_engine', 'Reading streaks', 'retention', 'shadow', 'Consecutive-day chains + milestones'),
+  cap('ret.streak_engine', 'Reading streaks', 'retention', 'production', 'Consecutive-day chains + milestones', { surface: 'account' }),
   cap('ret.churn_risk', 'Churn risk scoring', 'retention', 'shadow', 'Recency/frequency decay buckets'),
 )
 

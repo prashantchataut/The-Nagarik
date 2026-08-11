@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { PencilSimple, SealCheck, SignOut, UserPlus } from '@phosphor-icons/react'
+import { Fire, PencilSimple, SealCheck, SignOut, UserPlus } from '@phosphor-icons/react'
+import { readingStreak } from '@thenagarik/algorithms'
 import {
   PROFILE_EVENT,
   readBookmarks,
@@ -30,6 +31,8 @@ const COPY = {
     saved: 'सुरक्षित',
     read: 'पढाइ',
     interests: 'रुचि',
+    streak: 'दिनको पढाइ शृङ्खला',
+    milestone: 'माइलस्टोन!',
     signupTitle: 'आफ्नो पाठक खाता खोल्नुहोस्',
     signupBody: 'रुचिअनुसारको समाचार, प्रोफाइल र प्राथमिकता एकै ठाउँमा।',
     signupCta: 'खाता खोल्नुहोस्',
@@ -43,6 +46,8 @@ const COPY = {
     saved: 'Saved',
     read: 'Reading',
     interests: 'Interests',
+    streak: 'day reading streak',
+    milestone: 'Milestone!',
     signupTitle: 'Create your reader account',
     signupBody: 'Personalised news, profile, and preferences in one place.',
     signupCta: 'Create account',
@@ -61,13 +66,28 @@ export function ReaderIdentityCard({
   const router = useRouter()
   const [profile, setProfile] = useState<ReaderProfile>({ name: '', color: 'teal', interests: [] })
   const [counts, setCounts] = useState({ saved: 0, history: 0 })
+  const [streak, setStreak] = useState<{ current: number; milestone: number | null }>({
+    current: 0,
+    milestone: null,
+  })
   const [hydrated, setHydrated] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     const sync = () => {
       setProfile(readProfile())
-      setCounts({ saved: readBookmarks().length, history: readHistory().length })
+      const history = readHistory()
+      setCounts({ saved: readBookmarks().length, history: history.length })
+      // ALGO ret.streak_engine - consecutive local reading days.
+      const toLocalDay = (iso: string) => {
+        const d = new Date(iso)
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      }
+      const result = readingStreak(
+        history.map((h) => toLocalDay(h.updatedAt)),
+        toLocalDay(new Date().toISOString()),
+      )
+      setStreak({ current: result.current, milestone: result.milestone })
       setHydrated(true)
     }
     sync()
@@ -127,6 +147,13 @@ export function ReaderIdentityCard({
               </span>
             ) : null}
           </div>
+          {streak.current >= 2 ? (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-warning-muted px-3 py-1 text-xs font-bold text-warning">
+              <Fire size={14} weight="fill" aria-hidden="true" />
+              <span className="tabular-nums">{streak.current}</span> {copy.streak}
+              {streak.milestone ? <span className="ml-1">· {copy.milestone}</span> : null}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2 self-start sm:flex-col sm:self-center">

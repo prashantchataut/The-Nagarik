@@ -129,10 +129,19 @@ CUPED, chi-square SRM via incomplete gamma, guardrail monitor),
 `retention.ts` (newsletter selection, send-time optimization, digest dedupe,
 social-card feedback, streaks, churn risk).
 
-Wired in batch 2: `com.queue_priority` -> GET /api/admin/comments now orders
-the moderation queue by hot-article visibility, borderline uncertainty, and
-staleness. Everything else ships `shadow` in the registry (implemented +
-tested, awaiting surface).
+Wired in batch 2 (all verified live against the running portal):
+- `com.queue_priority` -> GET /api/admin/comments orders the moderation queue
+  by hot-article visibility, borderline uncertainty, and staleness.
+- `vel.velocity_rank` (+ ewma/spike-guard/burst) -> homepage trending now
+  ranks on real 15-min impression windows from the engagement snapshot
+  (`windowSeries`), with honest fallback to the two-window detector and then
+  recency. Verified: 12-impression story outranked 3-impression story in the
+  rendered HTML.
+- `search.transliterate` -> both search paths (Postgres ILIKE + facade
+  index): Roman queries match Devanagari ("nagarik" finds नागरिक). Candidate
+  generation is substitution-ordered so plausible readings survive caps.
+- `ret.streak_engine` -> account identity card shows consecutive-day reading
+  streaks with milestone callouts (device-local history).
 
 Engineering notes from the cautious pass:
 - Headline-length simhash is noisy (one token flips ~6/32 bits) -> wire

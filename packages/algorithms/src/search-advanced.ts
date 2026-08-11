@@ -82,12 +82,12 @@ const ROMAN_VOWELS: Array<[string, { independent: string; sign: string }]> = [
  * variants (schwa kept/dropped at word end, long/short vowel alternates for
  * i/u) because Roman spelling of Nepali is not deterministic.
  */
-export function romanToDevanagari(roman: string, maxCandidates = 8): string[] {
+export function romanToDevanagari(roman: string, maxCandidates = 16): string[] {
   const input = roman.trim()
   if (!input || /[^a-zA-Z]/.test(input)) return []
 
-  type State = { out: string; pendingConsonant: string | null }
-  let states: State[] = [{ out: '', pendingConsonant: null }]
+  type State = { out: string; pendingConsonant: string | null; subs: number }
+  let states: State[] = [{ out: '', pendingConsonant: null, subs: 0 }]
   let i = 0
   const lower = input.toLowerCase()
 
@@ -104,11 +104,17 @@ export function romanToDevanagari(roman: string, maxCandidates = 8): string[] {
     for (const [rom, dev] of ROMAN_VOWELS) {
       if (lower.startsWith(rom, i)) {
         for (const state of states) {
-          nextStates.push({ out: flush(state, dev.sign, dev.independent), pendingConsonant: null })
+          nextStates.push({
+            out: flush(state, dev.sign, dev.independent),
+            pendingConsonant: null,
+            subs: state.subs,
+          })
           // Alternates: loose romanization writes long vowels short.
-          if (rom === 'a') nextStates.push({ out: flush(state, 'ा', 'आ'), pendingConsonant: null })
-          if (rom === 'i') nextStates.push({ out: flush(state, 'ी', 'ई'), pendingConsonant: null })
-          if (rom === 'u') nextStates.push({ out: flush(state, 'ू', 'ऊ'), pendingConsonant: null })
+          // Each alternate counts as a substitution so plausibility ordering
+          // (fewest substitutions first) survives candidate caps.
+          if (rom === 'a') nextStates.push({ out: flush(state, 'ा', 'आ'), pendingConsonant: null, subs: state.subs + 1 })
+          if (rom === 'i') nextStates.push({ out: flush(state, 'ी', 'ई'), pendingConsonant: null, subs: state.subs + 1 })
+          if (rom === 'u') nextStates.push({ out: flush(state, 'ू', 'ऊ'), pendingConsonant: null, subs: state.subs + 1 })
         }
         i += rom.length
         matched = true
@@ -125,7 +131,7 @@ export function romanToDevanagari(roman: string, maxCandidates = 8): string[] {
         for (const state of states) {
           // A pending consonant with no vowel forms a conjunct via virama.
           const out = state.pendingConsonant ? state.out + state.pendingConsonant + '्' : state.out
-          nextStates.push({ out, pendingConsonant: dev })
+          nextStates.push({ out, pendingConsonant: dev, subs: state.subs })
         }
         i += rom.length
         matched = true
@@ -136,26 +142,36 @@ export function romanToDevanagari(roman: string, maxCandidates = 8): string[] {
     states = dedupeStates(nextStates, maxCandidates)
   }
 
-  const finals = new Set<string>()
+  const finals: Array<{ text: string; subs: number }> = []
+  const seenFinal = new Set<string>()
+  const pushFinal = (text: string, subs: number) => {
+    if (!text || seenFinal.has(text)) return
+    seenFinal.add(text)
+    finals.push({ text, subs })
+  }
   for (const state of states) {
     if (state.pendingConsonant) {
       // Word-final consonant: emit both with and without the inherent schwa.
-      finals.add(state.out + state.pendingConsonant)
-      finals.add(state.out + state.pendingConsonant + '्')
+      pushFinal(state.out + state.pendingConsonant, state.subs)
+      pushFinal(state.out + state.pendingConsonant + '्', state.subs)
     } else {
-      finals.add(state.out)
+      pushFinal(state.out, state.subs)
     }
   }
-  return [...finals].filter(Boolean).slice(0, maxCandidates)
+  return finals
+    .sort((a, b) => a.subs - b.subs)
+    .slice(0, maxCandidates)
+    .map((f) => f.text)
 }
 
 function dedupeStates(
-  states: Array<{ out: string; pendingConsonant: string | null }>,
+  states: Array<{ out: string; pendingConsonant: string | null; subs: number }>,
   max: number,
-): Array<{ out: string; pendingConsonant: string | null }> {
+): Array<{ out: string; pendingConsonant: string | null; subs: number }> {
   const seen = new Set<string>()
   const out: typeof states = []
-  for (const state of states) {
+  // Fewest substitutions first: plausible readings survive the state cap.
+  for (const state of [...states].sort((a, b) => a.subs - b.subs)) {
     const key = `${state.out}|${state.pendingConsonant ?? ''}`
     if (seen.has(key)) continue
     seen.add(key)
