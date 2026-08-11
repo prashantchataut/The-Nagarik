@@ -9,6 +9,7 @@ import { Authors } from './collections/Authors'
 import { Categories } from './collections/Categories'
 import { Comments } from './collections/Comments'
 import { Media } from './collections/Media'
+import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
 import { Tags } from './collections/Tags'
 import { Users } from './collections/Users'
 
@@ -30,6 +31,16 @@ const DATABASE_URL =
   'postgres://build-placeholder.not.used.at.runtime/db'
 const SERVER_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000'
 
+/**
+ * Extra origins allowed to send cookie-authenticated requests (CSRF list).
+ * Needed when the app is reached through more than one public origin
+ * (preview domains, multi-domain tenants). Comma-separated.
+ */
+const EXTRA_CSRF_ORIGINS = (process.env.PAYLOAD_CSRF_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean)
+
 function validateAtBoot() {
   if (isBuild) return
   const secret = process.env.PAYLOAD_SECRET?.trim()
@@ -49,6 +60,7 @@ function validateAtBoot() {
 export default buildConfig({
   secret: PAYLOAD_SECRET,
   serverURL: SERVER_URL,
+  csrf: [SERVER_URL, ...EXTRA_CSRF_ORIGINS],
   routes: {
     admin: '/cms',
   },
@@ -62,7 +74,7 @@ export default buildConfig({
       title: 'द नागरिक',
     },
   },
-  collections: [Users, Media, Categories, Authors, Tags, Articles, Comments],
+  collections: [Users, Media, Categories, Authors, Tags, Articles, Comments, NewsletterSubscribers],
   plugins: [
     vercelBlobStorage({
       enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim()),

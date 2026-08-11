@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { apiError, apiOk, clientIp } from '@/lib/api/http'
+import { createRateLimiter } from '@/lib/api/rate-limit'
 import {
   createComment,
   listApprovedComments,
@@ -23,75 +25,58 @@ const CreateSchema = z.object({
   website: z.string().max(0).optional(),
 })
 
-/** Per-instance rate limit: 4 comments per IP per 10 minutes. */
-const attempts = new Map<string, number[]>()
-const WINDOW_MS = 10 * 60 * 1000
-const MAX_PER_WINDOW = 4
+/** 4 comments per IP per 10 minutes. */
+const limiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 4 })
 
-function rateLimited(ip: string): boolean {
-  const now = Date.now()
-  const list = (attempts.get(ip) ?? []).filter((t) => now - t < WINDOW_MS)
-  if (list.length >= MAX_PER_WINDOW) {
-    attempts.set(ip, list)
-    return true
-  }
-  list.push(now)
-  attempts.set(ip, list)
-  return false
-}
-
-function clientIp(request: Request): string {
-  return (
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    'local'
-  )
-}
-
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<NextResponse> {
   const url = new URL(request.url)
   const articleId = url.searchParams.get('articleId')?.trim()
   if (!articleId || articleId.length > 128) {
-    return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 })
+    return apiError('invalid', 'articleId query parameter is required.')
   }
   const comments = await listApprovedComments(articleId)
-  return NextResponse.json(
-    { ok: true, comments: comments.map(toPublicComment) },
-    { headers: { 'cache-control': 'public, max-age=30, stale-while-revalidate=120' } },
+  return apiOk(
+    { comments: comments.map(toPublicComment) },
+    { cacheControl: 'public, max-age=30, stale-while-revalidate=120' },
   )
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   const ip = clientIp(request)
-  if (rateLimited(ip)) {
-    return NextResponse.json({ ok: false, reason: 'rate-limit' }, { status: 429 })
+  const limit = limiter.check(ip)
+  if (limit.limited) {
+    return apiError('rate-limit', 'Too many comments; please retry in a few minutes.', {
+      retryAfterSec: limit.retryAfterSec,
+    })
   }
 
   const parsed = CreateSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
-    return NextResponse.json(
-      { ok: false, reason: 'invalid', issues: parsed.error.issues.map((i) => i.message) },
-      { status: 400 },
-    )
+    return apiError('invalid', 'Comment validation failed.', {
+      issues: parsed.error.issues.map((i) => i.message),
+    })
   }
 
   // Honeypot triggered: pretend success without persisting anything.
   if (parsed.data.website && parsed.data.website.length > 0) {
-    return NextResponse.json({ ok: true, status: 'pending' })
+    return apiOk({ status: 'pending' })
   }
 
   const salt = process.env.PAYLOAD_SECRET ?? 'tn-comments'
   const ipHash = createHash('sha256').update(`${salt}:${ip}`).digest('hex').slice(0, 32)
 
-  const record = await createComment({
-    articleId: parsed.data.articleId,
-    parentId: parsed.data.parentId ?? null,
-    name: parsed.data.name,
-    email: parsed.data.email || '',
-    body: parsed.data.body,
-    locale: parsed.data.locale ?? 'ne',
-    ipHash,
-  })
-
-  return NextResponse.json({ ok: true, status: record.status, id: record.id }, { status: 201 })
+  try {
+    const record = await createComment({
+      articleId: parsed.data.articleId,
+      parentId: parsed.data.parentId ?? null,
+      name: parsed.data.name,
+      email: parsed.data.email || '',
+      body: parsed.data.body,
+      locale: parsed.data.locale ?? 'ne',
+      ipHash,
+    })
+    return apiOk({ status: record.status, id: record.id }, { status: 201 })
+  } catch {
+    return apiError('server-error', 'Comment could not be stored; please retry.')
+  }
 }

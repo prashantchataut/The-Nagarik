@@ -1,7 +1,11 @@
 import type { AppLocale } from '@/lib/i18n'
+import { SITE } from '@/site.config'
 
-export const BRAND_EN = 'The Nagarik'
-export const BRAND_NE = 'द नागरिक'
+/** Brand constants derive from site.config - never hardcode brand strings. */
+export const BRAND_EN = SITE.brand.en
+export const BRAND_NE = SITE.brand.ne
+export const SITE_DOMAIN = SITE.domain
+export const SITE_ID = SITE.id
 
 /** Patro product URL — subdomain when configured, else in-app route. */
 export function patroHref(locale: AppLocale): string {

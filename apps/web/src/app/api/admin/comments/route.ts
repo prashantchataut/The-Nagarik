@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { apiError, apiOk } from '@/lib/api/http'
 import { getStaffSession, staffAuthReady } from '@/lib/auth/staff-session'
 import { editorRoles } from '@/payload/access/rbac'
 import { listPendingComments, moderateComment } from '@/lib/comments'
@@ -26,25 +27,25 @@ async function canModerate(): Promise<boolean> {
   return (process.env.LAUNCH_STATUS ?? 'dev') !== 'live'
 }
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   if (!(await canModerate())) {
-    return NextResponse.json({ ok: false, reason: 'unauthorized' }, { status: 401 })
+    return apiError('unauthorized', 'Editor session required for moderation.')
   }
   const comments = await listPendingComments(100)
-  return NextResponse.json({ ok: true, comments })
+  return apiOk({ comments })
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   if (!(await canModerate())) {
-    return NextResponse.json({ ok: false, reason: 'unauthorized' }, { status: 401 })
+    return apiError('unauthorized', 'Editor session required for moderation.')
   }
   const parsed = ActionSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 })
+    return apiError('invalid', 'id and action (approve|reject) are required.')
   }
   const record = await moderateComment(parsed.data.id, parsed.data.action)
   if (!record) {
-    return NextResponse.json({ ok: false, reason: 'not-found' }, { status: 404 })
+    return apiError('not-found', 'Comment not found.')
   }
-  return NextResponse.json({ ok: true, comment: record })
+  return apiOk({ comment: record })
 }

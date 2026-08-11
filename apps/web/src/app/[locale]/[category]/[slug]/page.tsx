@@ -21,6 +21,7 @@ import { CategoryTag } from '@/components/news/CategoryTag'
 import { CategoryIcon } from '@/components/CategoryIcon'
 import { renderInlineMarkup } from '@/components/journalist/inline-markup'
 import { getContent, siteUrl } from '@/lib/content'
+import { SITE } from '@/site.config'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 import { Clock, CaretRight, House } from '@phosphor-icons/react/dist/ssr'
 
@@ -140,6 +141,13 @@ export default async function ArticlePage({
       name: locale === 'en' && a!.nameEn ? a!.nameEn : a!.nameNe,
       url: siteUrl(`/${locale}/author/${a!.slug}`),
     })),
+    publisher: {
+      '@type': 'NewsMediaOrganization',
+      name: locale === 'en' ? SITE.brand.en : SITE.brand.ne,
+      url: siteUrl(`/${locale}`),
+      logo: { '@type': 'ImageObject', url: siteUrl('/icon') },
+    },
+    mainEntityOfPage: siteUrl(`/${locale}/${category}/${slug}`),
     image: article.hero?.url,
   }
 

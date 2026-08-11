@@ -1,5 +1,6 @@
 import { localizeDeck, localizeTitle } from '@thenagarik/content'
 import { getContent, siteUrl } from '@/lib/content'
+import { SITE } from '@/site.config'
 
 export const revalidate = 300
 
@@ -26,9 +27,9 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
 <channel>
-  <title>The Nagarik</title>
+  <title>${SITE.brand.en}</title>
   <link>${siteUrl('/en')}</link>
-  <description>Civic news for Nepal (English)</description>
+  <description>${SITE.brand.taglineEn} (English)</description>
   ${items}
 </channel>
 </rss>`

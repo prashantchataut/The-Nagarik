@@ -1,21 +1,22 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { PwaRegister } from '@/components/PwaRegister'
+import { SITE } from '@/site.config'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'The Nagarik | द नागरिक',
-    template: '%s | The Nagarik',
+    default: `${SITE.brand.en} | ${SITE.brand.ne}`,
+    template: `%s | ${SITE.brand.en}`,
   },
-  description: 'Nepali-first civic news for Nepal.',
+  description: SITE.brand.descriptionEn ?? SITE.brand.taglineEn,
   manifest: '/manifest.webmanifest',
   robots: { index: false, follow: false },
   appleWebApp: {
     capable: true,
-    title: 'The Nagarik',
+    title: SITE.brand.en,
     statusBarStyle: 'default',
   },
   icons: {
