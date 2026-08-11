@@ -1,11 +1,13 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
+import { commentSpamScore, isDuplicateComment, moderateComment } from '@thenagarik/algorithms'
 import { z } from 'zod'
 import { apiError, apiOk, clientIp } from '@/lib/api/http'
 import { createRateLimiter } from '@/lib/api/rate-limit'
 import {
   createComment,
   listApprovedComments,
+  listPendingComments,
   toPublicComment,
 } from '@/lib/comments'
 
@@ -59,6 +61,30 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   // Honeypot triggered: pretend success without persisting anything.
   if (parsed.data.website && parsed.data.website.length > 0) {
+    return apiOk({ status: 'pending' })
+  }
+
+  // ALGO quality.comment_spam + mod.lexical: high-confidence spam is
+  // silently dropped (same response as success - no oracle for bots).
+  // Borderline content still lands in the human moderation queue.
+  const spam = commentSpamScore(parsed.data.body)
+  const verdict = moderateComment({ text: parsed.data.body })
+  if (spam.score >= 0.6 || verdict.suggested === 'reject') {
+    return apiOk({ status: 'pending' })
+  }
+
+  // ALGO quality.dup_comment: identical/near-identical repeat on the same
+  // article is dropped the same silent way. Pending comments count too -
+  // double-submits are the most common duplicate.
+  const [approved, pending] = await Promise.all([
+    listApprovedComments(parsed.data.articleId),
+    listPendingComments(100),
+  ])
+  const recentTexts = [
+    ...approved.map((c) => c.body),
+    ...pending.filter((c) => c.articleId === parsed.data.articleId).map((c) => c.body),
+  ].slice(-40)
+  if (isDuplicateComment(parsed.data.body, recentTexts)) {
     return apiOk({ status: 'pending' })
   }
 

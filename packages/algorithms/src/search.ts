@@ -10,10 +10,12 @@ export type SearchDoc = {
 type Posting = { docId: string; tf: number; fieldBoost: number }
 
 function tokenize(text: string): string[] {
+  // \p{M} kept inside tokens: Devanagari matras/virama are combining marks,
+  // and splitting on them shatters words (bug found via algorithm suite).
   return text
     .toLowerCase()
     .normalize('NFC')
-    .split(/[^\p{L}\p{N}]+/u)
+    .split(/[^\p{L}\p{M}\p{N}]+/u)
     .filter((t) => t.length > 1)
 }
 
