@@ -16,6 +16,7 @@ import {
 import { StoryRail } from '@/components/Story'
 import { CommentsSection } from '@/components/reader/CommentsSection'
 import { NewsletterCard } from '@/components/reader/NewsletterCard'
+import { UpNextSheet } from '@/components/reader/UpNextSheet'
 import { RelativeTime } from '@/components/RelativeTime'
 import { CategoryTag } from '@/components/news/CategoryTag'
 import { CategoryIcon } from '@/components/CategoryIcon'
@@ -154,6 +155,7 @@ export default async function ArticlePage({
   return (
     <>
       <ReadingProgress />
+      <UpNextSheet storyId={article.id} locale={locale} />
       <ArticleEngagement
         storyId={article.id}
         categorySlug={category}

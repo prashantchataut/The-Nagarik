@@ -6,15 +6,19 @@ Date: 2026-08-11 · Audited with: `ui-audit`, `design-taste-frontend`, `web-perf
 Scope: CODE gaps only. Env/keys/hosting/DNS are excluded by request.
 Legend: ⛔ launch blocker · 🔴 high · 🟡 medium · 🟢 polish
 
-## 1. Launch blockers (must fix before any public launch)
+## 1. Launch blockers - STATUS UPDATE 2026-08-11: 4 of 5 closed, 1 mitigated
+Also shipped same day (see ADR-0004): login-first conversion (prominent header
+login/signup CTA, login-gated account area with ?next= return), hardened
+narrator engine (async voice loading, start watchdog, keep-alive), and the
+SPA story-hopping UpNextSheet with personalized /api/recommendations.
 
 | # | Finding | Evidence | Fix |
 |---|---------|----------|-----|
-| ⛔1 | **Site-wide `noindex`.** Root layout hardcodes `robots: { index: false, follow: false }` - the entire site is invisible to Google forever. | `app/layout.tsx:16` | Drive from `LAUNCH_STATUS`: `index: launch === 'live'`; per-page noindex stays for account/desk routes. |
-| ⛔2 | **Render-blocking third-party fonts.** Google Fonts loaded via CSS `@import` in `globals.css` - blocks first paint, FOIT on Devanagari, no fallback metrics (CLS). Kills LCP < 2.5s on 3G. | `globals.css:1` | Migrate to `next/font/google` (Mukta + Noto Serif Devanagari) with `display: swap` + `adjustFontFallback`; wire into the existing `--font-*` vars. Also required for the factory's config-driven fonts. |
-| ⛔3 | **No pagination anywhere.** Category, latest, search, and author pages render a fixed slice; older stories become unreachable and list pages will collapse at real archive sizes. | `[category]/page.tsx`, `latest/page.tsx` | Cursor pagination (`?page=` + `payload.find({ limit, page })`) with rel prev/next links for SEO. |
-| ⛔4 | **Search does not scale.** Every query loads ALL published articles + bodies into memory and builds an index per request. Fine at 40 fixtures; O(n) at 10k articles. | `search/page.tsx` → `buildSearchIndex` | Postgres full-text search (tsvector column + GIN index via a Payload hook) behind the same UI; keep facade path for dev. |
-| ⛔5 | **Engagement/ranking store is a JSON file.** `.data/engagement.json` is per-instance and lost on redeploy - trending/most-read silently break in production. | `lib/engagement.ts` | `events` Payload collection (or raw table) + windowed aggregate queries; the algorithms package already consumes normalized signals. |
+| ✅1 | ~~Site-wide `noindex`~~ **CLOSED 2026-08-11**: robots now derive from `LAUNCH_STATUS` (live => index,follow). | `app/layout.tsx` | Done. |
+| 🟡2 | ~~Render-blocking font `@import`~~ **MITIGATED 2026-08-11**: preconnect + parallel `<link>` with `display=swap`, families from site.config. Full close = `next/font` self-hosting, blocked only by missing egress to fonts.googleapis.com in this build env - land it in CI (ADR-0005). | `app/layout.tsx` | next/font in CI. |
+| ✅3 | ~~No pagination~~ **CLOSED 2026-08-11**: `?page=` pagination (18/page) with crawlable rel prev/next on latest + category archives (`Pager`/`parsePage`). Remaining refinement: push paging into the Payload query itself once the content facade exposes limit/page. | `components/news/Pager.tsx` | Done (UI + clamped parsing). |
+| ✅4 | ~~Search does not scale~~ **CLOSED 2026-08-11**: Payload-backed sites now search database-side (bounded ILIKE across titles/decks/slug, published-only, no body hydration) via `lib/search-db.ts`; in-memory index is facade/dev-only. Upgrade path (tsvector + GIN) documented for high query volume. | `lib/search-db.ts` | Done (interim); tsvector later. |
+| ✅5 | ~~Engagement store is a JSON file~~ **CLOSED 2026-08-11**: `engagement-events` collection (migration `20260811_162228`), payload-first `recordEvent`/`getEngagementSnapshot` with file fallback for facade mode. Remaining refinement: SQL-side window aggregation + retention cron. | `lib/engagement.ts` | Done. |
 
 ## 2. High priority (product incomplete without)
 

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { SiteFooter, SiteHeader } from '@/components/Chrome'
 import { ConsentBanner } from '@/components/ReaderClient'
 import { listDeskTags, payloadDeskAvailable } from '@/lib/admin/payload-desk'
+import { getReaderSession } from '@/lib/auth/reader-session'
 import { getContent } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -17,7 +18,10 @@ export default async function LocaleLayout({
   const locale = raw as AppLocale
   const dict = getDictionary(locale)
   const content = getContent()
-  const categories = await content.listCategories()
+  const [categories, reader] = await Promise.all([
+    content.listCategories(),
+    getReaderSession(),
+  ])
   const trendingTags = payloadDeskAvailable()
     ? (await listDeskTags())
         .slice(0, 6)
@@ -33,7 +37,13 @@ export default async function LocaleLayout({
       >
         {dict.skipToContent}
       </a>
-      <SiteHeader locale={locale} dict={dict} categories={categories} trendingTags={trendingTags} />
+      <SiteHeader
+        locale={locale}
+        dict={dict}
+        categories={categories}
+        trendingTags={trendingTags}
+        reader={reader ? { name: reader.name } : null}
+      />
       <main id="main">
         {children}
       </main>

@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Clock, Lightning } from '@phosphor-icons/react/dist/ssr'
 import { RelativeTime } from '@/components/RelativeTime'
 import { CategoryIcon } from '@/components/CategoryIcon'
+import { Pager, parsePage } from '@/components/news/Pager'
 import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
@@ -35,10 +36,13 @@ export async function generateMetadata({
 
 export default async function LatestUpdatesPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ page?: string }>
 }) {
   const { locale: raw } = await params
+  const { page: rawPage } = await searchParams
   if (!isLocale(raw)) notFound()
   const locale = raw as AppLocale
   const dict = getDictionary(locale)
@@ -54,7 +58,10 @@ export default async function LatestUpdatesPage({
   const current = cards.filter(
     (story) => story.publishedAt && now - new Date(story.publishedAt).getTime() < dayMs,
   )
-  const archive = cards.filter((story) => !current.includes(story))
+  const archiveAll = cards.filter((story) => !current.includes(story))
+  const ARCHIVE_PAGE_SIZE = 18
+  const pager = parsePage(rawPage, archiveAll.length, ARCHIVE_PAGE_SIZE)
+  const archive = pager.slice(archiveAll)
   const featured = (current.length ? current : cards).slice(0, 4)
   const timeline = (current.length ? current : cards).slice(4)
 
@@ -273,11 +280,11 @@ export default async function LatestUpdatesPage({
         <section className="mt-14 rounded-[var(--radius-panel)] bg-paper-elevated p-6 sm:p-8" aria-label={copy.earlier}>
           <div className="mb-6 flex items-center justify-between border-b border-line pb-3">
             <h2 className="text-xl font-black text-ink">{copy.earlier}</h2>
-            <span className="text-xs font-bold text-stone">{archive.length}</span>
+            <span className="text-xs font-bold text-stone">{archiveAll.length}</span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {archive.slice(0, 12).map((story) => (
+            {archive.map((story) => (
               <Link
                 key={story.id}
                 href={storyHref(story)}
@@ -305,6 +312,13 @@ export default async function LatestUpdatesPage({
               </Link>
             ))}
           </div>
+        
+          <Pager
+            basePath={`/${locale}/latest`}
+            page={pager.page}
+            totalPages={pager.totalPages}
+            locale={locale}
+          />
         </section>
       ) : null}
     </main>

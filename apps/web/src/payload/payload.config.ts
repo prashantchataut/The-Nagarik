@@ -8,6 +8,7 @@ import { Articles } from './collections/Articles'
 import { Authors } from './collections/Authors'
 import { Categories } from './collections/Categories'
 import { Comments } from './collections/Comments'
+import { EngagementEvents } from './collections/EngagementEvents'
 import { JournalistApplications } from './collections/JournalistApplications'
 import { Media } from './collections/Media'
 import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
@@ -76,7 +77,7 @@ export default buildConfig({
       title: 'द नागरिक',
     },
   },
-  collections: [Users, Readers, Media, Categories, Authors, Tags, Articles, Comments, NewsletterSubscribers, JournalistApplications],
+  collections: [Users, Readers, Media, Categories, Authors, Tags, Articles, Comments, NewsletterSubscribers, JournalistApplications, EngagementEvents],
   plugins: [
     vercelBlobStorage({
       enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim()),

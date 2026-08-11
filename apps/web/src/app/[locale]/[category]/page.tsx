@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { StoryCard } from '@thenagarik/content'
+import { Pager, parsePage } from '@/components/news/Pager'
 import { getContent, siteUrl } from '@/lib/content'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 import { getEngagementSnapshot } from '@/lib/engagement'
@@ -49,9 +50,12 @@ export async function generateMetadata({
 
 export default async function CategoryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; category: string }>
+  searchParams: Promise<{ page?: string }>
 }) {
+  const { page: rawPage } = await searchParams
   const { locale: raw, category: categorySlug } = await params
   if (!isLocale(raw)) notFound()
   const locale = raw as AppLocale
@@ -69,7 +73,10 @@ export default async function CategoryPage({
   const categoryName = locale === 'en' ? categoryDoc.nameEn : categoryDoc.nameNe
   const categoryDesc = locale === 'en' ? categoryDoc.descriptionEn : categoryDoc.descriptionNe
 
-  const [leadStory, secondStory, thirdStory, ...streamStories] = cards
+  const [leadStory, secondStory, thirdStory, ...streamAll] = cards
+  const STREAM_PAGE_SIZE = 18
+  const pager = parsePage(rawPage, streamAll.length, STREAM_PAGE_SIZE)
+  const streamStories = pager.slice(streamAll)
 
   // Side trending & latest recommendations
   const snap = await getEngagementSnapshot()
@@ -241,6 +248,13 @@ export default async function CategoryPage({
                   </article>
                 ))}
               </div>
+            
+              <Pager
+                basePath={`/${locale}/${categorySlug}`}
+                page={pager.page}
+                totalPages={pager.totalPages}
+                locale={locale}
+              />
             </section>
           ) : null}
 

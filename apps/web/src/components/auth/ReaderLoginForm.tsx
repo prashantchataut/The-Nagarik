@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { SignIn, WarningCircle } from '@phosphor-icons/react'
 
@@ -35,6 +35,7 @@ const COPY = {
 export function ReaderLoginForm({ locale = 'ne' }: { locale?: 'ne' | 'en' }) {
   const copy = COPY[locale]
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -51,7 +52,12 @@ export function ReaderLoginForm({ locale = 'ne' }: { locale?: 'ne' | 'en' }) {
         body: JSON.stringify({ email, password }),
       })
       if (res.ok) {
-        router.push(`/${locale}/account`)
+        const next = searchParams?.get('next')
+        // Only same-site relative paths are honoured.
+        const target = next && next.startsWith('/') && !next.startsWith('//')
+          ? next
+          : `/${locale}/account`
+        router.push(target)
         router.refresh()
         return
       }

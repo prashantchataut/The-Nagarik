@@ -11,8 +11,8 @@ import {
   MagnifyingGlass,
   Moon,
   ShieldCheck,
+  SignIn,
   Translate,
-  User,
   UserCircle,
   X,
 } from '@phosphor-icons/react'
@@ -32,11 +32,14 @@ export function SiteHeader({
   dict,
   categories,
   trendingTags = [],
+  reader = null,
 }: {
   locale: AppLocale
   dict: Dictionary
   categories: Category[]
   trendingTags?: string[]
+  /** Signed-in reader (server-resolved); drives the conversion-first CTA. */
+  reader?: { name: string } | null
 }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname() ?? ''
@@ -134,22 +137,36 @@ export function SiteHeader({
                 <ShieldCheck size={13} weight="bold" aria-hidden="true" />
                 <span>{dict.trust}</span>
               </Link>
-              <Link
-                href={accountHref}
-                aria-current={accountActive ? 'page' : undefined}
-                className={`inline-flex min-h-7 items-center gap-1.5 rounded-[var(--radius-control)] px-2 font-bold transition-colors ${
-                  accountActive
-                    ? 'bg-accent-muted text-accent'
-                    : 'text-ink hover:bg-accent-muted hover:text-accent'
-                }`}
-              >
-                <UserCircle size={15} weight="bold" aria-hidden="true" />
-                <span>{dict.account}</span>
-              </Link>
-              <Link href={`/${locale}/login`} className="inline-flex items-center gap-1 text-ink hover:text-accent">
-                <User size={13} weight="bold" aria-hidden="true" />
-                <span>{dict.login}</span>
-              </Link>
+              {reader ? (
+                <Link
+                  href={accountHref}
+                  aria-current={accountActive ? 'page' : undefined}
+                  className={`inline-flex min-h-7 items-center gap-1.5 rounded-full px-3 font-bold transition-colors ${
+                    accountActive
+                      ? 'bg-accent-muted text-accent'
+                      : 'bg-paper text-ink hover:bg-accent-muted hover:text-accent'
+                  }`}
+                >
+                  <UserCircle size={15} weight="fill" className="text-accent" aria-hidden="true" />
+                  <span className="max-w-[12ch] truncate">{reader.name || dict.account}</span>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href={`/${locale}/login`}
+                    className="inline-flex min-h-7 items-center gap-1.5 rounded-full accent-solid px-3.5 font-bold shadow-sm transition-opacity hover:opacity-90"
+                  >
+                    <SignIn size={14} weight="bold" aria-hidden="true" />
+                    <span>{dict.login}</span>
+                  </Link>
+                  <Link
+                    href={`/${locale}/register`}
+                    className="inline-flex min-h-7 items-center rounded-full border border-accent px-3 font-bold text-accent transition-colors hover:bg-accent-muted"
+                  >
+                    {locale === 'ne' ? 'दर्ता' : 'Sign up'}
+                  </Link>
+                </>
+              )}
 
               <span className="h-3.5 w-px bg-line" aria-hidden="true" />
               <ThemeToggle dict={dict} />
@@ -270,7 +287,7 @@ export function SiteHeader({
         className="sticky top-0 z-40 border-b border-line bg-paper shadow-[0_2px_8px_rgb(16_32_29_/_0.06)] md:hidden"
         data-focus-hide
       >
-        <div className="grid h-14 grid-cols-[3rem_1fr_3rem] items-center px-2">
+        <div className="grid h-14 grid-cols-[3rem_1fr_3rem_3rem] items-center px-2">
           <button
             ref={menuButtonRef}
             type="button"
@@ -294,6 +311,22 @@ export function SiteHeader({
             <span className="mt-0.5 block text-[0.6rem] font-bold tracking-[0.12em] text-stone">
               {BRAND_EN.toUpperCase()}
             </span>
+          </Link>
+
+          <Link
+            href={reader ? accountHref : `/${locale}/login`}
+            className={`inline-flex h-11 w-11 items-center justify-center justify-self-end rounded-full ${
+              reader
+                ? 'text-accent hover:bg-accent-muted'
+                : 'accent-solid shadow-sm'
+            }`}
+            aria-label={reader ? dict.account : dict.login}
+          >
+            {reader ? (
+              <UserCircle size={24} weight="fill" aria-hidden="true" />
+            ) : (
+              <SignIn size={21} weight="bold" aria-hidden="true" />
+            )}
           </Link>
 
           <Link
@@ -486,11 +519,13 @@ export function SiteHeader({
                   {dict.authors}
                 </Link>
                 <Link
-                  href={`/${locale}/login`}
-                  className="flex min-h-10 items-center px-3 text-xs font-semibold text-ink hover:text-accent"
+                  href={reader ? accountHref : `/${locale}/login`}
+                  className={`flex min-h-10 items-center justify-center rounded-[var(--radius-control)] px-3 text-xs font-bold ${
+                    reader ? 'text-ink hover:text-accent' : 'accent-solid shadow-sm'
+                  }`}
                   onClick={() => setOpen(false)}
                 >
-                  {dict.login}
+                  {reader ? (reader.name || dict.account) : dict.login}
                 </Link>
                 <Link
                   href={otherLocaleHref}

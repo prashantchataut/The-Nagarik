@@ -1,6 +1,8 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { AccountNav } from '@/components/account/AccountNav'
+import { getReaderSession, readerAuthReady } from '@/lib/auth/reader-session'
+import { getStaffSession } from '@/lib/auth/staff-session'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +23,17 @@ export default async function AccountLayout({
   const locale = raw as AppLocale
   const dict = getDictionary(locale)
   const isNe = locale === 'ne'
+
+  // Login-first: the account area belongs to signed-in people.
+  // Anonymous visitors land on the login screen (with a return path).
+  // When the account service is offline (no DB), the gate stays open so the
+  // device-local surfaces keep working in facade/demo mode.
+  if (readerAuthReady()) {
+    const [reader, staff] = await Promise.all([getReaderSession(), getStaffSession()])
+    if (!reader && !staff) {
+      redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/account`)}`)
+    }
+  }
 
   return (
     <div className="mx-auto max-w-[1040px] px-4 py-8 md:px-6 md:py-12">

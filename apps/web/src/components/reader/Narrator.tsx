@@ -33,6 +33,7 @@ const COPY = {
     close: 'वाचक बन्द गर्नुहोस्',
     speed: 'गति',
     unsupported: 'यो ब्राउजरमा आवाज वाचन समर्थन छैन।',
+    noVoice: 'यो उपकरणमा वाचन आवाज भेटिएन। ब्राउजर वा प्रणालीको आवाज सेटिङ जाँच गर्नुहोस्।',
     sentence: 'वाक्य',
   },
   en: {
@@ -46,6 +47,7 @@ const COPY = {
     close: 'Close narrator',
     speed: 'Speed',
     unsupported: 'Speech synthesis is not supported in this browser.',
+    noVoice: 'No speech voice was found on this device. Check your browser or system voice settings.',
     sentence: 'Sentence',
   },
 } as const
@@ -54,6 +56,43 @@ const DEVANAGARI = /[\u0900-\u097F]/
 
 function detectLang(text: string): string {
   return DEVANAGARI.test(text) ? 'ne-NP' : 'en-US'
+}
+
+/**
+ * Browsers populate getVoices() asynchronously; Chrome fires `voiceschanged`.
+ * Resolve with whatever is available after the event or a short timeout.
+ */
+function loadVoices(timeoutMs = 1500): Promise<SpeechSynthesisVoice[]> {
+  return new Promise((resolve) => {
+    const synth = window.speechSynthesis
+    const existing = synth.getVoices()
+    if (existing.length) {
+      resolve(existing)
+      return
+    }
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      synth.removeEventListener('voiceschanged', finish)
+      resolve(synth.getVoices())
+    }
+    synth.addEventListener('voiceschanged', finish)
+    window.setTimeout(finish, timeoutMs)
+  })
+}
+
+function pickVoice(voices: SpeechSynthesisVoice[], lang: string): SpeechSynthesisVoice | undefined {
+  const family = lang.split('-')[0]
+  return (
+    voices.find((v) => v.lang.replace('_', '-').toLowerCase().startsWith(lang.toLowerCase())) ??
+    voices.find((v) => v.lang.toLowerCase().startsWith(family)) ??
+    (family === 'ne'
+      ? voices.find((v) => v.lang.toLowerCase().startsWith('hi'))
+      : undefined) ??
+    voices.find((v) => v.default) ??
+    voices[0]
+  )
 }
 
 function splitSentences(text: string): Array<{ text: string; start: number; end: number }> {
@@ -134,14 +173,25 @@ export function ArticleNarrator({
   const [total, setTotal] = useState(0)
   const [rate, setRate] = useState(0.95)
 
+  const [voiceError, setVoiceError] = useState(false)
   const unitsRef = useRef<SentenceUnit[]>([])
   const indexRef = useRef(0)
   const stoppedRef = useRef(true)
   const rateRef = useRef(rate)
   const activeBlockRef = useRef<HTMLElement | null>(null)
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([])
+  const watchdogRef = useRef<number | null>(null)
+  const keepAliveRef = useRef<number | null>(null)
 
   useEffect(() => {
-    setSupported(typeof window !== 'undefined' && 'speechSynthesis' in window)
+    const ok = typeof window !== 'undefined' && 'speechSynthesis' in window
+    setSupported(ok)
+    if (ok) {
+      // Warm the voice list early so the first tap speaks immediately.
+      void loadVoices().then((voices) => {
+        voicesRef.current = voices
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -194,6 +244,17 @@ export function ArticleNarrator({
     return units
   }, [deck, title])
 
+  const clearTimers = useCallback(() => {
+    if (watchdogRef.current !== null) {
+      window.clearTimeout(watchdogRef.current)
+      watchdogRef.current = null
+    }
+    if (keepAliveRef.current !== null) {
+      window.clearInterval(keepAliveRef.current)
+      keepAliveRef.current = null
+    }
+  }, [])
+
   const speakFrom = useCallback(
     (index: number) => {
       const units = unitsRef.current
@@ -202,6 +263,7 @@ export function ArticleNarrator({
         setPhase('idle')
         setCursor(units.length)
         clearHighlight()
+        clearTimers()
         return
       }
       const unit = units[index]
@@ -213,16 +275,18 @@ export function ArticleNarrator({
       const lang = detectLang(unit.text)
       utterance.lang = lang
       utterance.rate = rateRef.current
-      const voices = window.speechSynthesis.getVoices()
-      const family = lang.split('-')[0]
-      const voice =
-        voices.find((v) => v.lang.replace('_', '-').toLowerCase().startsWith(lang.toLowerCase())) ??
-        voices.find((v) => v.lang.toLowerCase().startsWith(family)) ??
-        (family === 'ne'
-          ? voices.find((v) => v.lang.toLowerCase().startsWith('hi'))
-          : undefined)
+      const voice = pickVoice(voicesRef.current, lang)
       if (voice) utterance.voice = voice
 
+      let started = false
+      utterance.onstart = () => {
+        started = true
+        setVoiceError(false)
+        if (watchdogRef.current !== null) {
+          window.clearTimeout(watchdogRef.current)
+          watchdogRef.current = null
+        }
+      }
       utterance.onend = () => {
         if (stoppedRef.current) return
         speakFrom(indexRef.current + 1)
@@ -231,13 +295,37 @@ export function ArticleNarrator({
         if (stoppedRef.current) return
         speakFrom(indexRef.current + 1)
       }
+
+      // Watchdog: some engines (no installed voices, broken TTS service)
+      // accept speak() but never start. Surface it instead of hanging.
+      if (watchdogRef.current !== null) window.clearTimeout(watchdogRef.current)
+      watchdogRef.current = window.setTimeout(() => {
+        if (!started && !stoppedRef.current) {
+          window.speechSynthesis.cancel()
+          stoppedRef.current = true
+          setPhase('idle')
+          setVoiceError(true)
+          clearHighlight()
+          clearTimers()
+        }
+      }, 3500)
+
       window.speechSynthesis.speak(utterance)
+      // Chromium quirk: long sessions silently pause; nudge it back.
+      if (keepAliveRef.current === null) {
+        keepAliveRef.current = window.setInterval(() => {
+          if (!stoppedRef.current && !window.speechSynthesis.paused) {
+            window.speechSynthesis.resume()
+          }
+        }, 10_000)
+      }
     },
-    [clearHighlight, highlightUnit],
+    [clearHighlight, clearTimers, highlightUnit],
   )
 
   const start = useCallback(() => {
     if (!supported) return
+    setVoiceError(false)
     window.speechSynthesis.cancel()
     if (!unitsRef.current.length) {
       unitsRef.current = collectUnits()
@@ -245,7 +333,16 @@ export function ArticleNarrator({
     }
     stoppedRef.current = false
     setPhase('playing')
-    speakFrom(indexRef.current >= unitsRef.current.length ? 0 : indexRef.current)
+    const begin = () =>
+      speakFrom(indexRef.current >= unitsRef.current.length ? 0 : indexRef.current)
+    if (voicesRef.current.length) {
+      begin()
+    } else {
+      void loadVoices().then((voices) => {
+        voicesRef.current = voices
+        if (!stoppedRef.current) begin()
+      })
+    }
   }, [collectUnits, speakFrom, supported])
 
   const pause = useCallback(() => {
@@ -265,7 +362,8 @@ export function ArticleNarrator({
     setCursor(0)
     setPhase('idle')
     clearHighlight()
-  }, [clearHighlight])
+    clearTimers()
+  }, [clearHighlight, clearTimers])
 
   useEffect(() => {
     return () => {
@@ -381,6 +479,11 @@ export function ArticleNarrator({
               <p className="mt-3 text-[0.7rem] font-semibold tabular-nums text-stone" aria-live="polite">
                 {copy.sentence}: {cursor}/{total || 0}
               </p>
+              {voiceError ? (
+                <p className="mt-2 text-xs font-semibold leading-relaxed text-danger" role="alert">
+                  {copy.noVoice}
+                </p>
+              ) : null}
             </>
           )}
         </div>
