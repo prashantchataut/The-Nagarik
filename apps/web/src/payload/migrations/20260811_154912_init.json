@@ -1079,7 +1079,7 @@
         },
         "status": {
           "name": "status",
-          "type": "enum_articles_status",
+          "type": "enum_articles_editorial_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
@@ -1744,7 +1744,7 @@
         },
         "version_status": {
           "name": "version_status",
-          "type": "enum__articles_v_version_status",
+          "type": "enum_articles_editorial_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
@@ -3479,12 +3479,15 @@
         "admin"
       ]
     },
-    "public.enum_articles_status": {
-      "name": "enum_articles_status",
+    "public.enum_articles_editorial_status": {
+      "name": "enum_articles_editorial_status",
       "schema": "public",
       "values": [
         "draft",
-        "published"
+        "in_review",
+        "scheduled",
+        "published",
+        "retracted"
       ]
     },
     "public.enum_articles_english_status": {
@@ -3517,8 +3520,8 @@
         "original"
       ]
     },
-    "public.enum__articles_v_version_status": {
-      "name": "enum__articles_v_version_status",
+    "public.enum_articles_status": {
+      "name": "enum_articles_status",
       "schema": "public",
       "values": [
         "draft",
@@ -3553,6 +3556,14 @@
       "schema": "public",
       "values": [
         "original"
+      ]
+    },
+    "public.enum__articles_v_version_status": {
+      "name": "enum__articles_v_version_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "published"
       ]
     },
     "public.enum_comments_status": {
@@ -3599,6 +3610,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "e9fe40e8-32b2-416e-bfe3-3d7f51332b65",
+  "id": "c26a7374-915c-44a6-b93e-b4c270a61b99",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

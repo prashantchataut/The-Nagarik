@@ -3,8 +3,11 @@ import { headers } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { z } from 'zod'
-import { contributorRoles, hasAnyRole } from '@/payload/access/rbac'
+import { contributorRoles, hasAnyRole, rolesFromUser } from '@/payload/access/rbac'
 import { payloadDeskAvailable } from '@/lib/admin/payload-desk'
+import { getJournalistStatusCounts } from '@/lib/journalist/desk'
+import { siteUrl } from '@/lib/content'
+import type { StaffSession } from '@/lib/auth/staff-session'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,6 +74,15 @@ async function authedUser() {
   return { payload, user }
 }
 
+function toStaffSession(user: { id: string | number; email?: unknown; name?: unknown }): StaffSession {
+  return {
+    id: String(user.id),
+    email: typeof user.email === 'string' ? user.email : '',
+    name: typeof user.name === 'string' ? user.name : '',
+    roles: [...rolesFromUser(user)],
+  }
+}
+
 async function findOwnAuthor(payload: Awaited<ReturnType<typeof getPayload>>, userId: string | number) {
   const result = await payload.find({
     collection: 'authors',
@@ -122,12 +134,18 @@ export async function GET() {
   }
 
   const author = await findOwnAuthor(payload, user.id)
-  const portfolio = author ? await portfolioFor(payload, author.id) : []
+  const [portfolio, storyCounts] = await Promise.all([
+    author ? portfolioFor(payload, author.id) : Promise.resolve([]),
+    getJournalistStatusCounts(toStaffSession(user)).catch(() => null),
+  ])
+  const serialized = author ? serializeAuthor(author) : null
   return NextResponse.json({
     ok: true,
     account: { name: String(user.name ?? ''), email: String(user.email ?? '') },
-    author: author ? serializeAuthor(author) : null,
+    author: serialized,
     portfolio,
+    storyCounts,
+    publicUrl: serialized?.slug ? siteUrl(`/ne/author/${serialized.slug}`) : null,
   })
 }
 

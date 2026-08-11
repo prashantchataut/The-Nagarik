@@ -2,13 +2,20 @@
 
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import {
+  ArrowSquareOut,
+  ChartBar,
   CheckCircle,
+  GearSix,
+  House,
   IdentificationCard,
   Newspaper,
+  NotePencil,
   Plus,
   UploadSimple,
   WarningCircle,
+  Wrench,
   X,
 } from '@phosphor-icons/react'
 
@@ -32,11 +39,21 @@ type PortfolioItem = {
   publishedAt: string | null
 }
 
+type StoryCounts = {
+  draft: number
+  in_review: number
+  scheduled: number
+  published: number
+  retracted: number
+}
+
 type ProfileResponse = {
   ok?: boolean
   account?: { name: string; email: string }
   author?: AuthorProfile | null
   portfolio?: PortfolioItem[]
+  storyCounts?: StoryCounts | null
+  publicUrl?: string | null
   message?: string
   code?: string
 }
@@ -58,6 +75,9 @@ export function JournalistProfileForm() {
   const [state, setState] = useState<'loading' | 'ready' | 'offline' | 'error'>('loading')
   const [account, setAccount] = useState<{ name: string; email: string } | null>(null)
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([])
+  const [storyCounts, setStoryCounts] = useState<StoryCounts | null>(null)
+  const [publicUrl, setPublicUrl] = useState<string | null>(null)
+  const [authorSlug, setAuthorSlug] = useState('')
   const [nameNe, setNameNe] = useState('')
   const [nameEn, setNameEn] = useState('')
   const [bioNe, setBioNe] = useState('')
@@ -86,6 +106,9 @@ export function JournalistProfileForm() {
         if (!data || cancelled) return
         setAccount(data.account ?? null)
         setPortfolio(data.portfolio ?? [])
+        setStoryCounts(data.storyCounts ?? null)
+        setPublicUrl(data.publicUrl ?? null)
+        if (data.author) setAuthorSlug(data.author.slug)
         if (data.author) {
           setNameNe(data.author.nameNe)
           setNameEn(data.author.nameEn)
@@ -181,6 +204,7 @@ export function JournalistProfileForm() {
       const data = (await res.json()) as ProfileResponse
       if (data.author) {
         setAvatarUrl(data.author.avatarUrl)
+        setAuthorSlug(data.author.slug)
       }
       setPortfolio(data.portfolio ?? portfolio)
       setDirty(false)
@@ -189,6 +213,19 @@ export function JournalistProfileForm() {
       setSaveState('error')
     }
   }
+
+  const completeness = (() => {
+    const checks: Array<[string, boolean]> = [
+      ['नाम (नेपाली)', nameNe.trim().length >= 2],
+      ['Name (English)', nameEn.trim().length >= 2],
+      ['परिचय (नेपाली)', bioNe.trim().length >= 30],
+      ['Bio (English)', bioEn.trim().length >= 30],
+      ['प्रोफाइल तस्बिर', Boolean(avatarId)],
+      ['बिट (कम्तीमा २)', beats.length >= 2],
+    ]
+    const done = checks.filter(([, ok]) => ok).length
+    return { checks, done, percent: Math.round((done / checks.length) * 100) }
+  })()
 
   if (state === 'loading') {
     return (
@@ -402,8 +439,133 @@ export function JournalistProfileForm() {
         </div>
       </form>
 
-      {/* Right rail: identity + portfolio */}
+      {/* Right rail: preview, completeness, tools, stats, identity, portfolio */}
       <aside className="space-y-5">
+        {/* Live byline preview */}
+        <section className="newsroom-surface p-5" aria-labelledby="byline-preview-title">
+          <div className="flex items-center gap-2 text-accent">
+            <Newspaper size={18} weight="bold" aria-hidden="true" />
+            <h2 id="byline-preview-title" className="text-sm font-black text-ink">बाइलाइन पूर्वावलोकन</h2>
+          </div>
+          <div className="mt-4 rounded-[var(--radius-panel)] border border-line bg-paper p-4">
+            <p className="text-[0.65rem] font-bold uppercase tracking-wider text-stone">लेखक</p>
+            <div className="mt-3 flex items-start gap-3">
+              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-sm font-black text-accent-fg">
+                {avatarUrl ? (
+                  <Image src={avatarUrl} alt="" fill sizes="44px" className="object-cover" />
+                ) : (
+                  (nameNe || 'प').slice(0, 1)
+                )}
+              </span>
+              <div className="min-w-0">
+                <p className="text-base font-bold leading-tight text-ink">{nameNe || 'तपाईंको नाम'}</p>
+                {beats.length ? (
+                  <p className="mt-0.5 text-[0.68rem] font-bold text-accent">{beats.join(' · ')}</p>
+                ) : null}
+                {bioNe ? (
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-stone">{bioNe}</p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          {publicUrl && authorSlug ? (
+            <a
+              href={publicUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-accent hover:underline"
+            >
+              <ArrowSquareOut size={13} weight="bold" aria-hidden="true" />
+              सार्वजनिक लेखक पृष्ठ हेर्नुहोस्
+            </a>
+          ) : null}
+        </section>
+
+        {/* Profile completeness */}
+        <section className="newsroom-surface p-5" aria-labelledby="completeness-title">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="completeness-title" className="text-sm font-black text-ink">प्रोफाइल पूर्णता</h2>
+            <span className="text-sm font-black tabular-nums text-accent">{completeness.percent}%</span>
+          </div>
+          <div
+            role="progressbar"
+            aria-valuenow={completeness.percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`प्रोफाइल पूर्णता ${completeness.percent}%`}
+            className="mt-2.5 h-2 overflow-hidden rounded-full bg-paper-strong"
+          >
+            <div className="h-full accent-solid transition-[width]" style={{ width: `${completeness.percent}%` }} />
+          </div>
+          <ul className="mt-3 space-y-1.5">
+            {completeness.checks.map(([label, ok]) => (
+              <li key={label} className="flex items-center gap-2 text-xs">
+                <CheckCircle
+                  size={15}
+                  weight={ok ? 'fill' : 'regular'}
+                  className={ok ? 'shrink-0 text-success' : 'shrink-0 text-stone/50'}
+                  aria-hidden="true"
+                />
+                <span className={ok ? 'text-ink' : 'text-stone'}>{label}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Desk stats */}
+        {storyCounts ? (
+          <section className="newsroom-surface p-5" aria-labelledby="desk-stats-title">
+            <div className="flex items-center gap-2 text-accent">
+              <ChartBar size={18} weight="bold" aria-hidden="true" />
+              <h2 id="desk-stats-title" className="text-sm font-black text-ink">डेस्क तथ्याङ्क</h2>
+            </div>
+            <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
+              <div className="rounded-[var(--radius-control)] bg-paper p-2.5">
+                <dt className="text-[0.65rem] font-bold text-stone">मस्यौदा</dt>
+                <dd className="text-lg font-black tabular-nums text-ink">{storyCounts.draft}</dd>
+              </div>
+              <div className="rounded-[var(--radius-control)] bg-warning-muted p-2.5">
+                <dt className="text-[0.65rem] font-bold text-warning">समीक्षामा</dt>
+                <dd className="text-lg font-black tabular-nums text-warning">{storyCounts.in_review}</dd>
+              </div>
+              <div className="rounded-[var(--radius-control)] bg-paper p-2.5">
+                <dt className="text-[0.65rem] font-bold text-stone">तालिकामा</dt>
+                <dd className="text-lg font-black tabular-nums text-ink">{storyCounts.scheduled}</dd>
+              </div>
+              <div className="rounded-[var(--radius-control)] bg-success-muted p-2.5">
+                <dt className="text-[0.65rem] font-bold text-success">प्रकाशित</dt>
+                <dd className="text-lg font-black tabular-nums text-success">{storyCounts.published}</dd>
+              </div>
+            </dl>
+          </section>
+        ) : null}
+
+        {/* Quick tools */}
+        <section className="newsroom-surface p-5" aria-labelledby="tools-title">
+          <div className="flex items-center gap-2 text-accent">
+            <Wrench size={18} weight="bold" aria-hidden="true" />
+            <h2 id="tools-title" className="text-sm font-black text-ink">छिटो उपकरण</h2>
+          </div>
+          <nav className="mt-3 grid gap-1" aria-label="पत्रकार उपकरण">
+            <Link href="/journalist/compose" className="flex min-h-11 items-center gap-2.5 rounded-[var(--radius-control)] px-3 text-xs font-bold text-ink hover:bg-accent-muted hover:text-accent">
+              <NotePencil size={16} weight="bold" aria-hidden="true" />
+              नयाँ लेख सुरु गर्नुहोस्
+            </Link>
+            <Link href="/journalist" className="flex min-h-11 items-center gap-2.5 rounded-[var(--radius-control)] px-3 text-xs font-bold text-ink hover:bg-accent-muted hover:text-accent">
+              <House size={16} weight="bold" aria-hidden="true" />
+              मेरो डेस्क र समाचारहरू
+            </Link>
+            <Link href="/journalist/preferences" className="flex min-h-11 items-center gap-2.5 rounded-[var(--radius-control)] px-3 text-xs font-bold text-ink hover:bg-accent-muted hover:text-accent">
+              <GearSix size={16} weight="bold" aria-hidden="true" />
+              लेखन सेटिङ
+            </Link>
+            <Link href="/admin/account" className="flex min-h-11 items-center gap-2.5 rounded-[var(--radius-control)] px-3 text-xs font-bold text-ink hover:bg-accent-muted hover:text-accent">
+              <IdentificationCard size={16} weight="bold" aria-hidden="true" />
+              खाता तथा पासवर्ड
+            </Link>
+          </nav>
+        </section>
+
         <section className="newsroom-surface p-5">
           <div className="flex items-center gap-2 text-accent">
             <IdentificationCard size={18} weight="bold" aria-hidden="true" />

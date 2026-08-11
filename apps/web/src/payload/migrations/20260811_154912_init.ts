@@ -3,14 +3,15 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
    CREATE TYPE "public"."enum_users_roles" AS ENUM('journalist', 'editor', 'publisher', 'admin');
-  CREATE TYPE "public"."enum_articles_status" AS ENUM('draft', 'published');
+  CREATE TYPE "public"."enum_articles_editorial_status" AS ENUM('draft', 'in_review', 'scheduled', 'published', 'retracted');
   CREATE TYPE "public"."enum_articles_english_status" AS ENUM('none', 'draft', 'in_review', 'published');
   CREATE TYPE "public"."enum_articles_province" AS ENUM('bagmati', 'madhesh', 'koshi', 'gandaki', 'lumbini', 'karnali', 'sudurpashchim');
   CREATE TYPE "public"."enum_articles_attribution" AS ENUM('original');
-  CREATE TYPE "public"."enum__articles_v_version_status" AS ENUM('draft', 'published');
+  CREATE TYPE "public"."enum_articles_status" AS ENUM('draft', 'published');
   CREATE TYPE "public"."enum__articles_v_version_english_status" AS ENUM('none', 'draft', 'in_review', 'published');
   CREATE TYPE "public"."enum__articles_v_version_province" AS ENUM('bagmati', 'madhesh', 'koshi', 'gandaki', 'lumbini', 'karnali', 'sudurpashchim');
   CREATE TYPE "public"."enum__articles_v_version_attribution" AS ENUM('original');
+  CREATE TYPE "public"."enum__articles_v_version_status" AS ENUM('draft', 'published');
   CREATE TYPE "public"."enum_comments_status" AS ENUM('pending', 'approved', 'rejected');
   CREATE TYPE "public"."enum_comments_locale" AS ENUM('ne', 'en');
   CREATE TYPE "public"."enum_newsletter_subscribers_locale" AS ENUM('ne', 'en');
@@ -122,7 +123,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"slug" varchar,
   	"deck_ne" varchar,
   	"deck_en" varchar,
-  	"status" "enum_articles_status" DEFAULT 'draft',
+  	"status" "enum_articles_editorial_status" DEFAULT 'draft',
   	"created_by_id" integer,
   	"submitted_at" timestamp(3) with time zone,
   	"english_status" "enum_articles_english_status" DEFAULT 'none',
@@ -172,7 +173,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"version_slug" varchar,
   	"version_deck_ne" varchar,
   	"version_deck_en" varchar,
-  	"version_status" "enum__articles_v_version_status" DEFAULT 'draft',
+  	"version_status" "enum_articles_editorial_status" DEFAULT 'draft',
   	"version_created_by_id" integer,
   	"version_submitted_at" timestamp(3) with time zone,
   	"version_english_status" "enum__articles_v_version_english_status" DEFAULT 'none',
@@ -440,14 +441,15 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "payload_preferences_rels" CASCADE;
   DROP TABLE "payload_migrations" CASCADE;
   DROP TYPE "public"."enum_users_roles";
-  DROP TYPE "public"."enum_articles_status";
+  DROP TYPE "public"."enum_articles_editorial_status";
   DROP TYPE "public"."enum_articles_english_status";
   DROP TYPE "public"."enum_articles_province";
   DROP TYPE "public"."enum_articles_attribution";
-  DROP TYPE "public"."enum__articles_v_version_status";
+  DROP TYPE "public"."enum_articles_status";
   DROP TYPE "public"."enum__articles_v_version_english_status";
   DROP TYPE "public"."enum__articles_v_version_province";
   DROP TYPE "public"."enum__articles_v_version_attribution";
+  DROP TYPE "public"."enum__articles_v_version_status";
   DROP TYPE "public"."enum_comments_status";
   DROP TYPE "public"."enum_comments_locale";
   DROP TYPE "public"."enum_newsletter_subscribers_locale";

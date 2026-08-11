@@ -28,9 +28,15 @@ PAYLOAD_DB_PUSH=false pnpm --filter @thenagarik/web seed
   `payload` CLI breaks on Node 22/24 ESM interop).
 - `src/scripts/patch-next-env.cjs` loads Next-style env files AND patches the
   `@next/env` v16 interop shape that Payload's `bin/loadEnv` destructures.
-- Initial migration `20260811_133542_init` covers the full schema (22 tables)
+- Initial migration `20260811_154912_init` covers the full schema (22 tables)
   including `comments`, `newsletter_subscribers`, `authors_beats`,
   `users_sessions`.
+- **Critical enum fix**: `articles.status` must declare
+  `enumName: 'enum_articles_editorial_status'`. Without it drizzle collapses
+  the editorial field and Payload's drafts `_status` into one 2-value enum
+  ('draft','published'), making in_review/scheduled/retracted UNSTORABLE.
+  Verified fixed: full status cycle draft→in_review→scheduled→retracted→
+  published persists at the DB level.
 - Seeding acts as the demo admin user so the publish-gate hooks stay strict
   (no anonymous publishing, ever). `LAUNCH_STATUS=live` skips demo users.
 

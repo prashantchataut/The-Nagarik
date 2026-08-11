@@ -95,6 +95,13 @@ export const Articles: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'draft',
+      /**
+       * CRITICAL: without a distinct enumName, drizzle collapses this field
+       * and Payload's internal drafts `_status` into one Postgres enum
+       * ('draft','published'), making in_review/scheduled/retracted
+       * unstorable at the DB level.
+       */
+      enumName: 'enum_articles_editorial_status',
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'In review', value: 'in_review' },
