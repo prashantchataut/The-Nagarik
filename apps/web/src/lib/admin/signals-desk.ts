@@ -31,7 +31,22 @@ export type StorySignal = {
   kleinbergBursting: boolean
   surprise: number
   phase: LifecyclePhase
+  /**
+   * True when the story has fewer than MIN_SIGNAL_EVENTS impressions in the
+   * analysis window. Burst/surprise diagnostics are statistically meaningless
+   * at that volume (Poisson surprise on 3 events reads like a fire alarm), so
+   * they are zeroed/suppressed and the UI shows a "thin data" chip instead.
+   */
+  lowVolume: boolean
 }
+
+/**
+ * Minimum impressions (whole 2h window) before burst/surprise diagnostics
+ * are trusted. Below this, velocity ordering still works - it degrades
+ * gracefully - but alarm-style signals are suppressed.
+ */
+export const MIN_SIGNAL_EVENTS = 12
+
 
 export type SignalsDesk = {
   windowMinutes: number
@@ -70,6 +85,11 @@ export async function getSignalsDesk(limit = 20): Promise<SignalsDesk> {
       ? baseline.reduce((a, b) => a + b, 0) / baseline.length
       : 0
     const latest = series[series.length - 1] ?? 0
+    // Min-volume gate: burst automata and Poisson surprise scream on thin
+    // data (3 impressions can be "10x baseline"). Below MIN_SIGNAL_EVENTS
+    // total impressions we zero the alarms and flag the row instead.
+    const totalEvents = series.reduce((a, b) => a + b, 0)
+    const lowVolume = totalEvents < MIN_SIGNAL_EVENTS
     return {
       id: story.id,
       title: card?.title ?? story.id,
@@ -79,14 +99,16 @@ export async function getSignalsDesk(limit = 20): Promise<SignalsDesk> {
       velocityScore: story.velocityScore,
       // ALGO vel.acceleration
       accelerationPerMin: acceleration(series, snapshot.windowMinutes),
-      bursting: story.bursting,
-      burstScore: burst.score,
+      bursting: !lowVolume && story.bursting,
+      burstScore: lowVolume ? 0 : burst.score,
       // ALGO trend.kleinberg - burst automaton over raw impression times.
-      kleinbergBursting: kleinbergBursts(times.get(story.id) ?? []).length > 0,
+      kleinbergBursting:
+        !lowVolume && kleinbergBursts(times.get(story.id) ?? []).length > 0,
       // ALGO trend.poisson_surprise - how improbable is the latest window?
-      surprise: poissonSurprise(latest, Math.max(expected, 0.001)),
+      surprise: lowVolume ? 0 : poissonSurprise(latest, Math.max(expected, 0.001)),
       // ALGO trend.lifecycle
       phase: lifecyclePhase(series, 5),
+      lowVolume,
     }
   })
 

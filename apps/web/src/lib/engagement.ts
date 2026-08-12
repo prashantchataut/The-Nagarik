@@ -191,3 +191,33 @@ export async function getEngagementSnapshot() {
     searchQueryN: events.filter((e) => e.type === 'search').length,
   }
 }
+
+/**
+ * Retention: delete engagement events older than the cutoff. Called by the
+ * secured cron route (/api/cron/engagement-retention) so the Postgres table
+ * never grows unbounded - the analysis window only ever needs the last two
+ * hours; everything older is dead weight.
+ *
+ * Returns the number of rows removed (best effort in the Payload path:
+ * bulk delete reports the affected docs).
+ */
+export async function pruneEngagementEvents(cutoffIso: string): Promise<{
+  deleted: number
+  store: 'payload' | 'file'
+}> {
+  if (payloadDeskAvailable()) {
+    const p = await getPayload({ config })
+    const result = await p.delete({
+      collection: 'engagement-events',
+      where: { createdAt: { less_than: cutoffIso } },
+      overrideAccess: true,
+    })
+    return { deleted: result.docs.length, store: 'payload' }
+  }
+
+  const store = await loadFile()
+  const before = store.events.length
+  store.events = store.events.filter((e) => e.at >= cutoffIso)
+  await saveFile(store)
+  return { deleted: before - store.events.length, store: 'file' }
+}

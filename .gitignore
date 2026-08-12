@@ -17,3 +17,9 @@ apps/web/.env.local
 .audit-tools
 audit-screenshots
 audit-tools
+
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/blob-report/
+apps/web/playwright/.cache/

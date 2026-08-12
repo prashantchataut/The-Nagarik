@@ -48,6 +48,11 @@ async function ensureEnvLocal() {
     if (!/^CRON_SECRET=.+/m.test(raw) || /^CRON_SECRET=\s*$/m.test(raw)) {
       upsert('CRON_SECRET', 'local-dev-cron-secret-at-least-32-chars!')
     }
+    // Cookie `Secure` is keyed off this URL's scheme (lib/auth/session-cookie):
+    // local prod-mode servers run on plain http, so sessions must stay non-Secure.
+    if (!/^NEXT_PUBLIC_SITE_URL=.+/m.test(raw) || /^NEXT_PUBLIC_SITE_URL=\s*$/m.test(raw)) {
+      upsert('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000')
+    }
     fs.mkdirSync(path.dirname(envPath), { recursive: true })
     fs.writeFileSync(envPath, raw.endsWith('\n') ? raw : `${raw}\n`, 'utf8')
     console.log(`[local:pg] Updated ${envPath}`)

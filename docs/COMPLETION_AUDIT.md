@@ -35,8 +35,8 @@ SPA story-hopping UpNextSheet with personalized /api/recommendations.
 
 | # | Finding | Fix |
 |---|---------|-----|
-| 🟡1 | No CI. Zero automated gate on PRs (verification runs only when an agent remembers). | GitHub Actions: pnpm install → typecheck → lint → test → build on PR. |
-| 🟡2 | No E2E tests. All 37 tests are unit; the comment loop, auth separation, and patro navigation are verified manually per session. | Playwright suite for: reader signup/login separation, comment moderation loop, focus mode, patro month navigation. |
+| ✅🟡1 | ~~No CI~~ **CLOSED 2026-08-12**: `.github/workflows/ci.yml` - `quality` job (typecheck, lint, unit tests, algorithm claim auditor) + `build-e2e` job (Postgres 16 service, migrate, seed, build, Playwright api+chromium). ADR 0006. |
+| ✅🟡2 | ~~No E2E tests~~ **CLOSED 2026-08-12**: Playwright suite (`apps/web/e2e/`) - 15 api-project tests green locally (auth separation, login gate, comment moderation loop incl. rate limiter, cron auth, health) + 5 chromium smoke tests (CI-only; sandbox has no browser CDN egress). Still open: focus-mode/narrator/patro interaction specs. |
 | 🟡3 | Rate limits are per-instance memory. Fine as abuse damping; formal limits need an edge/WAF rule or a Postgres counter. | Documented in BACKEND_RUNBOOK §4; add pg-backed limiter when multi-instance. |
 | 🟡4 | `middleware.ts` locale redirect doesn't respect reader `locale` preference. | Read the reader session locale (or a cookie mirror) in middleware. |
 | 🟡5 | Narrator/focus popovers lack focus traps (drawer has one); Escape handling inconsistent. | Shared `useFocusTrap` hook across drawer, narrator panel, tint menu. |

@@ -15,84 +15,52 @@ We operate two portals — thenagarik.com (this repo, the **golden template**)
 and nagarikwatch.com (sibling repo, its UI is deprecated and will be rebased
 onto this template as tenant #2). The plan is a **site factory**: ship a
 complete branded Nepali news portal in one day, scale toward ~100 sold or
-network-operated sites. The full strategy, bottleneck analysis, architecture
-(site.config layer, theme tokens, layout variants, Model A independent clones
-vs Model B multi-tenant), hosting decisions (no cPanel shared hosting — Node
-infra only), and the cross-agent cooperation protocol live in
-`docs/NETWORK_FACTORY_PLAN.md`. Read it before writing code and treat it as
-the contract with the Nagarik Watch agent. Coordination happens through the
-shared `nagarik-network-kit` GitHub repo (DECISIONS.md / STATUS.md / CONTRACTS.md);
-pull it at session start, append your status/decisions, PR any schema or token
-changes.
+network-operated sites. Strategy and contracts: `docs/NETWORK_FACTORY_PLAN.md`.
 
-## Current state
-- PR #2 (branch `arena/019feca8-the-nagarik`) delivered: reader account
-  surface, journalist profile workbench (+authors.user/avatar/beats), the
-  autonomous BS 2070–2095 patro engine, focus reading mode + TTS narrator,
-  de-clustered article toolbar, moderated threaded comments (+/admin/queue
-  panel), live breaking ticker, newsletter cards, offline bookmarks (SW v2).
-  Notes: `docs/READER_UX_PHASE2.md`.
-- Verification is green: `pnpm typecheck | lint | test | build`.
+## Session start ritual (sandbox resets between turns)
+1. `git fetch origin arena/019feca8-the-nagarik && git reset --hard FETCH_HEAD`
+2. `corepack enable && corepack prepare pnpm@9.15.4 --activate`; `pnpm install --prefer-offline` if node_modules is gone.
+3. `pnpm --filter @thenagarik/web local:pg` (background; port 5433; writes both `.env.local` files incl. `NEXT_PUBLIC_SITE_URL=http://localhost:3000`).
+4. `sed -i 's/^PAYLOAD_DB_PUSH=true/PAYLOAD_DB_PUSH=false/' .env.local apps/web/.env.local`
+5. `pnpm --filter @thenagarik/web migrate && pnpm --filter @thenagarik/web seed`
+6. Build once, serve with `npx next start -p 3000 -H 0.0.0.0` from `apps/web`.
+7. Before claiming anything done: `pnpm typecheck && pnpm lint && pnpm test`,
+   claim auditor (`pnpm --filter @thenagarik/web exec node --import tsx ../../packages/algorithms/scripts/audit-production-claims.mjs`),
+   and `CRON_SECRET='local-dev-cron-secret-at-least-32-chars!' pnpm --filter @thenagarik/web test:e2e:api`
+   against the running server. Commit + push every session (remote is the source of truth).
+
+## Current state (2026-08-12, PR #2, HEAD after CI/E2E session)
+- Reader UX phase 2, dual hard-separated accounts, algorithms batches 1+2
+  (143 executable fns, 68 honest production caps), Signals Desk, search
+  autocomplete, brigading alerts, pagination, DB search — all shipped earlier.
+- **CI**: `.github/workflows/ci.yml` — quality job (typecheck/lint/unit/claim-audit)
+  + build-e2e job (Postgres 16 service, migrate, seed, build, Playwright).
+  ADR 0006 documents the strategy and the traps.
+- **E2E**: `apps/web/e2e/` — 15 api-project tests green locally (auth
+  separation, login gate, comment moderation loop, rate limiter fires, cron
+  auth, health) + 5 chromium smoke tests that only run in CI (no browser CDN
+  egress in the sandbox). Comment API contract: 201 persisted / 200 silent drop.
+- **Cookie fix**: session cookie `Secure` now keyed off NEXT_PUBLIC_SITE_URL
+  scheme (`cookieSecure()` in `lib/auth/session-cookie.ts`), not NODE_ENV.
+- **Retention**: `/api/cron/engagement-retention` (Bearer CRON_SECRET,
+  `ENGAGEMENT_RETENTION_DAYS` default 14) prunes engagement_events.
+- **Signal gating**: Signals Desk suppresses burst/surprise below
+  `MIN_SIGNAL_EVENTS = 12` impressions per 2h window; UI shows an n<12 chip.
 
 ## Your tasks this session (in order)
-1. **Factory refactor step 1**: extract `apps/web/src/site.config.ts`
-   (zod-validated per `NETWORK_FACTORY_PLAN.md` §2.2). Wire `lib/site.ts`,
-   dictionaries' brand strings, `manifest.ts`, icons, RSS, and JSON-LD to it.
-   Nothing brand-specific may remain hardcoded outside the config.
-2. **Theme layer**: make palette + font pair config-driven. Emit a per-site
-   `theme.css` override loaded after `@thenagarik/ui/tokens.css`. Prove it by
-   adding a second preset (`sindoor` red-orange, for Nagarik Watch) and a
-   `THEME_PRESET` env toggle. Maintain WCAG AA in both light/dark.
-3. **Layout variants** (anti-footprint requirement): add variant props to
-   `HeroLead` (`commanding | split | mosaic`), `SectionBand`
-   (`bordered | cards | list`), `SiteHeader` (`two-tier | compact`), selected
-   from `site.config.layout`. Default = current look, pixel-identical.
-4. **UI/UX final pass** benchmarked against OnlineKhabar (two-tier header,
-   numbered trending, commanding hero), Ratopati (utilities integration),
-   Techpana (whitespace/16:9 discipline), Nepalkhabar (bylines/hashtags),
-   ArthaKhabar (kickers, band background differentiation): homepage rhythm,
-   category page (kicker header + lead + stream + sticky rail), mobile 360px
-   sweep of article tools (focus mode, narrator, comments).
-5. **Backend hardening**: Postgres-backed newsletter + rate limiting when
-   `DATABASE_URL` exists; seed script reads categories/legal identity from
-   `site.config`; consistent API error shapes.
-6. **Kit repo sync**: write the resulting config schema + token presets +
-   collection contracts into `nagarik-network-kit` (or `docs/CONTRACTS.md`
-   here if the kit repo doesn't exist yet) so the Nagarik Watch agent can
-   start its migration.
+1. **Watch CI go green on PR #2** — first run may surface CI-only issues
+   (chromium smoke selectors, service container timing). Fix forward.
+2. **Email adapter + password reset**: nodemailer adapter behind env
+   (`SMTP_*` or Resend), Payload forgot-password flow for readers, replace
+   the manual journalist password handover with an invite email when
+   configured (keep manual fallback).
+3. **Reader account depth**: server-side bookmark/history sync (collections +
+   routes), interests feeding the homepage mix (not just Up-Next).
+4. **Factory theme presets**: `sindoor` preset + `THEME_PRESET` toggle, layout
+   variants (anti-footprint) per `NETWORK_FACTORY_PLAN.md`.
+5. Backlog (docs/CONTINUING_BACKLOG.md): newsletter digest cron, headline A/B
+   composer, composer autosave, tsvector search index, payload-types generation,
+   locale-switcher 404s, focus-trap fixes for narrator/tint popovers.
 
-## Skills to apply
-`verification-before-completion` (fresh `pnpm test`, `typecheck`, `lint`,
-`build` before claiming done), `ui-audit` (focus management, ≥44px targets,
-data-loss prevention, a11y markup), `design-taste-frontend` (dual-mode tokens,
-zero em-dash, Devanagari line-height ≥1.7, anti-default variance),
-`impeccable`, `ui-ux-pro-max`, `payload` (collection/RBAC correctness),
-`eeat-signals` (bylines, corrections, schema markup), `web-perf`
-(LCP < 2.5s, CLS < 0.1, INP < 200ms), plus `redesign-existing-projects` and
-`brandkit` for the theming layer.
-
-## Constraints
-- The golden template rule: no site-specific forks; variations become config
-  variants. Backward compatible: with the default config, the current site
-  must render pixel-identical.
-- Never regress the Civic Newsroom token system, zero em-dash rule, or the
-  ne-first/en-second content model.
-- Work only on the session branch; commit with evidence; end with fresh
-  verification output and an updated `STATUS.md` entry for the sibling agent.
-
----
-
-### Mirrored prompt for the Nagarik Watch agent (hand this to it)
-
-You are the Nagarik Watch agent. Your UI codebase is **deprecated** — do not
-polish it further. The Nagarik repo is the golden template (see its
-`docs/NETWORK_FACTORY_PLAN.md`, included in the handoff zip). This session:
-(1) inventory Nagarik Watch's content model, features, and any backend
-capability the template lacks → document in `CONTRACTS.md`; (2) build a
-content export (categories, authors, articles with body blocks, media
-manifest) matching the template's `@thenagarik/content` types; (3) author
-`sites/nagarikwatch.config.ts` — brand नागरिक वाच, a distinct non-teal palette
-(e.g. sindoor red-orange), different font pairing and hero/band variants (the
-network must not share a visual footprint); (4) file every template gap as an
-issue/DECISIONS.md entry instead of diverging. Apply the same skills list and
-verification discipline as above.
+Be brutally honest in the final report: what is verified, what is assumed,
+what is still open.

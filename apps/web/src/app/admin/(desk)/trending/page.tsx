@@ -1,5 +1,5 @@
 import { AdminCard } from '@/components/admin/primitives'
-import { getSignalsDesk } from '@/lib/admin/signals-desk'
+import { getSignalsDesk, MIN_SIGNAL_EVENTS } from '@/lib/admin/signals-desk'
 import { payloadDeskAvailable } from '@/lib/admin/payload-desk'
 
 export const dynamic = 'force-dynamic'
@@ -128,7 +128,14 @@ export default async function SignalsDeskPage() {
                     {signal.accelerationPerMin.toFixed(2)}
                   </td>
                   <td className="px-4 py-3">
-                    {signal.bursting || signal.kleinbergBursting ? (
+                    {signal.lowVolume ? (
+                      <span
+                        className="rounded bg-paper-strong px-1.5 py-0.5 text-[0.65rem] font-bold text-stone"
+                        title={`थोरै डाटा: ${MIN_SIGNAL_EVENTS} भन्दा कम impressions - burst/surprise गेट गरियो`}
+                      >
+                        n&lt;{MIN_SIGNAL_EVENTS}
+                      </span>
+                    ) : signal.bursting || signal.kleinbergBursting ? (
                       <span className="rounded bg-danger px-1.5 py-0.5 text-[0.65rem] font-black text-danger-fg">
                         BURST{signal.kleinbergBursting ? ' ·K' : ''}
                       </span>
@@ -168,7 +175,8 @@ export default async function SignalsDeskPage() {
         accel = window-over-window rate change (vel.acceleration) · BURST = robust MAD-z ≥ 3σ
         (vel.burst_z), ·K = Kleinberg automaton agrees (trend.kleinberg) · surprise = -log10
         P(X ≥ observed) of the latest window (trend.poisson_surprise; 2 = 1-in-100) · phase =
-        trend.lifecycle.
+        trend.lifecycle. Burst/surprise are gated: rows with fewer than {MIN_SIGNAL_EVENTS}
+        impressions in the window show n&lt;{MIN_SIGNAL_EVENTS} instead of alarms.
       </p>
     </div>
   )

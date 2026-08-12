@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { hasAnyRole, STAFF_ROLES } from '@/payload/access/rbac'
 import { payloadDeskAvailable } from '@/lib/admin/payload-desk'
+import { cookieSecure } from '@/lib/auth/session-cookie'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
     })
 
     if (result.token) {
-      const secure = process.env.NODE_ENV === 'production'
+      const secure = cookieSecure()
       response.cookies.set('payload-token', result.token, {
         httpOnly: true,
         path: '/',

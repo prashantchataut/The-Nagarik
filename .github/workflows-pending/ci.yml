@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'arena/**']
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  quality:
+    name: Typecheck, lint, unit tests, claim audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        # Version comes from the packageManager field in package.json.
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Algorithm registry claim audit
+        # Fails the build if any capability claims `production` without a
+        # verified call site in apps/web. No fake claims, ever.
+        working-directory: apps/web
+        run: pnpm exec node --import tsx ../../packages/algorithms/scripts/audit-production-claims.mjs
+
+  build-e2e:
+    name: Build + E2E (Postgres, Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nagarik
+          POSTGRES_PASSWORD: nagarik_ci_password
+          POSTGRES_DB: nagarik
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://nagarik:nagarik_ci_password@127.0.0.1:5433/nagarik
+      PAYLOAD_SECRET: ci-only-payload-secret-at-least-32-characters!!
+      PAYLOAD_DB_PUSH: 'false'
+      CONTENT_SOURCE: payload
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      CRON_SECRET: ci-only-cron-secret-at-least-32-characters!!
+      REVALIDATE_SECRET: ci-only-revalidate-secret-32-characters!!
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run migrations
+        run: pnpm --filter @thenagarik/web migrate
+
+      - name: Seed demo content + staff accounts
+        run: pnpm --filter @thenagarik/web seed
+
+      - name: Build
+        run: pnpm --filter @thenagarik/web build
+
+      - name: Install Playwright chromium
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E (api + chromium)
+        working-directory: apps/web
+        run: pnpm exec playwright test
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
