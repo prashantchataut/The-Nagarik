@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -101,8 +102,18 @@ export default async function AuthorPage({
       {/* Author Profile Header Card */}
       <header className="surface-card p-6 md:p-8 mb-10 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-accent text-accent-fg font-black text-2xl shadow-md">
-            {name.slice(0, 1)}
+          <span className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-accent-fg font-black text-2xl shadow-md">
+            {author.avatarUrl ? (
+              <Image
+                src={author.avatarUrl}
+                alt={name}
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+            ) : (
+              name.slice(0, 1)
+            )}
           </span>
 
           <div className="min-w-0 flex-1">
@@ -124,6 +135,19 @@ export default async function AuthorPage({
               <p className="mt-2.5 max-w-[68ch] text-sm leading-relaxed text-stone md:text-base">
                 {bio}
               </p>
+            ) : null}
+
+            {author.beats?.length ? (
+              <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Beats">
+                {author.beats.map((beat) => (
+                  <li
+                    key={beat}
+                    className="rounded-full bg-accent-muted px-2.5 py-1 text-[0.7rem] font-bold text-accent"
+                  >
+                    {beat}
+                  </li>
+                ))}
+              </ul>
             ) : null}
 
             {/* Author Stats Bar */}

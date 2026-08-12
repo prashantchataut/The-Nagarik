@@ -1,9 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { CaretRight, Lightning } from '@phosphor-icons/react'
 import type { StoryCard } from '@thenagarik/content'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
+
+const REFRESH_MS = 60_000
 
 const NEP_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९']
 function toNepDigit(n: number): string {
@@ -22,14 +25,40 @@ export function BreakingStrip({
   dict: Dictionary
   stories: StoryCard[]
 }) {
-  if (!stories.length) return null
-  const displayStories = stories.slice(0, 5)
+  const [liveStories, setLiveStories] = useState<StoryCard[]>(stories)
+
+  // Live refresh: pull the current breaking set so new alerts pulse in
+  // without a full page reload.
+  useEffect(() => {
+    let cancelled = false
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/breaking?locale=${locale}`)
+        if (!res.ok) return
+        const data = (await res.json()) as { ok?: boolean; stories?: StoryCard[] }
+        if (!cancelled && data.ok && Array.isArray(data.stories) && data.stories.length) {
+          setLiveStories(data.stories)
+        }
+      } catch {
+        // Keep showing the last known set when offline.
+      }
+    }
+    const id = window.setInterval(() => void tick(), REFRESH_MS)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [locale])
+
+  if (!liveStories.length) return null
+  const displayStories = liveStories.slice(0, 5)
   const isBreaking = displayStories.some((s) => s.isBreaking)
 
   return (
     <section
       className="border-b border-line bg-paper-elevated"
       aria-label={isBreaking ? dict.breaking : dict.latestUpdates}
+      aria-live="polite"
     >
       <div className="mx-auto flex min-h-[44px] max-w-[1280px] items-center gap-3 px-4 md:px-6">
         {/* Badge */}
@@ -44,6 +73,12 @@ export function BreakingStrip({
             <Lightning size={13} weight="fill" aria-hidden="true" />
             <span>{isBreaking ? dict.breaking : dict.hot}</span>
           </span>
+          {isBreaking ? (
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-danger" />
+            </span>
+          ) : null}
         </div>
 
         {/* Scrollable Story Strip */}

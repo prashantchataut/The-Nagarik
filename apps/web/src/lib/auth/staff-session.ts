@@ -33,7 +33,10 @@ export const getStaffSession = cache(async (): Promise<StaffSession | null> => {
   try {
     const payload = await getPayload({ config })
     const { user } = await payload.auth({ headers: await headers() })
-    if (!user || !hasAnyRole(user, STAFF_ROLES)) return null
+    // Hard separation: only the `users` collection is newsroom staff.
+    // A reader token must never resolve to a staff session.
+    if (!user || user.collection !== 'users') return null
+    if (!hasAnyRole(user, STAFF_ROLES)) return null
     return {
       id: String(user.id),
       email: typeof user.email === 'string' ? user.email : '',

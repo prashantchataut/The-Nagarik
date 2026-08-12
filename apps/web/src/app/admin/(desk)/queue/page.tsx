@@ -5,6 +5,8 @@ import {
   AdminStatusPill,
   CmsCanonicalBanner,
 } from '@/components/admin/primitives'
+import { CommentModerationPanel } from '@/components/admin/CommentModerationPanel'
+import { JournalistApplicationsPanel } from '@/components/admin/JournalistApplicationsPanel'
 import { getDeskEditorialQueue, payloadDeskAvailable } from '@/lib/admin/payload-desk'
 import { cmsArticleCreateUrl, cmsArticleEditUrl, cmsCollectionUrl } from '@/lib/admin/nav'
 
@@ -136,6 +138,12 @@ export default async function AdminQueuePage() {
           ) : null}
         </div>
       )}
+
+      {/* Journalist onboarding queue */}
+      <JournalistApplicationsPanel />
+
+      {/* Reader comment moderation queue */}
+      <CommentModerationPanel />
     </div>
   )
 }

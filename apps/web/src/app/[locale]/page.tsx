@@ -4,13 +4,14 @@ import type { StoryCard } from '@thenagarik/content'
 import { getContent } from '@/lib/content'
 import { getEngagementSnapshot } from '@/lib/engagement'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
-import { detectTrending, mostRead } from '@thenagarik/algorithms'
+import { detectTrending, mostRead, velocityRank } from '@thenagarik/algorithms'
 import { provinceLabel } from '@/lib/provinces'
 
 import { UtilityStrip } from '@/components/home/UtilityStrip'
 import { BreakingStrip } from '@/components/home/BreakingStrip'
 import { HeroLead } from '@/components/home/HeroLead'
 import { TrendingSection } from '@/components/home/TrendingSection'
+import { ForYouStrip } from '@/components/reader/ForYouStrip'
 import { LatestSection } from '@/components/home/LatestSection'
 import { HomeProvinceTabs } from '@/components/home/HomeProvinceTabs'
 import { HomeCategoryBand } from '@/components/news/HomeCategoryBand'
@@ -44,11 +45,25 @@ export default async function HomePage({
   const cards = await Promise.all(articles.map((a) => content.toStoryCard(a, locale)))
 
   const snap = await getEngagementSnapshot()
-  const trending = detectTrending(
+
+  // ALGO vel.velocity_rank - primary trending ranker: smoothed velocity x
+  // freshness with burst multipliers over real 15-min windows. Falls back
+  // to the classic two-window detector, which itself falls back honestly
+  // to recency when signals are cold.
+  const storyWindows = new Map(snap.windowSeries.map((w) => [w.storyId, w.windows]))
+  const velocityRanked = velocityRank(
     articles.map((a) => ({ id: a.id, publishedAt: a.publishedAt })),
-    snap.trendingSamples,
-    { limit: 8 },
+    storyWindows,
+    { windowMinutes: snap.windowMinutes, limit: 8 },
   )
+  const trending =
+    velocityRanked.length >= 2
+      ? { items: velocityRanked, live: true, reason: 'velocity' as const }
+      : detectTrending(
+          articles.map((a) => ({ id: a.id, publishedAt: a.publishedAt })),
+          snap.trendingSamples,
+          { limit: 8 },
+        )
   const read = mostRead(
     articles.map((a) => ({ id: a.id, publishedAt: a.publishedAt })),
     snap.dwellStats,
@@ -140,6 +155,9 @@ export default async function HomePage({
             stories={trendingPool}
             title={dict.trending}
           />
+
+          {/* Client-side personalization: ISR HTML stays shared/cacheable. */}
+          <ForYouStrip locale={locale} />
 
           {latestPool.length ? (
             <LatestSection

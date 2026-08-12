@@ -1,4 +1,5 @@
 import type { Locale } from '@thenagarik/content'
+import { SITE } from '@/site.config'
 
 export const locales = ['ne', 'en'] as const
 export type AppLocale = (typeof locales)[number]
@@ -13,8 +14,8 @@ export function toContentLocale(locale: AppLocale): Locale {
 
 export const dictionaries = {
   ne: {
-    siteName: 'द नागरिक',
-    tagline: 'नेपालको नागरिक समाचार',
+    siteName: SITE.brand.ne,
+    tagline: SITE.brand.taglineNe,
     latest: 'ताजा',
     latestUpdates: 'ताजा अपडेट',
     trending: 'चर्चित',
@@ -102,8 +103,8 @@ export const dictionaries = {
     copyLink: 'लिङ्क प्रतिलिपि गर्नुहोस्',
   },
   en: {
-    siteName: 'The Nagarik',
-    tagline: 'Civic news for Nepal',
+    siteName: SITE.brand.en,
+    tagline: SITE.brand.taglineEn,
     latest: 'Latest',
     latestUpdates: 'Latest updates',
     trending: 'Trending',

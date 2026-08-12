@@ -1,5 +1,6 @@
 import { buildConfig } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'node:path'
@@ -7,9 +8,15 @@ import { fileURLToPath } from 'node:url'
 import { Articles } from './collections/Articles'
 import { Authors } from './collections/Authors'
 import { Categories } from './collections/Categories'
+import { Comments } from './collections/Comments'
+import { EngagementEvents } from './collections/EngagementEvents'
+import { JournalistApplications } from './collections/JournalistApplications'
 import { Media } from './collections/Media'
+import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
+import { Readers } from './collections/Readers'
 import { Tags } from './collections/Tags'
 import { Users } from './collections/Users'
+import { SITE } from '../site.config'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -28,6 +35,45 @@ const DATABASE_URL =
   process.env.DATABASE_URL?.trim() ||
   'postgres://build-placeholder.not.used.at.runtime/db'
 const SERVER_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000'
+
+/**
+ * Extra origins allowed to send cookie-authenticated requests (CSRF list).
+ * Needed when the app is reached through more than one public origin
+ * (preview domains, multi-domain tenants). Comma-separated.
+ */
+const EXTRA_CSRF_ORIGINS = (process.env.PAYLOAD_CSRF_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean)
+
+/**
+ * Transactional email over SMTP when configured (password resets, journalist
+ * invites, future digests). Without SMTP_* env Payload falls back to its
+ * console logger - visible in dev, and surfaced as `emailConfigured: false`
+ * in /api/health so operators can see the gap before launch.
+ */
+const SMTP_CONFIGURED = Boolean(
+  process.env.SMTP_HOST?.trim() &&
+    process.env.SMTP_USER?.trim() &&
+    process.env.SMTP_PASS?.trim() &&
+    process.env.EMAIL_FROM?.trim(),
+)
+
+const emailAdapter = SMTP_CONFIGURED
+  ? nodemailerAdapter({
+      defaultFromAddress: process.env.EMAIL_FROM!.trim(),
+      defaultFromName: process.env.EMAIL_FROM_NAME?.trim() || SITE.brand.en,
+      transportOptions: {
+        host: process.env.SMTP_HOST!.trim(),
+        port: Number(process.env.SMTP_PORT ?? 587),
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER!.trim(),
+          pass: process.env.SMTP_PASS!.trim(),
+        },
+      },
+    })
+  : undefined
 
 function validateAtBoot() {
   if (isBuild) return
@@ -48,6 +94,8 @@ function validateAtBoot() {
 export default buildConfig({
   secret: PAYLOAD_SECRET,
   serverURL: SERVER_URL,
+  csrf: [SERVER_URL, ...EXTRA_CSRF_ORIGINS],
+  email: emailAdapter,
   routes: {
     admin: '/cms',
   },
@@ -61,7 +109,7 @@ export default buildConfig({
       title: 'द नागरिक',
     },
   },
-  collections: [Users, Media, Categories, Authors, Tags, Articles],
+  collections: [Users, Readers, Media, Categories, Authors, Tags, Articles, Comments, NewsletterSubscribers, JournalistApplications, EngagementEvents],
   plugins: [
     vercelBlobStorage({
       enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim()),

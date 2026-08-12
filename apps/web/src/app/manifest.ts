@@ -1,15 +1,17 @@
 import type { MetadataRoute } from 'next'
+import { SITE } from '@/site.config'
 
 export default function manifest(): MetadataRoute.Manifest {
+  const home = `/${SITE.editorial.defaultLocale}`
   return {
-    name: 'The Nagarik',
-    short_name: 'The Nagarik',
-    description: 'Nepali-first civic news for Nepal.',
-    start_url: '/ne',
+    name: SITE.brand.en,
+    short_name: SITE.brand.en,
+    description: SITE.brand.descriptionEn ?? SITE.brand.taglineEn,
+    start_url: home,
     display: 'standalone',
-    background_color: '#E8ECF1',
-    theme_color: '#0F6E6A',
-    lang: 'ne',
+    background_color: SITE.theme.background,
+    theme_color: SITE.theme.accent,
+    lang: SITE.editorial.defaultLocale,
     icons: [
       {
         src: '/icon',

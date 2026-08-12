@@ -6,8 +6,10 @@ import { MagnifyingGlass, Clock, CaretRight } from '@phosphor-icons/react/dist/s
 import { buildSearchIndex } from '@thenagarik/algorithms'
 import { localizeBody, localizeDeck, localizeTitle } from '@thenagarik/content'
 import { getContent, siteUrl } from '@/lib/content'
+import { dbSearchAvailable, searchArticlesDb, type SearchHit } from '@/lib/search-db'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 import { CategoryIcon } from '@/components/CategoryIcon'
+import { SearchAutocomplete } from '@/components/search/SearchAutocomplete'
 import { RelativeTime } from '@/components/RelativeTime'
 
 export async function generateMetadata({
@@ -53,35 +55,74 @@ export default async function SearchPage({
     content.listAuthors(),
   ])
 
-  const docs = articles.map((article) => {
-    const category = categories.find((item) => item.id === article.categoryId)
-    const author = authors.find((item) => item.id === article.authorIds[0])
-    return {
-      id: article.id,
-      title: localizeTitle(article, locale),
-      deck: localizeDeck(article, locale),
-      category: locale === 'en' ? category?.nameEn ?? '' : category?.nameNe ?? '',
-      categorySlug: category?.slug ?? '',
-      author: author ? (locale === 'en' && author.nameEn ? author.nameEn : author.nameNe) : '',
-      body: localizeBody(article, locale)
-        .map((block) => ('text' in block ? block.text : ''))
-        .join(' '),
-    }
-  })
-
   const query = q.trim()
-  const index = buildSearchIndex(docs)
-  let results = query ? index.search(query, 40) : []
 
-  const targetCategory = selectedCat ? categories.find((c) => c.slug === selectedCat) : undefined
-  if (targetCategory) {
-    results = results.filter((r) => byId.get(r.id)?.categoryId === targetCategory.id)
+  /**
+   * Search strategy:
+   * - Payload connected: DB-side ILIKE search (bounded, no body hydration).
+   * - Facade/dev: in-memory index over fixtures (small by definition).
+   */
+  let hits: SearchHit[] = []
+  if (query) {
+    if (dbSearchAvailable()) {
+      hits = await searchArticlesDb(query, locale, {
+        categorySlug: selectedCat || undefined,
+      })
+    } else {
+      const docs = articles.map((article) => {
+        const category = categories.find((item) => item.id === article.categoryId)
+        const author = authors.find((item) => item.id === article.authorIds[0])
+        return {
+          id: article.id,
+          title: localizeTitle(article, locale),
+          deck: localizeDeck(article, locale),
+          category: locale === 'en' ? category?.nameEn ?? '' : category?.nameNe ?? '',
+          categorySlug: category?.slug ?? '',
+          author: author ? (locale === 'en' && author.nameEn ? author.nameEn : author.nameNe) : '',
+          body: localizeBody(article, locale)
+            .map((block) => ('text' in block ? block.text : ''))
+            .join(' '),
+        }
+      })
+      const index = buildSearchIndex(docs)
+      let results = index.search(query, 40)
+      const byIdLocal = new Map(articles.map((article) => [article.id, article]))
+      const targetCategory = selectedCat
+        ? categories.find((c) => c.slug === selectedCat)
+        : undefined
+      if (targetCategory) {
+        results = results.filter((r) => byIdLocal.get(r.id)?.categoryId === targetCategory.id)
+      }
+      const hitCards = await Promise.all(
+        results.map(async (r) => {
+          const article = byIdLocal.get(r.id)
+          return article ? content.toStoryCard(article, locale) : null
+        }),
+      )
+      hits = results.map((r, i) => {
+        const article = byIdLocal.get(r.id)
+        const card = hitCards[i]
+        const category = categories.find((c) => c.id === article?.categoryId)
+        return {
+          id: r.id,
+          slug: article?.slug ?? '',
+          title: r.doc.title,
+          deck: r.doc.deck,
+          categorySlug: category?.slug ?? '',
+          categoryLabel: r.doc.category,
+          authorName: r.doc.author,
+          publishedAt: article?.publishedAt ?? null,
+          heroUrl: card?.hero?.url ?? null,
+          heroAlt: card?.hero?.alt ?? '',
+        }
+      })
+    }
   }
 
-  const byId = new Map(articles.map((article) => [article.id, article]))
-  const cards = await Promise.all(articles.map((article) => content.toStoryCard(article, locale)))
-  const cardById = new Map(cards.map((card) => [card.id, card]))
-  const currentStories = cards.slice(0, 6)
+  // Empty-query state: only hydrate the six featured cards, never the archive.
+  const currentStories = await Promise.all(
+    articles.slice(0, 6).map((article) => content.toStoryCard(article, locale)),
+  )
 
   const isNe = locale === 'ne'
   const copy = isNe
@@ -125,36 +166,19 @@ export default async function SearchPage({
         </p>
       </header>
 
-      {/* Search Bar Form */}
-      <form className="mt-8 max-w-[840px]" role="search">
+      {/* Search Bar with algorithm-backed suggestions */}
+      <div className="mt-8 max-w-[840px]" role="search">
         <label className="sr-only" htmlFor="q">
           {dict.searchPlaceholder}
         </label>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <MagnifyingGlass
-              aria-hidden="true"
-              size={20}
-              weight="bold"
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone"
-            />
-            <input
-              id="q"
-              name="q"
-              type="search"
-              defaultValue={q}
-              autoFocus
-              className="h-12 w-full rounded-[var(--radius-control)] border border-line bg-field pl-12 pr-4 text-base text-ink outline-none placeholder:text-stone/70 focus:border-accent focus:shadow-sm"
-              placeholder={dict.searchPlaceholder}
-            />
-          </div>
-          <button
-            type="submit"
-            className="inline-flex h-12 items-center justify-center rounded-[var(--radius-control)] accent-solid px-6 text-sm font-bold shadow-sm hover:opacity-95 transition-opacity"
-          >
-            {copy.button}
-          </button>
-        </div>
+        <SearchAutocomplete
+          locale={locale}
+          inputId="q"
+          size="lg"
+          defaultValue={q}
+          placeholder={dict.searchPlaceholder}
+          submitLabel={copy.button}
+        />
 
         {/* Quick Category Filter Pills */}
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
@@ -186,7 +210,7 @@ export default async function SearchPage({
             )
           })}
         </div>
-      </form>
+      </div>
 
       {/* Results View */}
       {query ? (
@@ -203,72 +227,61 @@ export default async function SearchPage({
               ) : null}
             </div>
             <span className="rounded-full bg-paper-elevated border border-line px-3 py-0.5 text-xs font-bold text-stone">
-              {results.length} {dict.searchResults}
+              {hits.length} {dict.searchResults}
             </span>
           </div>
 
-          {results.length ? (
+          {hits.length ? (
             <div className="mt-6 divide-y divide-line">
-              {results.map((result) => {
-                const article = byId.get(result.id)
-                const card = cardById.get(result.id)
-                if (!article || !card) return null
-                const category = categories.find((item) => item.id === article.categoryId)
-                if (!category) return null
+              {hits.map((hit) => (
+                <article key={hit.id} className="py-5 first:pt-2 group">
+                  <Link
+                    href={`/${locale}/${hit.categorySlug}/${hit.slug}`}
+                    className={`grid gap-4 ${hit.heroUrl ? 'sm:grid-cols-[10rem_1fr] sm:items-center sm:gap-6' : ''}`}
+                  >
+                    {hit.heroUrl ? (
+                      <div className="editorial-image relative aspect-[16/10] rounded-[var(--radius-control)] overflow-hidden shadow-sm">
+                        <Image
+                          src={hit.heroUrl}
+                          alt={hit.heroAlt || hit.title}
+                          fill
+                          sizes="160px"
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : null}
 
-                return (
-                  <article key={result.id} className="py-5 first:pt-2 group">
-                    <Link
-                      href={`/${locale}/${category.slug}/${article.slug}`}
-                      className={`grid gap-4 ${card.hero ? 'sm:grid-cols-[10rem_1fr] sm:items-center sm:gap-6' : ''}`}
-                    >
-                      {card.hero ? (
-                        <div className="editorial-image relative aspect-[16/10] rounded-[var(--radius-control)] overflow-hidden shadow-sm">
-                          <Image
-                            src={card.hero.url}
-                            alt={card.hero.alt || card.title}
-                            fill
-                            sizes="160px"
-                            className="object-cover"
-                          />
-                        </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-xs font-bold text-accent">
+                        <CategoryIcon slug={hit.categorySlug} size={13} weight="bold" />
+                        <span>{hit.categoryLabel}</span>
+                      </div>
+
+                      <h3 className="mt-1.5 text-xl font-bold leading-snug tracking-[-0.018em] text-ink group-hover:text-accent transition-colors md:text-2xl">
+                        {hit.title}
+                      </h3>
+
+                      {hit.deck ? (
+                        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-stone">
+                          {hit.deck}
+                        </p>
                       ) : null}
 
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 text-xs font-bold text-accent">
-                          <CategoryIcon slug={category.slug} size={13} weight="bold" />
-                          <span>{isNe ? category.nameNe : category.nameEn}</span>
-                        </div>
-
-                        <h3 className="mt-1.5 text-xl font-bold leading-snug tracking-[-0.018em] text-ink group-hover:text-accent transition-colors md:text-2xl">
-                          {result.doc.title}
-                        </h3>
-
-                        {result.doc.deck ? (
-                          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-stone">
-                            {result.doc.deck}
-                          </p>
+                      <div className="mt-3 flex items-center gap-3 text-xs font-medium text-stone">
+                        {hit.authorName ? (
+                          <span className="font-semibold text-ink">{hit.authorName}</span>
                         ) : null}
-
-                        <div className="mt-3 flex items-center gap-3 text-xs font-medium text-stone">
-                          {result.doc.author ? (
-                            <span className="font-semibold text-ink">{result.doc.author}</span>
-                          ) : null}
-                          <span>·</span>
-                          <RelativeTime iso={article.publishedAt} locale={locale} />
-                          <span>·</span>
-                          <div className="inline-flex items-center gap-1">
-                            <Clock size={12} weight="bold" />
-                            <span>
-                              {card.readTimeMinutes} {dict.minutesRead}
-                            </span>
-                          </div>
-                        </div>
+                        {hit.publishedAt ? (
+                          <>
+                            <span>·</span>
+                            <RelativeTime iso={hit.publishedAt} locale={locale} />
+                          </>
+                        ) : null}
                       </div>
-                    </Link>
-                  </article>
-                )
-              })}
+                    </div>
+                  </Link>
+                </article>
+              ))}
             </div>
           ) : (
             <div className="mt-8 rounded-[var(--radius-panel)] border border-line bg-paper-elevated p-12 text-center">

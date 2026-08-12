@@ -20,6 +20,9 @@ export type RecommendResult = {
   strategy: 'cold-start' | 'hybrid' | 'hybrid+cf'
 }
 
+import { categoryQuota } from './diversity'
+import { impressionFatigue } from './personalize'
+
 const DEFAULT_WEIGHTS = {
   content: 1,
   session: 0.6,
@@ -61,6 +64,10 @@ export function recommendForReader(
     minCfReaders?: number
     cfReaderCount?: number
     now?: Date
+    /** Impressions already shown per story id - applies fatigue dampening. */
+    seenCounts?: Record<string, number>
+    /** Max stories per category inside the result window (default 2). */
+    maxPerCategory?: number
   } = {},
 ): RecommendResult {
   const limit = opts.limit ?? 8
@@ -87,7 +94,7 @@ export function recommendForReader(
         ? 1
         : 0
       const editorial = c.isBreaking ? 1 : 0
-      const score =
+      const raw =
         content * DEFAULT_WEIGHTS.content +
         session * DEFAULT_WEIGHTS.session +
         sequence * DEFAULT_WEIGHTS.sequence +
@@ -95,14 +102,21 @@ export function recommendForReader(
         freshness(c.publishedAt, now) * DEFAULT_WEIGHTS.freshness +
         follow * DEFAULT_WEIGHTS.follow +
         editorial * DEFAULT_WEIGHTS.editorial
-      return { c, score }
+      // ALGO pers.fatigue - repeated impressions dampen the score.
+      const fatigue = impressionFatigue(opts.seenCounts?.[c.id] ?? 0)
+      return { c, score: raw * fatigue }
     })
     .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map((x) => x.c)
+
+  // ALGO div.category_quota - no category may flood the recommendation window.
+  const diversified = categoryQuota(
+    scored.map((x) => ({ ...x.c, score: x.score })),
+    opts.maxPerCategory ?? 2,
+    limit,
+  ).slice(0, limit)
 
   return {
-    items: scored,
+    items: diversified,
     strategy: cold ? 'cold-start' : cfReady ? 'hybrid+cf' : 'hybrid',
   }
 }

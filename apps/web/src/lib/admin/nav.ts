@@ -58,6 +58,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     heading: 'सञ्चालन',
     items: [
+      { label: 'सिग्नल डेस्क', href: '/admin/trending' },
       { label: 'एल्गोरिदम डेस्क', href: '/admin/algorithms' },
       { label: 'लन्च चेक', href: '/admin/launch' },
       { label: 'Payload CMS', href: CMS_BASE, external: true },

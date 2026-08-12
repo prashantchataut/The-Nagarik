@@ -67,16 +67,13 @@ function cap(
 /** Full newsroom coverage map — statuses are honest, not fixture theater. */
 export const CAPABILITIES: CapabilityDef[] = [
   // Ranking — production core
-  cap('rank.weighted', 'Weighted hub ranker', 'ranking', 'production', 'Editorial + decay + engagement blend', {
-    surface: 'hubs',
+  cap('rank.weighted', 'Weighted hub ranker', 'ranking', 'shadow', 'Editorial + decay + engagement blend - implemented + tested, awaiting hub surface (audit 2026-08-12)', {
     killSwitchEnv: 'ALGORITHMS_ENABLED',
   }),
-  cap('rank.time_decay', 'Time decay', 'ranking', 'production', 'Half-life freshness term'),
-  cap('rank.bayesian_ctr', 'Bayesian CTR', 'ranking', 'production', 'Smoothed CTR for cold items'),
-  cap('rank.category_diversity', 'Category diversity', 'ranking', 'production', 'Cap same-category streaks', {
-    surface: 'homepage',
-  }),
-  cap('rank.breaking_boost', 'Breaking boost', 'ranking', 'production', 'Editorial breaking flag weight'),
+  cap('rank.time_decay', 'Time decay', 'ranking', 'shadow', 'weightedScore half-life term - unwired; live decay runs via rank.half_life (audit 2026-08-12)'),
+  cap('rank.bayesian_ctr', 'Bayesian CTR', 'ranking', 'shadow', 'Smoothed CTR term of weightedScore - unwired (audit 2026-08-12)'),
+  cap('rank.category_diversity', 'Category diversity', 'ranking', 'shadow', 'applyCategoryDiversity unwired; live diversity runs via div.category_quota (audit 2026-08-12)'),
+  cap('rank.breaking_boost', 'Breaking boost', 'ranking', 'shadow', 'weightedScore breaking term - unwired; breaking handled editorially in feeds (audit 2026-08-12)'),
   cap('rank.sponsorship_penalty', 'Sponsorship penalty', 'ranking', 'shadow', 'Downrank sponsored when present'),
   cap('rank.fatigue_penalty', 'Fatigue penalty', 'ranking', 'shadow', 'Penalize over-exposed stories'),
   cap('rank.ucb_explore', 'UCB exploration', 'ranking', 'shadow', 'Explore under-impressed arms'),
@@ -107,9 +104,7 @@ export const CAPABILITIES: CapabilityDef[] = [
   cap('discover.visual_stories', 'Visual stories', 'discovery', 'shadow', 'Hero-present stories'),
 
   // Search
-  cap('search.bm25', 'BM25 fielded search', 'search', 'production', 'Title-weighted BM25', {
-    surface: 'search',
-  }),
+  cap('search.bm25', 'BM25 fielded search', 'search', 'shadow', 'Title-weighted BM25 - unwired: live lexical search is search.lexicon + DB ILIKE (audit 2026-08-12)'),
   cap('search.autocomplete', 'Autocomplete trie', 'search', 'production', 'Prefix terms from index'),
   cap('search.lexicon', 'Bilingual lexicon', 'search', 'production', 'Nepali↔English query expand'),
   cap('search.typo_latin', 'Latin typo tolerance', 'search', 'planned', 'Edit-distance for Latin tokens'),
@@ -138,7 +133,7 @@ export const CAPABILITIES: CapabilityDef[] = [
 
   // Moderation
   cap('mod.lexical', 'Lexical moderation', 'moderation', 'production', 'Banned terms + URL spam'),
-  cap('mod.wilson_rank', 'Wilson comment rank', 'moderation', 'production', 'Wilson lower bound'),
+  cap('mod.wilson_rank', 'Wilson comment rank', 'moderation', 'shadow', 'Wilson lower bound - unwired: needs comment voting surface (audit 2026-08-12)'),
   cap('mod.queue_default_off', 'Comments default off', 'moderation', 'production', 'Feature flag closed'),
   cap('mod.captcha_required', 'CAPTCHA on UGC', 'moderation', 'planned', 'Enable with comments'),
   cap('mod.troll_risk', 'Troll risk', 'moderation', 'production', 'Reject history signal'),
@@ -303,6 +298,147 @@ for (const [domain, slug] of PLANNED_EXPANSIONS) {
     ),
   )
 }
+
+
+// ---------------------------------------------------------------------------
+// Algorithm library batch 1 (2026-08-11) - implemented + unit-tested in this
+// package. Status is honest: production = wired to a live surface today,
+// shadow = implemented and tested, awaiting its consumer surface.
+// ---------------------------------------------------------------------------
+CAPABILITIES.push(
+  // stats
+  cap('stats.sma', 'Simple moving average', 'infra', 'shadow', 'Trailing-window mean for dashboards'),
+  cap('stats.ewma', 'Exponential moving average', 'ranking', 'production', 'Smoothing under velocity ranking', { surface: 'trending' }),
+  cap('stats.z_score', 'Z-score', 'ranking', 'production', 'Burst detection baseline scoring'),
+  cap('stats.mad_z', 'Robust MAD z-score', 'ranking', 'production', 'Spike-resistant burst scoring'),
+  cap('stats.percentile', 'Interpolated percentile', 'infra', 'shadow', 'Latency/engagement distribution cuts'),
+  cap('stats.laplace', 'Laplace smoothing', 'ranking', 'shadow', 'Additive smoothing for sparse counts'),
+  cap('stats.beta_mean', 'Beta posterior mean', 'ranking', 'shadow', 'Smoothed CTR under scoring - unwired directly; smoothing runs inside recommendForReader freshness path (audit 2026-08-12)'),
+  cap('stats.two_proportion_z', 'Two-proportion z-test', 'experiments', 'shadow', 'A/B conversion significance'),
+  cap('stats.regression_slope', 'Trend slope', 'ranking', 'shadow', 'Direction of engagement over windows'),
+  cap('stats.softmax', 'Softmax distribution', 'recommend', 'shadow', 'Score-to-probability conversion'),
+  cap('stats.sessionize', 'Event sessionization', 'retention', 'shadow', '30-minute-gap session splitting'),
+  cap('stats.winsorize', 'Winsorization', 'ranking', 'production', 'Outlier clamping inside spike guard'),
+  // velocity & burst
+  cap('vel.velocity', 'Velocity (events/min)', 'ranking', 'shadow', 'Newest-window event rate'),
+  cap('vel.acceleration', 'Acceleration', 'ranking', 'production', 'Velocity delta between windows', { surface: 'signals-desk' }),
+  cap('vel.burst_z', 'Burst detection', 'ranking', 'production', 'Robust z outlier vs baseline windows, flat-floor fallback', { surface: 'homepage' }),
+  cap('vel.burst_hysteresis', 'Burst hysteresis', 'ranking', 'shadow', 'Enter/exit thresholds against flapping'),
+  cap('vel.ewma_velocity', 'Smoothed velocity', 'ranking', 'production', 'EWMA of per-window rates', { surface: 'homepage' }),
+  cap('vel.spike_guard', 'Spike guard', 'ranking', 'production', 'Winsorized windows against bot spikes', { surface: 'homepage' }),
+  cap('vel.velocity_rank', 'Velocity ranking', 'ranking', 'production', 'Velocity x freshness x burst composite', { surface: 'homepage' }),
+  cap('rank.half_life', 'Half-life decay factory', 'ranking', 'production', 'Configurable exponential freshness'),
+  // scoring
+  cap('score.hn_gravity', 'Hacker News gravity', 'ranking', 'shadow', '(p-1)/(age+2)^1.8 reference ranker'),
+  cap('score.reddit_hot', 'Reddit hot', 'ranking', 'shadow', 'log10 votes + time epoch term'),
+  cap('score.bayesian_avg', 'Bayesian average', 'ranking', 'shadow', 'Prior-weighted rating for sparse items'),
+  cap('score.freshness', 'Freshness half-life', 'ranking', 'production', 'Freshness term in feeds', { surface: 'up-next' }),
+  cap('score.ctr_smoothed', 'Smoothed CTR', 'ranking', 'shadow', 'Beta-smoothed CTR term - unwired: awaiting CTR event capture (audit 2026-08-12)'),
+  cap('score.dwell', 'Dwell quality', 'ranking', 'shadow', 'Read time vs expected, capped'),
+  cap('score.completion', 'Completion rate', 'ranking', 'shadow', 'Finished reads over views'),
+  cap('score.position_bias', 'Position bias correction', 'ranking', 'shadow', 'Inverse-propensity CTR by rank'),
+  cap('score.editorial_decay', 'Editorial boost decay', 'editorial', 'shadow', 'Pins expire linearly'),
+  cap('score.engagement_composite', 'Engagement composite', 'ranking', 'shadow', 'Rate-normalized weighted blend'),
+  // text
+  cap('text.tokenize', 'Devanagari-safe tokenizer', 'search', 'production', 'Mark-aware Unicode tokenization', { surface: 'search' }),
+  cap('text.tfidf', 'TF-IDF vectors', 'search', 'shadow', 'Smoothed-IDF document vectors'),
+  cap('text.cosine_sparse', 'Sparse cosine', 'recommend', 'shadow', 'Similarity over sparse vectors'),
+  cap('text.jaccard', 'Jaccard similarity', 'moderation', 'production', 'Set overlap under dup detection', { surface: 'comments' }),
+  cap('text.bm25', 'Okapi BM25', 'search', 'shadow', 'Exact BM25 (k1=1.2, b=0.75) - swap-in for lexical search'),
+  cap('text.simhash', 'SimHash fingerprint', 'editorial', 'shadow', '32-bit near-dup fingerprints for wire copy'),
+  cap('text.near_dup', 'Near-duplicate verdict', 'editorial', 'shadow', 'Shingle Jaccard OR simhash Hamming'),
+  cap('text.keywords', 'TF-IDF keywords', 'editorial', 'shadow', 'Top-k distinctive terms per story'),
+  cap('feed.headline_dedupe', 'Headline dedupe', 'discovery', 'shadow', 'Greedy near-dup removal in rails'),
+  // diversity
+  cap('div.mmr', 'MMR re-ranking', 'recommend', 'shadow', 'Relevance/diversity trade-off re-ranker'),
+  cap('div.category_quota', 'Category quota', 'recommend', 'production', 'Window cap in recommendations', { surface: 'up-next' }),
+  cap('div.author_spacing', 'Author spacing', 'discovery', 'shadow', 'Minimum gap between same byline'),
+  cap('div.serendipity', 'Serendipity injection', 'recommend', 'shadow', 'Deterministic exploration slots'),
+  cap('div.interleave', 'Team-draft interleaving', 'experiments', 'shadow', 'Online ranker comparison'),
+  // personalization
+  cap('pers.interest_decay', 'Decayed interest profile', 'recommend', 'shadow', 'Half-life category vector from reads'),
+  cap('pers.covisit', 'Co-visitation matrix', 'recommend', 'shadow', 'Readers-also-read counts from sessions'),
+  cap('pers.item_cf', 'Item-item CF', 'recommend', 'shadow', 'Popularity-damped co-read scores'),
+  cap('pers.markov_next', 'Markov next-read', 'recommend', 'shadow', 'Smoothed session transition model'),
+  cap('pers.fatigue', 'Impression fatigue', 'recommend', 'production', 'Dampens repeatedly shown stories', { surface: 'up-next' }),
+  cap('pers.freq_cap', 'Frequency capping', 'notify', 'shadow', 'Hard cap per rolling window'),
+  cap('pers.cold_start_blend', 'Cold-start blending', 'recommend', 'shadow', 'n/(n+k) personal-global weight'),
+  // experimentation
+  cap('exp.epsilon_greedy', 'Epsilon-greedy bandit', 'experiments', 'shadow', 'Explore/exploit module ordering'),
+  cap('exp.ucb1', 'UCB1 bandit', 'experiments', 'shadow', 'Optimism under uncertainty'),
+  cap('exp.thompson', 'Thompson sampling', 'experiments', 'shadow', 'Beta-Bernoulli posterior sampling'),
+  cap('exp.bucket_assign', 'Deterministic bucketing', 'experiments', 'shadow', 'Hash-based stable variant assignment'),
+  cap('exp.srm', 'Sample ratio mismatch', 'experiments', 'shadow', 'Loud alarm on broken splits'),
+  // quality
+  cap('quality.read_time', 'Devanagari-aware read time', 'editorial', 'production', 'Script-blended WPM estimate'),
+  cap('quality.comment_spam', 'Comment spam score', 'moderation', 'production', 'Links/shout/repetition composite gate', { surface: 'comments' }),
+  cap('quality.dup_comment', 'Duplicate comment detection', 'moderation', 'production', 'Shingle-Jaccard repeat gate', { surface: 'comments' }),
+  cap('quality.clickbait', 'Clickbait linting', 'editorial', 'shadow', 'Curiosity-gap heuristics for the composer'),
+  cap('quality.readability', 'Readability hint', 'editorial', 'shadow', 'Danda-aware sentence-length buckets'),
+  cap('quality.profanity', 'Profanity matcher', 'moderation', 'shadow', 'Normalized wordlist engine, CMS-fed lists'),
+)
+
+
+// ---------------------------------------------------------------------------
+// Algorithm library batch 2 (2026-08-11) - implemented + unit-tested.
+// ---------------------------------------------------------------------------
+CAPABILITIES.push(
+  // trending depth
+  cap('trend.kleinberg', 'Kleinberg burst automaton', 'ranking', 'production', 'Two-state Viterbi over event gaps', { surface: 'signals-desk' }),
+  cap('trend.poisson_surprise', 'Poisson surprise', 'ranking', 'production', '-log10 tail probability of observed spikes', { surface: 'signals-desk' }),
+  cap('trend.category_baseline', 'Per-category baselines', 'ranking', 'shadow', 'Politics judged against politics'),
+  cap('trend.topic_cluster', 'Trending topic clustering', 'discovery', 'production', 'Keyword co-occurrence agglomeration', { surface: 'signals-desk' }),
+  cap('trend.geo', 'Province trending', 'discovery', 'shadow', 'Regional velocity splits with honest minimums'),
+  cap('trend.hour_of_week', 'Seasonality normalization', 'ranking', 'shadow', '168-bucket hour-of-week baselines'),
+  cap('trend.lifecycle', 'Story lifecycle phases', 'editorial', 'production', 'rising / peak / decaying / dormant', { surface: 'signals-desk' }),
+  cap('trend.half_life_fit', 'Half-life estimation', 'ranking', 'shadow', 'Log-linear decay fitting per category'),
+  // search upgrades
+  cap('search.trie_autocomplete', 'Prefix trie autocomplete', 'search', 'production', 'Devanagari + Latin weighted completions', { surface: 'search-suggest' }),
+  cap('search.transliterate', 'Roman->Devanagari matching', 'search', 'production', 'Syllable parser with vowel alternates, substitution-ordered candidates', { surface: 'search' }),
+  cap('search.levenshtein', 'Typo tolerance', 'search', 'production', 'Banded edit distance, length-scaled budget', { surface: 'search-suggest' }),
+  cap('search.zero_result_rewrite', 'Zero-result rescue', 'search', 'shadow', 'Closest successful query suggestion'),
+  cap('search.proximity', 'Phrase proximity scoring', 'search', 'shadow', 'Minimal window span boost'),
+  cap('search.xquad', 'Result diversification', 'search', 'shadow', 'xQuAD-lite category coverage'),
+  cap('search.trending_queries', 'Trending queries', 'search', 'shadow', 'Burst-scored query suggestions'),
+  // personalization depth
+  cap('pers.mf_als', 'Matrix factorization (ALS-lite)', 'recommend', 'shadow', 'Implicit-feedback latent factors, deterministic'),
+  cap('pers.markov2', 'Order-2 Markov next-read', 'recommend', 'shadow', 'Bigram transitions with order-1 fallback'),
+  cap('pers.author_affinity', 'Author affinity profiles', 'recommend', 'shadow', 'Decayed byline vectors'),
+  cap('pers.negative_feedback', 'Negative feedback', 'recommend', 'shadow', 'Hide stories, damp categories/authors'),
+  cap('pers.onboarding', 'Interest onboarding optimizer', 'retention', 'shadow', 'Greedy max-coverage pick-3'),
+  cap('pers.locale_transfer', 'Cross-locale transfer', 'recommend', 'shadow', 'ne<->en interests at 0.7 confidence'),
+  cap('pers.time_slot', 'Time-slot preferences', 'recommend', 'shadow', 'Daypart length preferences from history'),
+  cap('pers.push_propensity', 'Push propensity', 'notify', 'shadow', 'Logistic send/skip with hard gates'),
+  // editorial intelligence
+  cap('ed.wire_cluster', 'Wire-copy cluster collapse', 'editorial', 'shadow', 'Dual-detector headline clustering'),
+  cap('ed.publish_time', 'Optimal publish hours', 'editorial', 'shadow', 'Engagement-weighted hour histogram'),
+  cap('ed.headline_ab', 'Headline A/B testing', 'editorial', 'shadow', 'Thompson sampling with 95% posterior stop'),
+  cap('ed.story_gap', 'Coverage gap detection', 'editorial', 'shadow', 'Bursting queries missing from the corpus'),
+  cap('ed.evergreen', 'Evergreen resurfacing', 'discovery', 'shadow', 'Old stories with fresh bursts'),
+  cap('ed.correction_propagation', 'Correction propagation', 'trust', 'shadow', 'BFS over the citation graph'),
+  cap('ed.tag_suggest', 'Composer tag suggestions', 'editorial', 'shadow', 'TF-IDF keywords onto tag vocabulary'),
+  cap('ed.related_gate', 'Related-story quality gate', 'discovery', 'shadow', 'Similarity floor - empty beats misleading'),
+  // community
+  cap('com.rank', 'Comment ranking', 'community', 'shadow', 'Wilson bound x freshness blend'),
+  cap('com.toxicity', 'Tiered toxicity scoring', 'moderation', 'shadow', 'CMS-fed weighted wordlists ne+en'),
+  cap('com.thread_collapse', 'Thread collapse', 'community', 'shadow', 'Low-value chain folding'),
+  cap('com.reputation', 'Commenter reputation', 'moderation', 'shadow', 'Beta-smoothed accept rate'),
+  cap('com.brigading', 'Brigading detection', 'moderation', 'production', 'Volume x concentration x new-source composite', { surface: 'admin-queue' }),
+  cap('com.queue_priority', 'Moderation queue priority', 'moderation', 'production', 'Hot-article, borderline-first review order', { surface: 'admin-queue' }),
+  // experiments depth
+  cap('exp.exposure_join', 'Exposure-metric join', 'experiments', 'shadow', 'Intent-to-treat per-variant metrics'),
+  cap('exp.bayes_stop', 'Bayesian early stopping', 'experiments', 'shadow', 'Exact P(B>A) via log-Beta summation'),
+  cap('exp.cuped', 'CUPED variance reduction', 'experiments', 'shadow', 'Pre-period covariate adjustment'),
+  cap('exp.srm_chi2', 'Multi-variant SRM', 'experiments', 'shadow', 'Chi-square GOF with incomplete-gamma p-values'),
+  cap('exp.guardrail', 'Guardrail monitor', 'experiments', 'shadow', 'One-sided degradation test, auto-halt'),
+  // distribution & retention
+  cap('ret.newsletter_select', 'Newsletter story selection', 'retention', 'shadow', 'Interest-ranked, deduped, quota-bound'),
+  cap('ret.send_time', 'Send-time optimization', 'retention', 'shadow', 'Laplace-smoothed open-hour histogram'),
+  cap('ret.digest_dedupe', 'Digest dedupe', 'retention', 'shadow', 'Read + recently-sent removal'),
+  cap('ret.card_ctr_feedback', 'Social card feedback', 'distribution', 'shadow', 'Wilson-bound conservative winner'),
+  cap('ret.streak_engine', 'Reading streaks', 'retention', 'production', 'Consecutive-day chains + milestones', { surface: 'account' }),
+  cap('ret.churn_risk', 'Churn risk scoring', 'retention', 'shadow', 'Recency/frequency decay buckets'),
+)
 
 // Fill to ~232 with numbered planned infra/ops jobs (still honest: status=planned)
 while (CAPABILITIES.length < 232) {

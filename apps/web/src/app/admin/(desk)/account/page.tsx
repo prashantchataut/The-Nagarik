@@ -61,7 +61,10 @@ export default async function AdminAccountPage() {
         </div>
 
         <div className="pt-2 flex flex-wrap gap-3">
-          <AdminButton href={cmsCollectionUrl('users', session.id)} external>
+          <AdminButton href="/journalist/profile">
+            Public Byline Profile (bio, photo, beats)
+          </AdminButton>
+          <AdminButton href={cmsCollectionUrl('users', session.id)} variant="secondary" external>
             Edit Profile & Password in CMS
           </AdminButton>
           <StaffLogoutButton className="rounded-[var(--radius-control)] border border-line bg-paper px-4 py-2 text-xs font-bold text-stone hover:text-danger hover:border-danger" />

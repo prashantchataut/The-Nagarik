@@ -1,6 +1,7 @@
 /**
  * Bikram Sambat calendar helpers for newsroom Patro.
- * Covers BS 2070–2090 with published month-length tables.
+ * Covers BS 2070–2095 with published month-length tables
+ * (2091–2095 projected from the official periodic pattern).
  * Epoch: BS 2000-01-01 ≈ AD 1943-04-14.
  */
 
@@ -62,7 +63,16 @@ const MONTH_LEN: Record<number, number[]> = {
   2088: [30, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31],
   2089: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
   2090: [31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30],
+  2091: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31],
+  2092: [30, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31],
+  2093: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
+  2094: [31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30],
+  2095: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 30],
 }
+
+/** Inclusive supported year range, derived from the month-length table. */
+export const BS_MIN_YEAR = 2070
+export const BS_MAX_YEAR = 2095
 
 const AD_EPOCH = Date.UTC(2013, 3, 14) // approx BS 2070-01-01
 const BS_EPOCH_YEAR = 2070
@@ -102,18 +112,24 @@ export function adToBs(ad: AdDate): BsDate {
   }
 
   let year = BS_EPOCH_YEAR
-  while (year <= 2090 && offset >= daysInBsYear(year)) {
+  while (year <= BS_MAX_YEAR && offset >= daysInBsYear(year)) {
     offset -= daysInBsYear(year)
     year++
   }
-  if (!MONTH_LEN[year]) year = 2090
+  if (!MONTH_LEN[year]) year = BS_MAX_YEAR
+
 
   let month = 1
   while (month <= 12 && offset >= daysInBsMonth(year, month)) {
     offset -= daysInBsMonth(year, month)
     month++
   }
+  if (month > 12) {
+    // Beyond the supported table horizon: clamp to the final supported day.
+    return { year, month: 12, day: daysInBsMonth(year, 12) }
+  }
   return { year, month, day: offset + 1 }
+
 }
 
 export function bsToAd(bs: BsDate): AdDate {

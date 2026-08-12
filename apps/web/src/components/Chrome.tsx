@@ -11,8 +11,9 @@ import {
   MagnifyingGlass,
   Moon,
   ShieldCheck,
+  SignIn,
   Translate,
-  User,
+  UserCircle,
   X,
 } from '@phosphor-icons/react'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
@@ -20,6 +21,8 @@ import type { Category } from '@thenagarik/content'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ChromeDate } from '@/components/ChromeDate'
 import { CategoryIcon } from '@/components/CategoryIcon'
+import { NewsletterCard } from '@/components/reader/NewsletterCard'
+import { SearchAutocomplete } from '@/components/search/SearchAutocomplete'
 import { BRAND_EN, BRAND_NE, patroHref, swapLocalePath } from '@/lib/site'
 
 const FOCUSABLE_SELECTOR =
@@ -30,11 +33,14 @@ export function SiteHeader({
   dict,
   categories,
   trendingTags = [],
+  reader = null,
 }: {
   locale: AppLocale
   dict: Dictionary
   categories: Category[]
   trendingTags?: string[]
+  /** Signed-in reader (server-resolved); drives the conversion-first CTA. */
+  reader?: { name: string } | null
 }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname() ?? ''
@@ -103,10 +109,14 @@ export function SiteHeader({
         : 'text-ink hover:bg-paper-elevated hover:text-ink'
     }`
 
+  const accountHref = `/${locale}/account`
+  const accountActive = isActive(accountHref)
+
   return (
     <>
       {/* Desktop Header */}
-      <header className="hidden bg-paper md:block">
+      <header className="hidden bg-paper md:block" data-focus-hide>
+
         {/* Top utility bar */}
         <div className="border-b border-line bg-paper-elevated text-[0.78rem] text-stone">
           <div className="mx-auto flex min-h-9 max-w-[1280px] items-center justify-between gap-6 px-6">
@@ -128,10 +138,37 @@ export function SiteHeader({
                 <ShieldCheck size={13} weight="bold" aria-hidden="true" />
                 <span>{dict.trust}</span>
               </Link>
-              <Link href={`/${locale}/login`} className="inline-flex items-center gap-1 text-ink hover:text-accent">
-                <User size={13} weight="bold" aria-hidden="true" />
-                <span>{dict.login}</span>
-              </Link>
+              {reader ? (
+                <Link
+                  href={accountHref}
+                  aria-current={accountActive ? 'page' : undefined}
+                  className={`inline-flex min-h-7 items-center gap-1.5 rounded-full px-3 font-bold transition-colors ${
+                    accountActive
+                      ? 'bg-accent-muted text-accent'
+                      : 'bg-paper text-ink hover:bg-accent-muted hover:text-accent'
+                  }`}
+                >
+                  <UserCircle size={15} weight="fill" className="text-accent" aria-hidden="true" />
+                  <span className="max-w-[12ch] truncate">{reader.name || dict.account}</span>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href={`/${locale}/login`}
+                    className="inline-flex min-h-7 items-center gap-1.5 rounded-full accent-solid px-3.5 font-bold shadow-sm transition-opacity hover:opacity-90"
+                  >
+                    <SignIn size={14} weight="bold" aria-hidden="true" />
+                    <span>{dict.login}</span>
+                  </Link>
+                  <Link
+                    href={`/${locale}/register`}
+                    className="inline-flex min-h-7 items-center rounded-full border border-accent px-3 font-bold text-accent transition-colors hover:bg-accent-muted"
+                  >
+                    {locale === 'ne' ? 'दर्ता' : 'Sign up'}
+                  </Link>
+                </>
+              )}
+
               <span className="h-3.5 w-px bg-line" aria-hidden="true" />
               <ThemeToggle dict={dict} />
               <Link
@@ -165,31 +202,18 @@ export function SiteHeader({
               </span>
             </Link>
 
-            <form
-              action={`/${locale}/search`}
-              method="get"
-              className="w-full max-w-[18rem] justify-self-end"
-              role="search"
-            >
+            <div className="w-full max-w-[19rem] justify-self-end" role="search">
               <label className="sr-only" htmlFor="masthead-search">
                 {dict.search}
               </label>
-              <div className="relative">
-                <MagnifyingGlass
-                  size={16}
-                  weight="bold"
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone"
-                  aria-hidden="true"
-                />
-                <input
-                  id="masthead-search"
-                  name="q"
-                  type="search"
-                  placeholder={dict.searchPlaceholder}
-                  className="min-h-10 w-full rounded-[var(--radius-control)] border border-line bg-field pl-9 pr-3 text-sm text-ink placeholder:text-stone/70 focus:border-accent focus:outline-none"
-                />
-              </div>
-            </form>
+              <SearchAutocomplete
+                locale={locale}
+                inputId="masthead-search"
+                placeholder={dict.searchPlaceholder}
+                submitLabel={dict.search}
+              />
+            </div>
+
           </div>
         </div>
 
@@ -239,8 +263,11 @@ export function SiteHeader({
       </header>
 
       {/* Mobile Top Header */}
-      <header className="sticky top-0 z-40 border-b border-line bg-paper shadow-[0_2px_8px_rgb(16_32_29_/_0.06)] md:hidden">
-        <div className="grid h-14 grid-cols-[3rem_1fr_3rem] items-center px-2">
+      <header
+        className="sticky top-0 z-40 border-b border-line bg-paper shadow-[0_2px_8px_rgb(16_32_29_/_0.06)] md:hidden"
+        data-focus-hide
+      >
+        <div className="grid h-14 grid-cols-[3rem_1fr_3rem_3rem] items-center px-2">
           <button
             ref={menuButtonRef}
             type="button"
@@ -264,6 +291,22 @@ export function SiteHeader({
             <span className="mt-0.5 block text-[0.6rem] font-bold tracking-[0.12em] text-stone">
               {BRAND_EN.toUpperCase()}
             </span>
+          </Link>
+
+          <Link
+            href={reader ? accountHref : `/${locale}/login`}
+            className={`inline-flex h-11 w-11 items-center justify-center justify-self-end rounded-full ${
+              reader
+                ? 'text-accent hover:bg-accent-muted'
+                : 'accent-solid shadow-sm'
+            }`}
+            aria-label={reader ? dict.account : dict.login}
+          >
+            {reader ? (
+              <UserCircle size={24} weight="fill" aria-hidden="true" />
+            ) : (
+              <SignIn size={21} weight="bold" aria-hidden="true" />
+            )}
           </Link>
 
           <Link
@@ -314,7 +357,7 @@ export function SiteHeader({
 
       {/* Trending Hashtag Strip */}
       {trendingTags.length ? (
-        <aside className="hidden border-b border-line bg-paper-elevated md:block">
+        <aside className="hidden border-b border-line bg-paper-elevated md:block" data-focus-hide>
           <div className="nav-scroller mx-auto flex min-h-8 max-w-[1280px] items-center gap-3 overflow-x-auto px-6 py-1 text-xs">
             <span className="shrink-0 font-bold text-accent">{dict.trending}:</span>
             {trendingTags.map((tag) => (
@@ -414,6 +457,15 @@ export function SiteHeader({
                 <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-stone">
                   {dict.utilities}
                 </p>
+                <Link
+                  href={accountHref}
+                  className={drawerLinkClass(accountActive)}
+                  aria-current={accountActive ? 'page' : undefined}
+                  onClick={() => setOpen(false)}
+                >
+                  <UserCircle size={18} weight="bold" />
+                  <span>{dict.account}</span>
+                </Link>
                 <Link href={calendarUrl} className={drawerLinkClass()} onClick={() => setOpen(false)}>
                   <CalendarBlank size={18} weight="bold" />
                   <span>{dict.nepaliPatro}</span>
@@ -447,11 +499,13 @@ export function SiteHeader({
                   {dict.authors}
                 </Link>
                 <Link
-                  href={`/${locale}/login`}
-                  className="flex min-h-10 items-center px-3 text-xs font-semibold text-ink hover:text-accent"
+                  href={reader ? accountHref : `/${locale}/login`}
+                  className={`flex min-h-10 items-center justify-center rounded-[var(--radius-control)] px-3 text-xs font-bold ${
+                    reader ? 'text-ink hover:text-accent' : 'accent-solid shadow-sm'
+                  }`}
                   onClick={() => setOpen(false)}
                 >
-                  {dict.login}
+                  {reader ? (reader.name || dict.account) : dict.login}
                 </Link>
                 <Link
                   href={otherLocaleHref}
@@ -474,6 +528,7 @@ export function SiteHeader({
       <nav
         className="fixed bottom-0 left-0 right-0 z-30 flex h-14 items-center justify-around border-t border-line bg-paper/95 backdrop-blur px-2 shadow-[0_-2px_10px_rgb(16_32_29_/_0.06)] md:hidden"
         aria-label="Mobile quick actions"
+        data-focus-hide
       >
         <Link
           href={`/${locale}`}
@@ -516,9 +571,16 @@ export function SiteHeader({
           <span>{dict.patroShort}</span>
         </Link>
 
-        <div className="flex flex-col items-center justify-center gap-0.5 px-2 py-1">
-          <ThemeToggle dict={dict} />
-        </div>
+        <Link
+          href={accountHref}
+          className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1 text-[0.68rem] font-bold ${
+            accountActive ? 'text-accent' : 'text-stone hover:text-ink'
+          }`}
+          aria-current={accountActive ? 'page' : undefined}
+        >
+          <UserCircle size={20} weight={accountActive ? 'fill' : 'bold'} />
+          <span>{dict.account}</span>
+        </Link>
       </nav>
     </>
   )
@@ -535,7 +597,7 @@ export function SiteFooter({
 }) {
   const calendarUrl = patroHref(locale)
   return (
-    <footer className="mt-12 border-t-2 border-line bg-paper-elevated pb-16 md:pb-0">
+    <footer className="mt-12 border-t-2 border-line bg-paper-elevated pb-16 md:pb-0" data-focus-hide>
       <div className="mx-auto max-w-[1280px] px-4 py-12 md:px-6">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-12">
           {/* Brand Column */}
@@ -558,6 +620,9 @@ export function SiteFooter({
               <span className="rounded-full bg-paper-strong px-2.5 py-1 text-stone">
                 {locale === 'ne' ? 'सातै प्रदेश' : '7 Provinces'}
               </span>
+            </div>
+            <div className="mt-6">
+              <NewsletterCard locale={locale} variant="footer" />
             </div>
           </div>
 
@@ -606,6 +671,9 @@ export function SiteFooter({
               </Link>
               <Link href={`/${locale}/login`} className="text-ink hover:text-accent">
                 {dict.login}
+              </Link>
+              <Link href={`/${locale}/register`} className="text-ink hover:text-accent">
+                {locale === 'ne' ? 'खाता खोल्नुहोस्' : 'Create account'}
               </Link>
               <Link href={locale === 'en' ? '/en/rss.xml' : '/rss.xml'} className="text-ink hover:text-accent">
                 RSS

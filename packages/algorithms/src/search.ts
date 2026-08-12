@@ -1,3 +1,5 @@
+import { romanToDevanagari } from './search-advanced'
+
 export type SearchDoc = {
   id: string
   title: string
@@ -10,10 +12,12 @@ export type SearchDoc = {
 type Posting = { docId: string; tf: number; fieldBoost: number }
 
 function tokenize(text: string): string[] {
+  // \p{M} kept inside tokens: Devanagari matras/virama are combining marks,
+  // and splitting on them shatters words (bug found via algorithm suite).
   return text
     .toLowerCase()
     .normalize('NFC')
-    .split(/[^\p{L}\p{N}]+/u)
+    .split(/[^\p{L}\p{M}\p{N}]+/u)
     .filter((t) => t.length > 1)
 }
 
@@ -33,6 +37,10 @@ function expandQuery(tokens: string[]): string[] {
   const out = new Set(tokens)
   for (const t of tokens) {
     for (const alt of LEXICON[t] ?? []) out.add(alt.toLowerCase())
+    // ALGO search.transliterate - Roman tokens also search as Devanagari.
+    if (/^[a-z]{3,}$/.test(t)) {
+      for (const candidate of romanToDevanagari(t).slice(0, 8)) out.add(candidate)
+    }
   }
   return [...out]
 }

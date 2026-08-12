@@ -10,18 +10,16 @@
  */
 import { getPayload } from 'payload'
 import config from '../payload/payload.config'
+import { SITE } from '../site.config'
 
 const DEMO_PASSWORD = 'NagarikPitch2026!'
 
-const categoriesSeed = [
-  { slug: 'samachar', nameNe: 'समाचार', nameEn: 'News' },
-  { slug: 'rajniti', nameNe: 'राजनीति', nameEn: 'Politics' },
-  { slug: 'arth', nameNe: 'अर्थ', nameEn: 'Economy' },
-  { slug: 'pradesh', nameNe: 'प्रदेश', nameEn: 'Provinces' },
-  { slug: 'bichar', nameNe: 'विचार', nameEn: 'Opinion' },
-  { slug: 'khel', nameNe: 'खेलकुद', nameEn: 'Sports' },
-  { slug: 'bishwa', nameNe: 'विश्व', nameEn: 'World' },
-]
+/** Categories come from site.config: one factory, many portals. */
+const categoriesSeed = SITE.editorial.categories.map((category) => ({
+  slug: category.slug,
+  nameNe: category.ne,
+  nameEn: category.en,
+}))
 
 const demoUsers = [
   {
@@ -59,7 +57,11 @@ async function main() {
 
   const payload = await getPayload({ config })
 
-  for (const user of demoUsers) {
+  const launchStatus = process.env.LAUNCH_STATUS ?? 'dev'
+  if (launchStatus === 'live') {
+    console.warn('LAUNCH_STATUS=live: skipping demo staff users (create real accounts in /cms).')
+  }
+  for (const user of launchStatus === 'live' ? [] : demoUsers) {
     const existing = await payload.find({
       collection: 'users',
       where: { email: { equals: user.email } },
@@ -132,6 +134,21 @@ async function main() {
     throw new Error('Required categories missing after seed.')
   }
 
+  // Publish gates require an authenticated publisher/admin actor - the seed
+  // acts as the demo admin (hooks stay strict; no anonymous publishing).
+  const seedActor = (
+    await payload.find({
+      collection: 'users',
+      where: { roles: { contains: 'admin' } },
+      limit: 1,
+      overrideAccess: true,
+    })
+  ).docs[0]
+  if (!seedActor) {
+    console.warn('No admin user found; skipping demo article seeding.')
+    return
+  }
+
   async function ensureArticle(data: Record<string, unknown>) {
     const slug = String(data.slug)
     const found = await payload.find({
@@ -153,6 +170,7 @@ async function main() {
         data: payloadData as never,
         draft: false,
         overrideAccess: true,
+        user: seedActor,
       })
       console.log(`Article updated: ${slug}`)
       return
@@ -162,6 +180,7 @@ async function main() {
       data: payloadData as never,
       draft: false,
       overrideAccess: true,
+      user: seedActor,
     })
     console.log(`Article created: ${slug}`)
   }

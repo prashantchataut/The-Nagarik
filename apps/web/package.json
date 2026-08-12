@@ -12,14 +12,18 @@
     "payload": "payload",
     "generate:types": "payload generate:types --config ./src/payload/payload.config.ts",
     "generate:importmap": "payload generate:importmap --config ./src/payload/payload.config.ts",
-    "seed": "node --require ./src/scripts/patch-next-env.cjs --import tsx --env-file=../../.env.local --env-file=.env.local src/scripts/seed.ts",
+    "seed": "node --require ./src/scripts/patch-next-env.cjs --import tsx src/scripts/seed.ts",
     "local:pg": "tsx src/scripts/local-pg.ts",
-    "migrate": "cross-env NODE_OPTIONS=--require=./src/scripts/patch-next-env.cjs payload migrate --config ./src/payload/payload.config.ts",
-    "migrate:create": "cross-env NODE_OPTIONS=--require=./src/scripts/patch-next-env.cjs payload migrate:create --config ./src/payload/payload.config.ts"
+    "migrate": "node --require ./src/scripts/patch-next-env.cjs --import tsx src/scripts/migrate.ts migrate",
+    "migrate:create": "node --require ./src/scripts/patch-next-env.cjs --import tsx src/scripts/migrate.ts create",
+    "migrate:status": "node --require ./src/scripts/patch-next-env.cjs --import tsx src/scripts/migrate.ts status",
+    "test:e2e": "playwright test",
+    "test:e2e:api": "playwright test --project=api"
   },
   "dependencies": {
     "@next/env": "^16.3.0",
     "@payloadcms/db-postgres": "3.85.1",
+    "@payloadcms/email-nodemailer": "3.85.1",
     "@payloadcms/next": "3.85.1",
     "@payloadcms/richtext-lexical": "3.85.1",
     "@payloadcms/storage-vercel-blob": "3.85.1",
@@ -38,6 +42,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.0.14",
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.10",
