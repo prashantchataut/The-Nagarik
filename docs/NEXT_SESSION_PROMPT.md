@@ -48,8 +48,11 @@ network-operated sites. Strategy and contracts: `docs/NETWORK_FACTORY_PLAN.md`.
   `MIN_SIGNAL_EVENTS = 12` impressions per 2h window; UI shows an n<12 chip.
 
 ## Your tasks this session (in order)
-1. **Watch CI go green on PR #2** — first run may surface CI-only issues
-   (chromium smoke selectors, service container timing). Fix forward.
+1. **CI activation**: the workflow is parked at `.github/workflows-pending/ci.yml`
+   (sandbox token lacks `workflows` permission). Ask the user to `git mv` it to
+   `.github/workflows/ci.yml` and push (or add via GitHub UI), then watch the
+   first run on PR #2 go green - fix forward any CI-only issues (chromium
+   smoke selectors, service container timing).
 2. **Email adapter + password reset**: nodemailer adapter behind env
    (`SMTP_*` or Resend), Payload forgot-password flow for readers, replace
    the manual journalist password handover with an invite email when

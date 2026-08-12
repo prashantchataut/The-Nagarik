@@ -17,7 +17,9 @@ the design:
 
 ## Decision
 
-**Two-lane GitHub Actions pipeline** (`.github/workflows/ci.yml`):
+**Two-lane GitHub Actions pipeline** (parked at `.github/workflows-pending/ci.yml`;
+the sandbox GitHub App token lacks the `workflows` permission, so a human must
+`git mv` it into `.github/workflows/` once - see the README next to it):
 
 - `quality`: typecheck, lint, all workspace unit tests, and the algorithm
   registry claim auditor (`packages/algorithms/scripts/audit-production-claims.mjs`).
