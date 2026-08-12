@@ -1,7 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChatCircleText, Check, X } from '@phosphor-icons/react'
+import { ChatCircleText, Check, Warning, X } from '@phosphor-icons/react'
+
+type BrigadeAlert = {
+  articleId: string
+  score: number
+  reasons: string[]
+}
 
 type PendingComment = {
   id: string
@@ -21,6 +27,7 @@ type PendingComment = {
  */
 export function CommentModerationPanel() {
   const [comments, setComments] = useState<PendingComment[]>([])
+  const [brigades, setBrigades] = useState<BrigadeAlert[]>([])
   const [state, setState] = useState<'loading' | 'ready' | 'unauthorized' | 'error'>('loading')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [notice, setNotice] = useState('')
@@ -36,9 +43,10 @@ export function CommentModerationPanel() {
         if (!res.ok) throw new Error(String(res.status))
         return res.json()
       })
-      .then((data: { comments?: PendingComment[] } | null) => {
+      .then((data: { comments?: PendingComment[]; brigades?: BrigadeAlert[] } | null) => {
         if (!data) return
         setComments(Array.isArray(data.comments) ? data.comments : [])
+        setBrigades(Array.isArray(data.brigades) ? data.brigades : [])
         setState('ready')
       })
       .catch(() => setState('error'))
@@ -91,6 +99,27 @@ export function CommentModerationPanel() {
       <div aria-live="polite" className="min-h-5 pt-2">
         {notice ? <p className="text-xs font-semibold text-accent">{notice}</p> : null}
       </div>
+
+      {/* Brigading alerts (com.brigading) */}
+      {brigades.length ? (
+        <div className="mt-2 space-y-2" role="alert">
+          {brigades.map((brigade) => (
+            <div
+              key={brigade.articleId}
+              className="flex flex-wrap items-center gap-2 rounded-[var(--radius-control)] border border-danger/40 bg-danger-muted px-3.5 py-2.5 text-xs"
+            >
+              <Warning size={16} weight="fill" className="shrink-0 text-danger" aria-hidden="true" />
+              <span className="font-black text-danger">
+                सम्भावित समन्वित आक्रमण · Article {brigade.articleId}
+              </span>
+              <span className="tabular-nums font-bold text-danger">
+                score {brigade.score.toFixed(2)}
+              </span>
+              <span className="text-stone">{brigade.reasons.join(' · ')}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {state === 'loading' ? (
         <p className="py-6 text-xs text-stone">Loading pending comments...</p>

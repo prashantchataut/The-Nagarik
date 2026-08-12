@@ -9,6 +9,7 @@ import { getContent, siteUrl } from '@/lib/content'
 import { dbSearchAvailable, searchArticlesDb, type SearchHit } from '@/lib/search-db'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 import { CategoryIcon } from '@/components/CategoryIcon'
+import { SearchAutocomplete } from '@/components/search/SearchAutocomplete'
 import { RelativeTime } from '@/components/RelativeTime'
 
 export async function generateMetadata({
@@ -165,36 +166,19 @@ export default async function SearchPage({
         </p>
       </header>
 
-      {/* Search Bar Form */}
-      <form className="mt-8 max-w-[840px]" role="search">
+      {/* Search Bar with algorithm-backed suggestions */}
+      <div className="mt-8 max-w-[840px]" role="search">
         <label className="sr-only" htmlFor="q">
           {dict.searchPlaceholder}
         </label>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <MagnifyingGlass
-              aria-hidden="true"
-              size={20}
-              weight="bold"
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone"
-            />
-            <input
-              id="q"
-              name="q"
-              type="search"
-              defaultValue={q}
-              autoFocus
-              className="h-12 w-full rounded-[var(--radius-control)] border border-line bg-field pl-12 pr-4 text-base text-ink outline-none placeholder:text-stone/70 focus:border-accent focus:shadow-sm"
-              placeholder={dict.searchPlaceholder}
-            />
-          </div>
-          <button
-            type="submit"
-            className="inline-flex h-12 items-center justify-center rounded-[var(--radius-control)] accent-solid px-6 text-sm font-bold shadow-sm hover:opacity-95 transition-opacity"
-          >
-            {copy.button}
-          </button>
-        </div>
+        <SearchAutocomplete
+          locale={locale}
+          inputId="q"
+          size="lg"
+          defaultValue={q}
+          placeholder={dict.searchPlaceholder}
+          submitLabel={copy.button}
+        />
 
         {/* Quick Category Filter Pills */}
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
@@ -226,7 +210,7 @@ export default async function SearchPage({
             )
           })}
         </div>
-      </form>
+      </div>
 
       {/* Results View */}
       {query ? (

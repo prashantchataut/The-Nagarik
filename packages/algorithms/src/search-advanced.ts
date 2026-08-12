@@ -132,6 +132,11 @@ export function romanToDevanagari(roman: string, maxCandidates = 16): string[] {
           // A pending consonant with no vowel forms a conjunct via virama.
           const out = state.pendingConsonant ? state.out + state.pendingConsonant + '्' : state.out
           nextStates.push({ out, pendingConsonant: dev, subs: state.subs })
+          // Nasal alternate: n/m before another consonant is usually the
+          // anusvara in Nepali orthography (sansad -> संसद, not सन्सद).
+          if (state.pendingConsonant === 'न' || state.pendingConsonant === 'म') {
+            nextStates.push({ out: state.out + 'ं', pendingConsonant: dev, subs: state.subs + 1 })
+          }
         }
         i += rom.length
         matched = true

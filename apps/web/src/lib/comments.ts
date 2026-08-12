@@ -213,6 +213,29 @@ export async function listPendingComments(limit = 100): Promise<CommentRecord[]>
     .slice(0, limit)
 }
 
+/** Recent comments regardless of status - abuse analysis only (staff surface). */
+export async function listRecentComments(limit = 300): Promise<CommentRecord[]> {
+  if (commentsOnPayload()) {
+    try {
+      const p = await getPayload({ config })
+      const result = await p.find({
+        collection: 'comments',
+        limit,
+        sort: '-createdAt',
+        depth: 0,
+        overrideAccess: true,
+      })
+      return result.docs.map((doc) => fromPayloadDoc(doc as unknown as PayloadCommentDoc))
+    } catch {
+      // fall through to file store
+    }
+  }
+  const store = await loadFile()
+  return [...store.comments]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit)
+}
+
 export async function moderateComment(
   id: string,
   action: 'approve' | 'reject',

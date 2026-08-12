@@ -22,6 +22,7 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { ChromeDate } from '@/components/ChromeDate'
 import { CategoryIcon } from '@/components/CategoryIcon'
 import { NewsletterCard } from '@/components/reader/NewsletterCard'
+import { SearchAutocomplete } from '@/components/search/SearchAutocomplete'
 import { BRAND_EN, BRAND_NE, patroHref, swapLocalePath } from '@/lib/site'
 
 const FOCUSABLE_SELECTOR =
@@ -201,38 +202,17 @@ export function SiteHeader({
               </span>
             </Link>
 
-            <form
-              action={`/${locale}/search`}
-              method="get"
-              className="w-full max-w-[19rem] justify-self-end"
-              role="search"
-            >
+            <div className="w-full max-w-[19rem] justify-self-end" role="search">
               <label className="sr-only" htmlFor="masthead-search">
                 {dict.search}
               </label>
-              <div className="relative flex">
-                <MagnifyingGlass
-                  size={16}
-                  weight="bold"
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone"
-                  aria-hidden="true"
-                />
-                <input
-                  id="masthead-search"
-                  name="q"
-                  type="search"
-                  placeholder={dict.searchPlaceholder}
-                  className="min-h-10 w-full rounded-l-[var(--radius-control)] border border-r-0 border-line bg-field pl-9 pr-3 text-sm text-ink placeholder:text-stone/70 focus:border-accent focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="inline-flex min-h-10 shrink-0 items-center rounded-r-[var(--radius-control)] accent-solid px-3.5 text-xs font-bold transition-opacity hover:opacity-90"
-                  aria-label={dict.search}
-                >
-                  {dict.search}
-                </button>
-              </div>
-            </form>
+              <SearchAutocomplete
+                locale={locale}
+                inputId="masthead-search"
+                placeholder={dict.searchPlaceholder}
+                submitLabel={dict.search}
+              />
+            </div>
 
           </div>
         </div>

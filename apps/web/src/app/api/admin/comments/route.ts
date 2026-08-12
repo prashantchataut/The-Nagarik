@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { prioritizeModerationQueue } from '@thenagarik/algorithms'
+import { detectBrigading, prioritizeModerationQueue } from '@thenagarik/algorithms'
 import { z } from 'zod'
 import { apiError, apiOk } from '@/lib/api/http'
 import { getStaffSession, staffAuthReady } from '@/lib/auth/staff-session'
 import { editorRoles } from '@/payload/access/rbac'
-import { listPendingComments, moderateComment } from '@/lib/comments'
+import { listPendingComments, listRecentComments, moderateComment } from '@/lib/comments'
 import { getEngagementSnapshot } from '@/lib/engagement'
 
 export const dynamic = 'force-dynamic'
@@ -49,7 +49,33 @@ export async function GET(): Promise<NextResponse> {
       createdAt: comment.createdAt,
     })),
   )
-  return apiOk({ comments: prioritized })
+
+  // ALGO com.brigading - per-article raid detection: comment volume in the
+  // last 30 minutes x source concentration x never-seen-before sources.
+  const recent = await listRecentComments(300)
+  const windowMs = 30 * 60_000
+  const now = Date.now()
+  const knownIpHashes = new Set(
+    recent
+      .filter((c) => now - new Date(c.createdAt).getTime() > windowMs)
+      .map((c) => c.ipHash)
+      .filter(Boolean),
+  )
+  const byArticle = new Map<string, typeof recent>()
+  for (const comment of recent) {
+    byArticle.set(comment.articleId, [...(byArticle.get(comment.articleId) ?? []), comment])
+  }
+  const brigades = [...byArticle.entries()]
+    .map(([articleId, articleComments]) => ({
+      articleId,
+      ...detectBrigading(
+        articleComments.map((c) => ({ ipHash: c.ipHash, at: c.createdAt })),
+        knownIpHashes,
+      ),
+    }))
+    .filter((b) => b.brigading)
+
+  return apiOk({ comments: prioritized, brigades })
 }
 
 export async function POST(request: Request): Promise<NextResponse> {

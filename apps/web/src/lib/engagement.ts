@@ -144,18 +144,25 @@ export async function getEngagementSnapshot() {
   }
 
   // ALGO vel.* feed: bucket impressions into fixed windows for velocity
-  // ranking, burst detection, and lifecycle classification.
+  // ranking, burst detection, and lifecycle classification. Raw timestamps
+  // (capped) feed the Kleinberg burst automaton on the signals desk.
   const windowsByStory = new Map<string, number[]>()
+  const impressionTimesByStory = new Map<string, number[]>()
+  const MAX_TIMES_PER_STORY = 300
   const windowSpanMs = WINDOW_MINUTES * 60_000
   for (const e of events) {
     if (e.type !== 'impression' || !e.storyId) continue
-    const ageMs = now - new Date(e.at).getTime()
+    const t = new Date(e.at).getTime()
+    const ageMs = now - t
     if (ageMs < 0 || ageMs >= WINDOW_COUNT * windowSpanMs) continue
     const bucketFromNow = Math.floor(ageMs / windowSpanMs) // 0 = newest
     const index = WINDOW_COUNT - 1 - bucketFromNow // oldest first
     const row = windowsByStory.get(e.storyId) ?? new Array<number>(WINDOW_COUNT).fill(0)
     row[index] += 1
     windowsByStory.set(e.storyId, row)
+    const times = impressionTimesByStory.get(e.storyId) ?? []
+    if (times.length < MAX_TIMES_PER_STORY) times.push(t)
+    impressionTimesByStory.set(e.storyId, times)
   }
 
   return {
@@ -164,6 +171,10 @@ export async function getEngagementSnapshot() {
     windowSeries: [...windowsByStory.entries()].map(([storyId, windows]) => ({
       storyId,
       windows,
+    })),
+    impressionTimes: [...impressionTimesByStory.entries()].map(([storyId, times]) => ({
+      storyId,
+      times: times.sort((a, b) => a - b),
     })),
     windowMinutes: WINDOW_MINUTES,
     trendingSamples: [...byStory.entries()].map(([storyId, v]) => ({

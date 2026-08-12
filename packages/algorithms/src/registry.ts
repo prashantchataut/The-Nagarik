@@ -326,7 +326,7 @@ CAPABILITIES.push(
   cap('stats.winsorize', 'Winsorization', 'ranking', 'production', 'Outlier clamping inside spike guard'),
   // velocity & burst
   cap('vel.velocity', 'Velocity (events/min)', 'ranking', 'shadow', 'Newest-window event rate'),
-  cap('vel.acceleration', 'Acceleration', 'ranking', 'shadow', 'Velocity delta between windows'),
+  cap('vel.acceleration', 'Acceleration', 'ranking', 'production', 'Velocity delta between windows', { surface: 'signals-desk' }),
   cap('vel.burst_z', 'Burst detection', 'ranking', 'production', 'Robust z outlier vs baseline windows, flat-floor fallback', { surface: 'homepage' }),
   cap('vel.burst_hysteresis', 'Burst hysteresis', 'ranking', 'shadow', 'Enter/exit thresholds against flapping'),
   cap('vel.ewma_velocity', 'Smoothed velocity', 'ranking', 'production', 'EWMA of per-window rates', { surface: 'homepage' }),
@@ -389,18 +389,18 @@ CAPABILITIES.push(
 // ---------------------------------------------------------------------------
 CAPABILITIES.push(
   // trending depth
-  cap('trend.kleinberg', 'Kleinberg burst automaton', 'ranking', 'shadow', 'Two-state Viterbi over event gaps'),
-  cap('trend.poisson_surprise', 'Poisson surprise', 'ranking', 'shadow', '-log10 tail probability of observed spikes'),
+  cap('trend.kleinberg', 'Kleinberg burst automaton', 'ranking', 'production', 'Two-state Viterbi over event gaps', { surface: 'signals-desk' }),
+  cap('trend.poisson_surprise', 'Poisson surprise', 'ranking', 'production', '-log10 tail probability of observed spikes', { surface: 'signals-desk' }),
   cap('trend.category_baseline', 'Per-category baselines', 'ranking', 'shadow', 'Politics judged against politics'),
-  cap('trend.topic_cluster', 'Trending topic clustering', 'discovery', 'shadow', 'Keyword co-occurrence agglomeration'),
+  cap('trend.topic_cluster', 'Trending topic clustering', 'discovery', 'production', 'Keyword co-occurrence agglomeration', { surface: 'signals-desk' }),
   cap('trend.geo', 'Province trending', 'discovery', 'shadow', 'Regional velocity splits with honest minimums'),
   cap('trend.hour_of_week', 'Seasonality normalization', 'ranking', 'shadow', '168-bucket hour-of-week baselines'),
-  cap('trend.lifecycle', 'Story lifecycle phases', 'editorial', 'shadow', 'rising / peak / decaying / dormant'),
+  cap('trend.lifecycle', 'Story lifecycle phases', 'editorial', 'production', 'rising / peak / decaying / dormant', { surface: 'signals-desk' }),
   cap('trend.half_life_fit', 'Half-life estimation', 'ranking', 'shadow', 'Log-linear decay fitting per category'),
   // search upgrades
-  cap('search.trie_autocomplete', 'Prefix trie autocomplete', 'search', 'shadow', 'Devanagari + Latin weighted completions'),
+  cap('search.trie_autocomplete', 'Prefix trie autocomplete', 'search', 'production', 'Devanagari + Latin weighted completions', { surface: 'search-suggest' }),
   cap('search.transliterate', 'Roman->Devanagari matching', 'search', 'production', 'Syllable parser with vowel alternates, substitution-ordered candidates', { surface: 'search' }),
-  cap('search.levenshtein', 'Typo tolerance', 'search', 'shadow', 'Banded edit distance, length-scaled budget'),
+  cap('search.levenshtein', 'Typo tolerance', 'search', 'production', 'Banded edit distance, length-scaled budget', { surface: 'search-suggest' }),
   cap('search.zero_result_rewrite', 'Zero-result rescue', 'search', 'shadow', 'Closest successful query suggestion'),
   cap('search.proximity', 'Phrase proximity scoring', 'search', 'shadow', 'Minimal window span boost'),
   cap('search.xquad', 'Result diversification', 'search', 'shadow', 'xQuAD-lite category coverage'),
@@ -428,7 +428,7 @@ CAPABILITIES.push(
   cap('com.toxicity', 'Tiered toxicity scoring', 'moderation', 'shadow', 'CMS-fed weighted wordlists ne+en'),
   cap('com.thread_collapse', 'Thread collapse', 'community', 'shadow', 'Low-value chain folding'),
   cap('com.reputation', 'Commenter reputation', 'moderation', 'shadow', 'Beta-smoothed accept rate'),
-  cap('com.brigading', 'Brigading detection', 'moderation', 'shadow', 'Volume x concentration x new-source composite'),
+  cap('com.brigading', 'Brigading detection', 'moderation', 'production', 'Volume x concentration x new-source composite', { surface: 'admin-queue' }),
   cap('com.queue_priority', 'Moderation queue priority', 'moderation', 'production', 'Hot-article, borderline-first review order', { surface: 'admin-queue' }),
   // experiments depth
   cap('exp.exposure_join', 'Exposure-metric join', 'experiments', 'shadow', 'Intent-to-treat per-variant metrics'),

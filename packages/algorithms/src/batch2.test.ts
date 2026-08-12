@@ -189,6 +189,7 @@ describe('search upgrades', () => {
   it('roman to devanagari generates the real word among candidates', () => {
     assert.ok(romanToDevanagari('nepal').includes('नेपाल'))
     assert.ok(romanToDevanagari('sansad').includes('सन्सद'))
+    assert.ok(romanToDevanagari('sansad').includes('संसद'), 'anusvara alternate for nasal+consonant')
     assert.deepEqual(romanToDevanagari('budget3'), [], 'non-alpha input rejected')
     assert.deepEqual(transliterationMatches('sansad', ['सन्सद', 'बजेट']), ['सन्सद'])
     assert.deepEqual(transliterationMatches('zzz', ['सन्सद']), [])
