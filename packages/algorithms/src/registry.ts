@@ -67,16 +67,13 @@ function cap(
 /** Full newsroom coverage map — statuses are honest, not fixture theater. */
 export const CAPABILITIES: CapabilityDef[] = [
   // Ranking — production core
-  cap('rank.weighted', 'Weighted hub ranker', 'ranking', 'production', 'Editorial + decay + engagement blend', {
-    surface: 'hubs',
+  cap('rank.weighted', 'Weighted hub ranker', 'ranking', 'shadow', 'Editorial + decay + engagement blend - implemented + tested, awaiting hub surface (audit 2026-08-12)', {
     killSwitchEnv: 'ALGORITHMS_ENABLED',
   }),
-  cap('rank.time_decay', 'Time decay', 'ranking', 'production', 'Half-life freshness term'),
-  cap('rank.bayesian_ctr', 'Bayesian CTR', 'ranking', 'production', 'Smoothed CTR for cold items'),
-  cap('rank.category_diversity', 'Category diversity', 'ranking', 'production', 'Cap same-category streaks', {
-    surface: 'homepage',
-  }),
-  cap('rank.breaking_boost', 'Breaking boost', 'ranking', 'production', 'Editorial breaking flag weight'),
+  cap('rank.time_decay', 'Time decay', 'ranking', 'shadow', 'weightedScore half-life term - unwired; live decay runs via rank.half_life (audit 2026-08-12)'),
+  cap('rank.bayesian_ctr', 'Bayesian CTR', 'ranking', 'shadow', 'Smoothed CTR term of weightedScore - unwired (audit 2026-08-12)'),
+  cap('rank.category_diversity', 'Category diversity', 'ranking', 'shadow', 'applyCategoryDiversity unwired; live diversity runs via div.category_quota (audit 2026-08-12)'),
+  cap('rank.breaking_boost', 'Breaking boost', 'ranking', 'shadow', 'weightedScore breaking term - unwired; breaking handled editorially in feeds (audit 2026-08-12)'),
   cap('rank.sponsorship_penalty', 'Sponsorship penalty', 'ranking', 'shadow', 'Downrank sponsored when present'),
   cap('rank.fatigue_penalty', 'Fatigue penalty', 'ranking', 'shadow', 'Penalize over-exposed stories'),
   cap('rank.ucb_explore', 'UCB exploration', 'ranking', 'shadow', 'Explore under-impressed arms'),
@@ -107,9 +104,7 @@ export const CAPABILITIES: CapabilityDef[] = [
   cap('discover.visual_stories', 'Visual stories', 'discovery', 'shadow', 'Hero-present stories'),
 
   // Search
-  cap('search.bm25', 'BM25 fielded search', 'search', 'production', 'Title-weighted BM25', {
-    surface: 'search',
-  }),
+  cap('search.bm25', 'BM25 fielded search', 'search', 'shadow', 'Title-weighted BM25 - unwired: live lexical search is search.lexicon + DB ILIKE (audit 2026-08-12)'),
   cap('search.autocomplete', 'Autocomplete trie', 'search', 'production', 'Prefix terms from index'),
   cap('search.lexicon', 'Bilingual lexicon', 'search', 'production', 'Nepali↔English query expand'),
   cap('search.typo_latin', 'Latin typo tolerance', 'search', 'planned', 'Edit-distance for Latin tokens'),
@@ -138,7 +133,7 @@ export const CAPABILITIES: CapabilityDef[] = [
 
   // Moderation
   cap('mod.lexical', 'Lexical moderation', 'moderation', 'production', 'Banned terms + URL spam'),
-  cap('mod.wilson_rank', 'Wilson comment rank', 'moderation', 'production', 'Wilson lower bound'),
+  cap('mod.wilson_rank', 'Wilson comment rank', 'moderation', 'shadow', 'Wilson lower bound - unwired: needs comment voting surface (audit 2026-08-12)'),
   cap('mod.queue_default_off', 'Comments default off', 'moderation', 'production', 'Feature flag closed'),
   cap('mod.captcha_required', 'CAPTCHA on UGC', 'moderation', 'planned', 'Enable with comments'),
   cap('mod.troll_risk', 'Troll risk', 'moderation', 'production', 'Reject history signal'),
@@ -318,7 +313,7 @@ CAPABILITIES.push(
   cap('stats.mad_z', 'Robust MAD z-score', 'ranking', 'production', 'Spike-resistant burst scoring'),
   cap('stats.percentile', 'Interpolated percentile', 'infra', 'shadow', 'Latency/engagement distribution cuts'),
   cap('stats.laplace', 'Laplace smoothing', 'ranking', 'shadow', 'Additive smoothing for sparse counts'),
-  cap('stats.beta_mean', 'Beta posterior mean', 'ranking', 'production', 'Smoothed CTR under scoring', { surface: 'hubs' }),
+  cap('stats.beta_mean', 'Beta posterior mean', 'ranking', 'shadow', 'Smoothed CTR under scoring - unwired directly; smoothing runs inside recommendForReader freshness path (audit 2026-08-12)'),
   cap('stats.two_proportion_z', 'Two-proportion z-test', 'experiments', 'shadow', 'A/B conversion significance'),
   cap('stats.regression_slope', 'Trend slope', 'ranking', 'shadow', 'Direction of engagement over windows'),
   cap('stats.softmax', 'Softmax distribution', 'recommend', 'shadow', 'Score-to-probability conversion'),
@@ -338,7 +333,7 @@ CAPABILITIES.push(
   cap('score.reddit_hot', 'Reddit hot', 'ranking', 'shadow', 'log10 votes + time epoch term'),
   cap('score.bayesian_avg', 'Bayesian average', 'ranking', 'shadow', 'Prior-weighted rating for sparse items'),
   cap('score.freshness', 'Freshness half-life', 'ranking', 'production', 'Freshness term in feeds', { surface: 'up-next' }),
-  cap('score.ctr_smoothed', 'Smoothed CTR', 'ranking', 'production', 'Beta-smoothed CTR term'),
+  cap('score.ctr_smoothed', 'Smoothed CTR', 'ranking', 'shadow', 'Beta-smoothed CTR term - unwired: awaiting CTR event capture (audit 2026-08-12)'),
   cap('score.dwell', 'Dwell quality', 'ranking', 'shadow', 'Read time vs expected, capped'),
   cap('score.completion', 'Completion rate', 'ranking', 'shadow', 'Finished reads over views'),
   cap('score.position_bias', 'Position bias correction', 'ranking', 'shadow', 'Inverse-propensity CTR by rank'),
