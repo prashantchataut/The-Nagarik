@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { payloadDeskAvailable } from '@/lib/admin/payload-desk'
+import { emailConfigured } from '@/lib/email'
 import { SITE } from '@/site.config'
 
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,7 @@ export async function GET(): Promise<NextResponse> {
       service: 'web',
       contentSource,
       cmsConfigured: payloadDeskAvailable(),
+      emailConfigured: emailConfigured(),
       launchStatus: process.env.LAUNCH_STATUS ?? 'dev',
       uptimeSec: Math.round((Date.now() - startedAt) / 1000),
       time: new Date().toISOString(),

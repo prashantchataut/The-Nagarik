@@ -1,5 +1,6 @@
 import { buildConfig } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'node:path'
@@ -15,6 +16,7 @@ import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
 import { Readers } from './collections/Readers'
 import { Tags } from './collections/Tags'
 import { Users } from './collections/Users'
+import { SITE } from '../site.config'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -44,6 +46,35 @@ const EXTRA_CSRF_ORIGINS = (process.env.PAYLOAD_CSRF_ORIGINS ?? '')
   .map((origin) => origin.trim().replace(/\/$/, ''))
   .filter(Boolean)
 
+/**
+ * Transactional email over SMTP when configured (password resets, journalist
+ * invites, future digests). Without SMTP_* env Payload falls back to its
+ * console logger - visible in dev, and surfaced as `emailConfigured: false`
+ * in /api/health so operators can see the gap before launch.
+ */
+const SMTP_CONFIGURED = Boolean(
+  process.env.SMTP_HOST?.trim() &&
+    process.env.SMTP_USER?.trim() &&
+    process.env.SMTP_PASS?.trim() &&
+    process.env.EMAIL_FROM?.trim(),
+)
+
+const emailAdapter = SMTP_CONFIGURED
+  ? nodemailerAdapter({
+      defaultFromAddress: process.env.EMAIL_FROM!.trim(),
+      defaultFromName: process.env.EMAIL_FROM_NAME?.trim() || SITE.brand.en,
+      transportOptions: {
+        host: process.env.SMTP_HOST!.trim(),
+        port: Number(process.env.SMTP_PORT ?? 587),
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER!.trim(),
+          pass: process.env.SMTP_PASS!.trim(),
+        },
+      },
+    })
+  : undefined
+
 function validateAtBoot() {
   if (isBuild) return
   const secret = process.env.PAYLOAD_SECRET?.trim()
@@ -64,6 +95,7 @@ export default buildConfig({
   secret: PAYLOAD_SECRET,
   serverURL: SERVER_URL,
   csrf: [SERVER_URL, ...EXTRA_CSRF_ORIGINS],
+  email: emailAdapter,
   routes: {
     admin: '/cms',
   },

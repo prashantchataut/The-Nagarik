@@ -11,6 +11,7 @@ import { UtilityStrip } from '@/components/home/UtilityStrip'
 import { BreakingStrip } from '@/components/home/BreakingStrip'
 import { HeroLead } from '@/components/home/HeroLead'
 import { TrendingSection } from '@/components/home/TrendingSection'
+import { ForYouStrip } from '@/components/reader/ForYouStrip'
 import { LatestSection } from '@/components/home/LatestSection'
 import { HomeProvinceTabs } from '@/components/home/HomeProvinceTabs'
 import { HomeCategoryBand } from '@/components/news/HomeCategoryBand'
@@ -154,6 +155,9 @@ export default async function HomePage({
             stories={trendingPool}
             title={dict.trending}
           />
+
+          {/* Client-side personalization: ISR HTML stays shared/cacheable. */}
+          <ForYouStrip locale={locale} />
 
           {latestPool.length ? (
             <LatestSection

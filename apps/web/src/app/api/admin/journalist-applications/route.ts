@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { z } from 'zod'
 import { apiError, apiOk } from '@/lib/api/http'
+import { emailConfigured } from '@/lib/email'
 import { getStaffSession, staffAuthReady } from '@/lib/auth/staff-session'
 import { editorRoles } from '@/payload/access/rbac'
 
@@ -147,9 +148,25 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
       overrideAccess: true,
     })
-    // Returned exactly once; the editor hands it over and the journalist
-    // changes it at first login in /cms.
-    return apiOk({ status: 'approved', tempPassword, email })
+    // Onboarding: with an email adapter configured, send a set-your-password
+    // link (never the password itself). Manual one-time handover stays the
+    // fallback when SMTP is not set up.
+    let inviteEmailSent = false
+    if (emailConfigured()) {
+      try {
+        await payload.forgotPassword({
+          collection: 'users',
+          data: { email },
+        })
+        inviteEmailSent = true
+      } catch {
+        // Fall back to the manual handover below.
+      }
+    }
+    // tempPassword is returned exactly once; the editor hands it over and
+    // the journalist changes it at first login in /cms. When the invite
+    // email went out, the panel can de-emphasise it.
+    return apiOk({ status: 'approved', tempPassword, email, inviteEmailSent })
   } catch {
     return apiError('server-error', 'Staff account could not be created.')
   }

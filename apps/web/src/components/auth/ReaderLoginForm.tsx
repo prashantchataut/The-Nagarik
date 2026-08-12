@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { SignIn, WarningCircle } from '@phosphor-icons/react'
+import { invalidateSessionProbe, syncLibrary } from '@/components/account/library-sync'
 
 const COPY = {
   ne: {
@@ -17,6 +18,7 @@ const COPY = {
     rateLimit: 'धेरै प्रयास भयो। केही मिनेट कुर्नुहोस्।',
     generic: 'लगइन हुन सकेन। पुनः प्रयास गर्नुहोस्।',
     staffHint: 'स्टाफ खाताले यहाँ होइन, स्टाफ लगइनबाट प्रवेश गर्छ।',
+    forgot: 'पासवर्ड बिर्सनुभयो?',
   },
   en: {
     email: 'Email address',
@@ -29,6 +31,7 @@ const COPY = {
     rateLimit: 'Too many attempts. Please wait a few minutes.',
     generic: 'Login failed. Please retry.',
     staffHint: 'Staff accounts sign in through the staff login, not here.',
+    forgot: 'Forgot your password?',
   },
 } as const
 
@@ -52,6 +55,9 @@ export function ReaderLoginForm({ locale = 'ne' }: { locale?: 'ne' | 'en' }) {
         body: JSON.stringify({ email, password }),
       })
       if (res.ok) {
+        // Pull the account's synced library onto this device (best effort).
+        invalidateSessionProbe()
+        void syncLibrary()
         const next = searchParams?.get('next')
         // Only same-site relative paths are honoured.
         const target = next && next.startsWith('/') && !next.startsWith('//')
@@ -97,6 +103,14 @@ export function ReaderLoginForm({ locale = 'ne' }: { locale?: 'ne' | 'en' }) {
           className="newsroom-field min-h-12 px-3 text-sm font-normal"
         />
       </label>
+      <p className="text-right">
+        <Link
+          href={`/${locale}/forgot-password`}
+          className="inline-flex min-h-11 items-center text-xs font-bold text-accent underline-offset-4 hover:underline"
+        >
+          {copy.forgot}
+        </Link>
+      </p>
 
       <div aria-live="polite" className="min-h-5">
         {error ? (

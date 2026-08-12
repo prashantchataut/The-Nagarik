@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import {
   articleHasEnglish,
@@ -88,7 +88,9 @@ export default async function ArticlePage({
   const content = getContent()
   const article = await content.getArticleBySlug(category, slug)
   if (!article) notFound()
-  if (locale === 'en' && !articleHasEnglish(article)) notFound()
+  // No English version: land on the Nepali original instead of a 404 -
+  // this is what the header locale switcher hits on untranslated stories.
+  if (locale === 'en' && !articleHasEnglish(article)) redirect(`/ne/${category}/${slug}`)
 
   const title = localizeTitle(article, locale)
   const deck = localizeDeck(article, locale)

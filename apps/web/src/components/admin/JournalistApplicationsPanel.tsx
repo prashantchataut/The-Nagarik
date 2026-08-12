@@ -20,6 +20,7 @@ type ApprovalResult = {
   email: string
   tempPassword?: string
   userExisted?: boolean
+  inviteEmailSent?: boolean
 }
 
 /**
@@ -74,7 +75,11 @@ export function JournalistApplicationsPanel() {
         body: JSON.stringify({ id: application.id, action }),
       })
       if (!res.ok) throw new Error(String(res.status))
-      const data = (await res.json()) as { tempPassword?: string; userExisted?: boolean }
+      const data = (await res.json()) as {
+        tempPassword?: string
+        userExisted?: boolean
+        inviteEmailSent?: boolean
+      }
       setApplications((prev) => prev.filter((a) => a.id !== application.id))
       if (action === 'approve') {
         setApproval({
@@ -82,6 +87,7 @@ export function JournalistApplicationsPanel() {
           email: application.email,
           tempPassword: data.tempPassword,
           userExisted: data.userExisted,
+          inviteEmailSent: data.inviteEmailSent,
         })
         setCopied(false)
       }
@@ -137,8 +143,9 @@ export function JournalistApplicationsPanel() {
           ) : (
             <>
               <p className="text-xs font-bold text-success">
-                स्वीकृत! नयाँ पत्रकार खाता बन्यो। यो एक पटक मात्र देखिने अस्थायी पासवर्ड हो -
-                व्यक्तिगत रूपमा हस्तान्तरण गर्नुहोस् र पहिलो लगइनमै फेर्न लगाउनुहोस्:
+                {approval.inviteEmailSent
+                  ? 'स्वीकृत! नयाँ पत्रकार खाता बन्यो र पासवर्ड सेट गर्ने लिङ्क इमेलमा पठाइयो। तलको अस्थायी पासवर्ड ब्याकअप मात्र हो:'
+                  : 'स्वीकृत! नयाँ पत्रकार खाता बन्यो। यो एक पटक मात्र देखिने अस्थायी पासवर्ड हो - व्यक्तिगत रूपमा हस्तान्तरण गर्नुहोस् र पहिलो लगइनमै फेर्न लगाउनुहोस्:'}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <code className="rounded bg-paper px-3 py-1.5 font-mono text-sm font-bold text-ink">

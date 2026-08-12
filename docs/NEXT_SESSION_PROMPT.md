@@ -46,6 +46,16 @@ network-operated sites. Strategy and contracts: `docs/NETWORK_FACTORY_PLAN.md`.
   `ENGAGEMENT_RETENTION_DAYS` default 14) prunes engagement_events.
 - **Signal gating**: Signals Desk suppresses burst/surprise below
   `MIN_SIGNAL_EVENTS = 12` impressions per 2h window; UI shows an n<12 chip.
+- **Email + resets (ADR 0007)**: nodemailer adapter behind SMTP_* env
+  (console fallback; `emailConfigured` in /api/health), bilingual reset
+  emails, forgot/reset routes + pages, journalist invite email on approval.
+  Full loop verified via `scripts/verify-password-reset.ts`.
+- **Reader library sync (ADR 0007)**: `/api/reader/library` GET/PUT/DELETE,
+  jsonb fields + tombstones (migration `20260812_140232_reader_library`),
+  client layer `components/account/library-sync.ts`, homepage `ForYouStrip`.
+  25 api E2E tests green (was 15).
+- **Audit fixes**: EN URLs of untranslated stories redirect to the Nepali
+  original (was 404); dead `MobileNav.tsx` removed.
 
 ## Your tasks this session (in order)
 1. **CI activation**: the workflow is parked at `.github/workflows-pending/ci.yml`
@@ -53,17 +63,15 @@ network-operated sites. Strategy and contracts: `docs/NETWORK_FACTORY_PLAN.md`.
    `.github/workflows/ci.yml` and push (or add via GitHub UI), then watch the
    first run on PR #2 go green - fix forward any CI-only issues (chromium
    smoke selectors, service container timing).
-2. **Email adapter + password reset**: nodemailer adapter behind env
-   (`SMTP_*` or Resend), Payload forgot-password flow for readers, replace
-   the manual journalist password handover with an invite email when
-   configured (keep manual fallback).
-3. **Reader account depth**: server-side bookmark/history sync (collections +
-   routes), interests feeding the homepage mix (not just Up-Next).
-4. **Factory theme presets**: `sindoor` preset + `THEME_PRESET` toggle, layout
-   variants (anti-footprint) per `NETWORK_FACTORY_PLAN.md`.
-5. Backlog (docs/CONTINUING_BACKLOG.md): newsletter digest cron, headline A/B
-   composer, composer autosave, tsvector search index, payload-types generation,
-   locale-switcher 404s, focus-trap fixes for narrator/tint popovers.
+2. **Factory theme presets**: `sindoor` preset + `THEME_PRESET` toggle, layout
+   variants (anti-footprint) per `NETWORK_FACTORY_PLAN.md` - the last big
+   unbuilt factory requirement.
+3. **Composer autosave** (data-loss risk for journalists) + comment identity
+   pre-fill from reader session.
+4. Backlog (docs/CONTINUING_BACKLOG.md): newsletter digest cron, headline A/B
+   composer, tsvector search index, payload-types generation, focus-trap
+   fixes for narrator/tint popovers, per-category RSS, email-change flow,
+   chromium specs for library sync + reset pages.
 
 Be brutally honest in the final report: what is verified, what is assumed,
 what is still open.

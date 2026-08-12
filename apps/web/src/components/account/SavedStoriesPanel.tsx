@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { ArrowRight, BookmarkSimple, CloudCheck, Trash } from '@phosphor-icons/react'
 import { readBookmarks, writeBookmarks, type Bookmark } from './reader-store'
+import { deleteFromLibrary, LIBRARY_EVENT, syncLibrary } from './library-sync'
 
 const COPY = {
   ne: {
@@ -42,6 +43,13 @@ export function SavedStoriesPanel({
   useEffect(() => {
     setItems(readBookmarks())
     setHydrated(true)
+    // Logged-in readers: pull the server-merged library (multi-device).
+    void syncLibrary().then((merged) => {
+      if (merged) setItems(readBookmarks())
+    })
+    const onLibrary = () => setItems(readBookmarks())
+    window.addEventListener(LIBRARY_EVENT, onLibrary)
+    return () => window.removeEventListener(LIBRARY_EVENT, onLibrary)
   }, [])
 
   function remove(storyId: string) {
@@ -49,6 +57,7 @@ export function SavedStoriesPanel({
     setItems(next)
     writeBookmarks(next)
     unpinFromServiceWorker(storyId)
+    void deleteFromLibrary('saved', [storyId])
   }
 
   function unpinFromServiceWorker(storyId: string) {
@@ -75,6 +84,7 @@ export function SavedStoriesPanel({
     for (const item of items) unpinFromServiceWorker(item.storyId)
     setItems([])
     writeBookmarks([])
+    void deleteFromLibrary('saved')
   }
 
   const visible = variant === 'compact' ? items.slice(0, 4) : items

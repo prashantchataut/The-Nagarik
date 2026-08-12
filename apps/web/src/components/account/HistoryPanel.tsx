@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, ClockCounterClockwise, Trash } from '@phosphor-icons/react'
 import { readHistory, writeHistory, type HistoryEntry } from './reader-store'
+import { deleteFromLibrary, LIBRARY_EVENT, syncLibrary } from './library-sync'
 
 const COPY = {
   ne: {
@@ -19,7 +20,7 @@ const COPY = {
     filterUnfinished: 'अधुरो',
     filterFinished: 'सकिएको',
     readPercent: 'पढिएको',
-    privacyNote: 'इतिहास यही उपकरणमा मात्र रहन्छ र कहिल्यै सर्भरमा पठाइँदैन।',
+    privacyNote: 'इतिहास यही उपकरणमा रहन्छ; लगइन गरेको खातामा मात्र उपकरणहरूबीच सिंक हुन्छ।',
   },
   en: {
     title: 'Reading history',
@@ -34,7 +35,7 @@ const COPY = {
     filterUnfinished: 'In progress',
     filterFinished: 'Finished',
     readPercent: 'read',
-    privacyNote: 'History stays on this device and is never sent to a server.',
+    privacyNote: 'History stays on this device; it syncs across devices only when you are logged in.',
   },
 } as const
 
@@ -55,6 +56,13 @@ export function HistoryPanel({
   useEffect(() => {
     setItems(readHistory())
     setHydrated(true)
+    // Logged-in readers: pull the server-merged history (multi-device).
+    void syncLibrary().then((merged) => {
+      if (merged) setItems(readHistory())
+    })
+    const onLibrary = () => setItems(readHistory())
+    window.addEventListener(LIBRARY_EVENT, onLibrary)
+    return () => window.removeEventListener(LIBRARY_EVENT, onLibrary)
   }, [])
 
   const filtered = useMemo(() => {
@@ -69,12 +77,14 @@ export function HistoryPanel({
     const next = items.filter((h) => h.storyId !== storyId)
     setItems(next)
     writeHistory(next)
+    void deleteFromLibrary('history', [storyId])
   }
 
   function clearAll() {
     if (!window.confirm(copy.confirmClear)) return
     setItems([])
     writeHistory([])
+    void deleteFromLibrary('history')
   }
 
   const filterButton = (value: Filter, label: string) => (

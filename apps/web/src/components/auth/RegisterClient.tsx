@@ -1,4 +1,5 @@
 'use client'
+import { invalidateSessionProbe, syncLibrary } from '@/components/account/library-sync'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -112,6 +113,9 @@ export function RegisterClient({ locale = 'ne' }: { locale?: 'ne' | 'en' }) {
       if (res.status === 429) return setError(copy.rateLimit)
       if (data.reason === 'email-taken') return setError(copy.emailTaken)
       if (!res.ok) return setError(copy.genericError)
+      // Push any device-local bookmarks/history up to the fresh account.
+      invalidateSessionProbe()
+      void syncLibrary()
       router.push(`/${locale}/account/profile`)
       router.refresh()
     } catch {

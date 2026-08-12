@@ -19,6 +19,8 @@ import { ArticleNarrator } from '@/components/reader/Narrator'
 
 
 const TYPE_SCALE_KEY = 'tn_article_type_scale_v1'
+import { deleteFromLibrary, queueLibrarySync } from '@/components/account/library-sync'
+
 const BOOKMARKS_KEY = 'tn_saved_stories_v1'
 
 export function SocialShareButtons({
@@ -248,6 +250,7 @@ export function BookmarkButton({
         items = items.filter((i: { storyId: string }) => i.storyId !== storyId)
         setSaved(false)
         notifyServiceWorker('UNCACHE_STORY')
+        void deleteFromLibrary('saved', [storyId])
       } else {
         items.unshift({
           storyId,
@@ -260,6 +263,7 @@ export function BookmarkButton({
         notifyServiceWorker('CACHE_STORY')
       }
       localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(items.slice(0, 50)))
+      if (!saved) queueLibrarySync(1500)
     } catch {
       // Ignore localStorage errors
     }
@@ -444,6 +448,7 @@ export function ArticleEngagement({
           title,
         })
         localStorage.setItem(KEY, JSON.stringify(list.slice(0, 40)))
+        queueLibrarySync(8000)
       } catch {
         // Ignore quota/private browsing errors
       }
