@@ -1,18 +1,36 @@
 /**
- * Seed taxonomy, demo staff users, and sample articles via Payload Local API.
+ * Seed taxonomy, demo staff users, and the full The Nagarik newsroom
+ * (30 real bilingual stories with original editorial imagery) via the
+ * Payload Local API.
  *
  * Prerequisites: DATABASE_URL + PAYLOAD_SECRET (≥32).
- * Prefer creating the first admin in /cms, then run:
+ * Run:
  *
  *   pnpm --filter @thenagarik/web seed
  *
  * Demo passwords are for local/pitch only — rotate before production.
+ * Articles/authors/tags/media come from @thenagarik/content fixtures,
+ * so facade mode and Payload mode serve the identical newsroom.
  */
+import { existsSync } from 'node:fs'
 import { getPayload } from 'payload'
 import config from '../payload/payload.config'
 import { SITE } from '../site.config'
+import {
+  fixtureArticles,
+  fixtureAuthors,
+  DEV_FIXTURE_MARK,
+} from '@thenagarik/content'
 
 const DEMO_PASSWORD = 'NagarikPitch2026!'
+
+const toSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 96)
 
 /** Categories come from site.config: one factory, many portals. */
 const categoriesSeed = SITE.editorial.categories.map((category) => ({
@@ -22,26 +40,10 @@ const categoriesSeed = SITE.editorial.categories.map((category) => ({
 }))
 
 const demoUsers = [
-  {
-    email: 'admin@nagarik.local',
-    name: 'Admin Desk',
-    roles: ['admin'] as const,
-  },
-  {
-    email: 'publisher@nagarik.local',
-    name: 'Publisher',
-    roles: ['publisher'] as const,
-  },
-  {
-    email: 'editor@nagarik.local',
-    name: 'Editor',
-    roles: ['editor'] as const,
-  },
-  {
-    email: 'journalist@nagarik.local',
-    name: 'Journalist',
-    roles: ['journalist'] as const,
-  },
+  { email: 'admin@nagarik.local', name: 'Admin Desk', roles: ['admin'] as const },
+  { email: 'publisher@nagarik.local', name: 'Publisher', roles: ['publisher'] as const },
+  { email: 'editor@nagarik.local', name: 'Editor', roles: ['editor'] as const },
+  { email: 'journalist@nagarik.local', name: 'Journalist', roles: ['journalist'] as const },
 ]
 
 async function main() {
@@ -56,6 +58,10 @@ async function main() {
   }
 
   const payload = await getPayload({ config })
+  const usingDevFixtures = DEV_FIXTURE_MARK === 'DEV_ONLY' && process.env.LAUNCH_STATUS !== 'live'
+  if (!usingDevFixtures) {
+    console.log('Skipping newsroom seed (live launch).')
+  }
 
   const launchStatus = process.env.LAUNCH_STATUS ?? 'dev'
   if (launchStatus === 'live') {
@@ -74,18 +80,28 @@ async function main() {
     }
     await payload.create({
       collection: 'users',
-      data: {
-        email: user.email,
-        password: DEMO_PASSWORD,
-        name: user.name,
-        roles: [...user.roles],
-        isActive: true,
-      },
+      data: { email: user.email, password: DEMO_PASSWORD, name: user.name, roles: [...user.roles], isActive: true },
       overrideAccess: true,
     })
     console.log(`Created user: ${user.email} / ${DEMO_PASSWORD}`)
   }
 
+  // Publish gates require an authenticated publisher/admin actor — the seed
+  // acts as the demo admin (hooks stay strict; no anonymous publishing).
+  const seedActor = (
+    await payload.find({
+      collection: 'users',
+      where: { roles: { contains: 'admin' } },
+      limit: 1,
+      overrideAccess: true,
+    })
+  ).docs[0]
+  if (!seedActor) {
+    console.warn('No admin user found; skipping article seeding.')
+    return
+  }
+
+  // ---- Categories -------------------------------------------------------
   const existingCats = await payload.find({
     collection: 'categories',
     limit: 100,
@@ -104,49 +120,92 @@ async function main() {
     console.log(`Category: ${cat.slug}`)
   }
 
-  let author = (
-    await payload.find({
-      collection: 'authors',
-      where: { slug: { equals: 'nagarik-desk' } },
-      limit: 1,
-      overrideAccess: true,
-    })
-  ).docs[0]
-
-  if (!author) {
-    author = await payload.create({
+  // ---- Authors ----------------------------------------------------------
+  const authorIdByFixtureId = new Map<string, string>()
+  for (const author of fixtureAuthors) {
+    const existing = (
+      await payload.find({
+        collection: 'authors',
+        where: { slug: { equals: author.slug } },
+        limit: 1,
+        overrideAccess: true,
+      })
+    ).docs[0]
+    if (existing) {
+      authorIdByFixtureId.set(author.id, String(existing.id))
+      continue
+    }
+    const created = await payload.create({
       collection: 'authors',
       data: {
-        slug: 'nagarik-desk',
-        nameNe: 'नागरिक डेस्क',
-        nameEn: 'Nagarik Desk',
-        bioNe: 'द नागरिकको सम्पादकीय डेस्क।',
-        bioEn: 'Editorial desk of The Nagarik.',
+        slug: author.slug,
+        nameNe: author.nameNe,
+        nameEn: author.nameEn,
+        bioNe: author.bioNe,
+        bioEn: author.bioEn,
+        beats: author.beats?.map((beat) => ({ beat })) ?? [],
       },
       overrideAccess: true,
     })
+    authorIdByFixtureId.set(author.id, String(created.id))
+    console.log(`Author: ${author.nameNe}`)
   }
 
-  const newsCat = catBySlug.get('samachar')
-  const politicsCat = catBySlug.get('rajniti')
-  const opinionCat = catBySlug.get('bichar')
-  if (!newsCat || !politicsCat || !opinionCat) {
-    throw new Error('Required categories missing after seed.')
+  // ---- Tags -------------------------------------------------------------
+  const tagIdBySlug = new Map<string, string>()
+  for (const article of fixtureArticles) {
+    for (const tagName of article.tagSlugs) {
+      const slug = toSlug(tagName)
+      if (!slug || tagIdBySlug.has(slug)) continue
+      const existing = (
+        await payload.find({ collection: 'tags', where: { slug: { equals: slug } }, limit: 1, overrideAccess: true })
+      ).docs[0]
+      if (existing) {
+        tagIdBySlug.set(slug, String(existing.id))
+        continue
+      }
+      const created = await payload.create({
+        collection: 'tags',
+        data: { slug, nameNe: tagName, nameEn: tagName },
+        overrideAccess: true,
+      })
+      tagIdBySlug.set(slug, String(created.id))
+    }
+  }
+  console.log(`Tags ready: ${tagIdBySlug.size}`)
+
+  // ---- Media (hero artwork from the photo desk) --------------------------
+  // Media is uploaded only when the file exists on disk; articles missing
+  // artwork still seed and render without a hero.
+  const mediaIdBySlug = new Map<string, string>()
+  if (usingDevFixtures) {
+    for (const article of fixtureArticles) {
+      if (!article.hero) continue
+      const fileName = article.hero.url.split('/').pop() ?? ''
+      const filePath = `public${article.hero.url}`
+      if (!fileName || !existsSync(filePath)) continue
+      const existing = (
+        await payload.find({ collection: 'media', where: { filename: { equals: fileName } }, limit: 1, overrideAccess: true })
+      ).docs[0]
+      if (existing) {
+        mediaIdBySlug.set(article.slug, String(existing.id))
+        continue
+      }
+      const created = await payload.create({
+        collection: 'media',
+        data: { alt: article.hero.alt, credit: article.hero.credit },
+        filePath,
+        overrideAccess: true,
+      })
+      mediaIdBySlug.set(article.slug, String(created.id))
+    }
+    console.log(`Media uploaded: ${mediaIdBySlug.size}`)
   }
 
-  // Publish gates require an authenticated publisher/admin actor - the seed
-  // acts as the demo admin (hooks stay strict; no anonymous publishing).
-  const seedActor = (
-    await payload.find({
-      collection: 'users',
-      where: { roles: { contains: 'admin' } },
-      limit: 1,
-      overrideAccess: true,
-    })
-  ).docs[0]
-  if (!seedActor) {
-    console.warn('No admin user found; skipping demo article seeding.')
-    return
+  // ---- Articles -----------------------------------------------------------
+  if (!usingDevFixtures) {
+    console.log('Seed complete (no articles in live mode).')
+    process.exit(0)
   }
 
   async function ensureArticle(data: Record<string, unknown>) {
@@ -172,8 +231,7 @@ async function main() {
         overrideAccess: true,
         user: seedActor,
       })
-      console.log(`Article updated: ${slug}`)
-      return
+      return 'updated'
     }
     await payload.create({
       collection: 'articles',
@@ -182,109 +240,60 @@ async function main() {
       overrideAccess: true,
       user: seedActor,
     })
-    console.log(`Article created: ${slug}`)
+    return 'created'
   }
 
-  const now = new Date().toISOString()
-  const packageId = 'federal-week-1'
+  let seeded = 0
+  let failed = 0
+  for (const article of fixtureArticles) {
+    // Fixture categoryId is 'cat-<slug>' by construction in fixtures.ts
+    const catSlug = article.categoryId.startsWith('cat-')
+      ? article.categoryId.slice(4)
+      : article.categoryId
+    const category = catBySlug.get(catSlug)
+    if (!category) continue
 
-  await ensureArticle({
-    titleNe: 'द नागरिक सुरु',
-    titleEn: 'The Nagarik launches',
-    slug: 'nagarik-launch',
-    deckNe: 'नेपाली-प्रथम द्विभाषी समाचार कक्षको सुरुवात।',
-    deckEn: 'A Nepali-first bilingual newsroom begins.',
-    status: 'published',
-    englishStatus: 'published',
-    category: newsCat.id,
-    authors: [author.id],
-    attribution: 'original',
-    editorialPriority: 8,
-    publishedAt: now,
-    packageId,
-    bodyNe: [
-      {
-        type: 'paragraph',
-        text: 'द नागरिक मौलिक पत्रकारितामा आधारित नेपाली-प्रथम समाचार माध्यम हो।',
-      },
-      {
-        type: 'paragraph',
-        text: 'यो बीज लेख CMS कटओभर पुष्टि गर्नका लागि हो।',
-      },
-    ],
-    bodyEn: [
-      {
-        type: 'paragraph',
-        text: 'The Nagarik is a Nepali-first outlet built on original journalism.',
-      },
-      {
-        type: 'paragraph',
-        text: 'This seed article verifies the CMS cutover path.',
-      },
-    ],
-  })
+    try {
+      const result = await ensureArticle({
+        titleNe: article.titleNe,
+        titleEn: article.titleEn,
+        slug: article.slug,
+        deckNe: article.deckNe,
+        deckEn: article.deckEn,
+        status: 'published',
+        englishStatus: article.englishStatus,
+        category: category.id,
+        authors: article.authorIds
+          .map((id) => authorIdByFixtureId.get(id))
+          .filter(Boolean),
+        tags: article.tagSlugs.map((t) => tagIdBySlug.get(toSlug(t))).filter(Boolean),
+        province: article.province,
+        hero: mediaIdBySlug.get(article.slug),
+        isBreaking: article.isBreaking,
+        editorialPriority: article.editorialPriority,
+        attribution: 'original',
+        corrections: article.corrections.map((c) => ({ at: c.at, noteNe: c.noteNe, noteEn: c.noteEn })),
+        publishedAt: article.publishedAt,
+        updatedAt: article.updatedAt ?? article.publishedAt,
+        packageId: article.packageId || undefined,
+        bodyNe: article.bodyNe,
+        bodyEn: article.bodyEn,
+        seoTitleNe: article.seoTitleNe,
+        seoTitleEn: article.seoTitleEn,
+        seoDescriptionNe: article.seoDescriptionNe,
+        seoDescriptionEn: article.seoDescriptionEn,
+      })
+      seeded += 1
+      if (seeded % 10 === 0 || result === 'created') {
+        console.log(`Article ${result}: ${article.slug}`)
+      }
+    } catch (error) {
+      failed += 1
+      console.error(`Article failed: ${article.slug}`, (error as Error).message)
+    }
+  }
 
-  await ensureArticle({
-    titleNe: 'संसद्मा आज विशेष बैठक',
-    titleEn: 'Special session in parliament today',
-    slug: 'sansad-special-session',
-    deckNe: 'ब्रेकिङ: संसद् सचिवालयले विशेष बैठक बोलाएको छ।',
-    deckEn: 'Breaking: Parliament secretariat calls a special session.',
-    status: 'published',
-    englishStatus: 'published',
-    category: politicsCat.id,
-    authors: [author.id],
-    attribution: 'original',
-    editorialPriority: 9,
-    isBreaking: true,
-    publishedAt: now,
-    packageId,
-    bodyNe: [
-      {
-        type: 'paragraph',
-        text: 'काठमाडौं — संसद् सचिवालयले आज विशेष बैठक बोलाएको जानकारी दिएको छ।',
-      },
-      {
-        type: 'paragraph',
-        text: 'विवरण आउने क्रममा छ। यो बीज ब्रेकिङ कथा हो।',
-      },
-    ],
-    bodyEn: [
-      {
-        type: 'paragraph',
-        text: 'Kathmandu — The parliament secretariat has called a special session today.',
-      },
-      {
-        type: 'paragraph',
-        text: 'Details are still emerging. This is a seed breaking story.',
-      },
-    ],
-  })
-
-  await ensureArticle({
-    titleNe: 'नागरिक अधिकार र सञ्चार स्वतन्त्रता',
-    slug: 'nagarik-rights-opinion',
-    deckNe: 'विचार: लोकतन्त्रमा सूचनाको अधिकार किन आधारभूत हो।',
-    status: 'published',
-    englishStatus: 'none',
-    category: opinionCat.id,
-    authors: [author.id],
-    attribution: 'original',
-    editorialPriority: 6,
-    publishedAt: now,
-    bodyNe: [
-      {
-        type: 'paragraph',
-        text: 'सूचना बिना नागरिक निगरानी सम्भव हुँदैन। पत्रकारिता त्यसैको औजार हो।',
-      },
-      {
-        type: 'paragraph',
-        text: 'अंग्रेजी संस्करण यस लेखमा अहिले सार्वजनिक गरिएको छैन — गेट परीक्षणका लागि।',
-      },
-    ],
-  })
-
-  console.log('Seed complete.')
+  console.log(`\nSeed complete: ${seeded} articles (${failed} failed).`)
   console.log('Pitch logins (local only): *@nagarik.local /', DEMO_PASSWORD)
   process.exit(0)
 }

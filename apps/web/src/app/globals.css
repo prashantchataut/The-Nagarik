@@ -353,10 +353,12 @@ html[data-reading='on'] [data-article-toolbar] {
 /* Article narrator (text-to-speech) highlighting                      */
 /* ------------------------------------------------------------------ */
 
-::highlight(tn-narrator) {
-  background: color-mix(in oklab, var(--accent) 30%, transparent);
-  color: var(--ink);
-}
+/*
+ * NOTE: the `::highlight(tn-narrator)` rule for the CSS Custom Highlight
+ * API is injected at runtime by <Narrator.tsx> (see ensureHighlightStyle).
+ * Writing it here breaks Turbopack's CSS parser, which 500s every page in
+ * dev mode ("'highlight' is not recognized as a valid pseudo-element").
+ */
 
 .narrator-active-block {
   background: color-mix(in oklab, var(--accent) 8%, transparent);

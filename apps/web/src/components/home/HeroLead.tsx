@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Clock, CaretRight } from '@phosphor-icons/react'
 import type { StoryCard } from '@thenagarik/content'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
+import { categoryName as localizedCategoryName } from '@/lib/category-names'
 import { RelativeTime } from '@/components/RelativeTime'
 import { CategoryIcon } from '@/components/CategoryIcon'
 
@@ -113,19 +114,36 @@ export function HeroLead({
             </Link>
           </div>
 
+          {/* Side Updates: thumbnail rows for visual weight balance with the hero */}
           <div className="divide-y divide-line">
             {sideUpdates.slice(0, 4).map((story) => (
-              <article key={story.id} className="py-3.5 first:pt-3 last:pb-0 group">
-                <div className="flex items-center gap-2 text-[0.72rem] font-bold text-stone">
-                  <span className="text-accent">{story.categorySlug}</span>
-                  <span>·</span>
-                  <RelativeTime iso={story.publishedAt} locale={locale} />
-                </div>
-                <h3 className="mt-1 text-base font-bold leading-snug tracking-[-0.015em] text-ink group-hover:text-accent transition-colors">
-                  <Link href={`/${locale}/${story.categorySlug}/${story.slug}`}>
-                    {story.title}
+              <article key={story.id} className="flex gap-3 py-3.5 first:pt-3 last:pb-0 group">
+                {story.hero ? (
+                  <Link
+                    href={`/${locale}/${story.categorySlug}/${story.slug}`}
+                    className="editorial-image relative aspect-[4/3] w-[4.5rem] shrink-0 rounded-[var(--radius-sm)]"
+                  >
+                    <Image
+                      src={story.hero.url}
+                      alt={story.hero.alt || story.title}
+                      fill
+                      sizes="72px"
+                      className="object-cover"
+                    />
                   </Link>
-                </h3>
+                ) : null}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 text-[0.72rem] font-bold text-stone">
+                    <span className="text-accent">{localizedCategoryName(story.categorySlug, locale)}</span>
+                    <span>·</span>
+                    <RelativeTime iso={story.publishedAt} locale={locale} />
+                  </div>
+                  <h3 className="mt-1 line-clamp-2 text-[0.95rem] font-bold leading-snug tracking-[-0.015em] text-ink group-hover:text-accent transition-colors">
+                    <Link href={`/${locale}/${story.categorySlug}/${story.slug}`}>
+                      {story.title}
+                    </Link>
+                  </h3>
+                </div>
               </article>
             ))}
           </div>
@@ -136,14 +154,14 @@ export function HeroLead({
               {dict.categories}
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {['samachar', 'rajniti', 'arth', 'pradesh', 'khel'].map((cat) => (
+              {['samachar', 'rajniti', 'arth', 'pradesh', 'khel', 'pravas'].map((cat) => (
                 <Link
                   key={cat}
                   href={`/${locale}/${cat}`}
                   className="inline-flex items-center gap-1 rounded-full bg-paper px-2.5 py-1 text-xs font-semibold text-ink border border-line hover:border-accent hover:text-accent transition-colors"
                 >
                   <CategoryIcon slug={cat} size={12} weight="bold" />
-                  <span className="capitalize">{cat}</span>
+                  <span>{localizedCategoryName(cat, locale)}</span>
                 </Link>
               ))}
             </div>

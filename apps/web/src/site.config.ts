@@ -47,6 +47,7 @@ export const SITE = defineSite({
       { slug: 'bichar', ne: 'विचार', en: 'Opinion' },
       { slug: 'khel', ne: 'खेलकुद', en: 'Sports' },
       { slug: 'bishwa', ne: 'विश्व', en: 'World' },
+      { slug: 'pravas', ne: 'प्रवास', en: 'Diaspora' },
     ],
     provinces: true,
   },

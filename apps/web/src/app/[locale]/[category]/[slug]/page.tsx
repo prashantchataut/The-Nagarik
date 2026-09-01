@@ -23,6 +23,7 @@ import { CategoryIcon } from '@/components/CategoryIcon'
 import { renderInlineMarkup } from '@/components/journalist/inline-markup'
 import { getContent, siteUrl } from '@/lib/content'
 import { SITE } from '@/site.config'
+import { categoryName } from '@/lib/category-names'
 import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 import { Clock, CaretRight, House } from '@phosphor-icons/react/dist/ssr'
 
@@ -154,6 +155,28 @@ export default async function ArticlePage({
     image: article.hero?.url,
   }
 
+  // Breadcrumb trail for crawlers and rich results (E-E-A-T: 🟡7 of the
+  // completion audit — previously article pages emitted NewsArticle only).
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: dict.home, item: siteUrl(`/${locale}`) },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: categoryLabel,
+        item: siteUrl(`/${locale}/${category}`),
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: title,
+        item: siteUrl(`/${locale}/${category}/${slug}`),
+      },
+    ],
+  }
+
   return (
     <>
       <ReadingProgress />
@@ -165,6 +188,7 @@ export default async function ArticlePage({
         title={title}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       <main>
         {/* Breadcrumb Bar */}
@@ -292,9 +316,9 @@ export default async function ArticlePage({
               />
             </div>
             {(article.hero.alt || heroCredit) ? (
-              <figcaption className="mt-2.5 px-1 text-xs leading-relaxed text-stone">
-                <span>{article.hero.alt}</span>
-                {heroCredit ? <span> · तस्बिर: {heroCredit}</span> : null}
+              <figcaption className="mt-2.5 flex flex-wrap items-baseline gap-x-1.5 px-1 text-[0.78rem] leading-relaxed text-stone">
+                <span className="font-bold text-ink">{article.hero.alt}</span>
+                {heroCredit ? <span className="text-stone">· तस्बिर: {heroCredit}</span> : null}
               </figcaption>
             ) : null}
           </figure>
@@ -366,12 +390,25 @@ export default async function ArticlePage({
                     return (
                       <blockquote
                         key={i}
-                        className="my-8 rounded-[var(--radius-control)] border-l-4 border-accent bg-paper-elevated p-5 text-xl font-bold leading-relaxed text-ink shadow-sm"
+                        className="my-10 relative rounded-[var(--radius-panel)] border border-line/60 bg-paper-elevated px-7 py-7 md:px-10 shadow-sm overflow-hidden"
                       >
-                        <p>&ldquo;{block.text}&rdquo;</p>
+                        <span
+                          className="absolute left-0 top-0 h-full w-1 bg-accent"
+                          aria-hidden="true"
+                        />
+                        <span
+                          className="pointer-events-none absolute -top-2 right-4 select-none font-serif text-[5rem] leading-none text-accent/15"
+                          aria-hidden="true"
+                        >
+                          &rdquo;
+                        </span>
+                        <p className="relative font-serif text-[1.45rem] font-bold leading-[1.55] tracking-[-0.01em] text-ink md:text-[1.6rem]">
+                          {block.text}
+                        </p>
                         {block.attribution ? (
-                          <cite className="mt-3 block text-xs font-semibold not-italic text-stone">
-                            - {block.attribution}
+                          <cite className="mt-4 flex items-center gap-2 text-[0.78rem] font-bold not-italic text-stone">
+                            <span className="h-px w-8 bg-accent" aria-hidden="true" />
+                            {block.attribution}
                           </cite>
                         ) : null}
                       </blockquote>
@@ -572,7 +609,7 @@ export default async function ArticlePage({
                 </span>
               ) : null}
               <div>
-                <span className="text-xs font-bold text-accent capitalize">{nextStory.categorySlug}</span>
+                <span className="text-xs font-bold text-accent">{categoryName(nextStory.categorySlug, locale)}</span>
                 <h3 className="mt-1 text-xl font-bold leading-snug tracking-[-0.018em] text-ink group-hover:text-accent transition-colors">
                   {nextStory.title}
                 </h3>

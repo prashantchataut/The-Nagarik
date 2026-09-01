@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CaretRight, Flame } from '@phosphor-icons/react'
 import type { StoryCard } from '@thenagarik/content'
 import type { AppLocale, Dictionary } from '@/lib/i18n'
+import { categoryName } from '@/lib/category-names'
 import { RelativeTime } from '@/components/RelativeTime'
 
 const NEP_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९']
@@ -108,8 +109,8 @@ export function TrendingSection({
 
                 {/* Footer meta */}
                 <div className="mt-3 flex items-center justify-between text-[0.72rem] font-semibold text-stone border-t border-line/60 pt-2">
-                  <span className="capitalize text-accent font-bold">
-                    {story.categorySlug}
+                  <span className="text-accent font-bold">
+                    {categoryName(story.categorySlug, locale)}
                   </span>
                   <RelativeTime iso={story.publishedAt} locale={locale} />
                 </div>

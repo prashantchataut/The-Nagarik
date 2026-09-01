@@ -7,7 +7,8 @@ import { getDictionary, isLocale, type AppLocale } from '@/lib/i18n'
 import { detectTrending, mostRead, velocityRank } from '@thenagarik/algorithms'
 import { provinceLabel } from '@/lib/provinces'
 
-import { UtilityStrip } from '@/components/home/UtilityStrip'
+import { PatroTodayStrip } from '@/components/PatroTodayStrip'
+import { MarketRatesStrip } from '@/components/home/MarketRatesStrip'
 import { BreakingStrip } from '@/components/home/BreakingStrip'
 import { HeroLead } from '@/components/home/HeroLead'
 import { TrendingSection } from '@/components/home/TrendingSection'
@@ -137,6 +138,7 @@ export default async function HomePage({
     <>
       {cards.length ? (
         <>
+          <PatroTodayStrip locale={locale} dict={dict} />
           <BreakingStrip locale={locale} dict={dict} stories={breakingStories} />
 
           {lead ? (
@@ -155,6 +157,8 @@ export default async function HomePage({
             stories={trendingPool}
             title={dict.trending}
           />
+
+          <MarketRatesStrip locale={locale} dict={dict} />
 
           {/* Client-side personalization: ISR HTML stays shared/cacheable. */}
           <ForYouStrip locale={locale} />

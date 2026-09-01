@@ -152,6 +152,30 @@ function highlightCtor(): HighlightCtor | null {
 }
 
 /**
+ * Inject the `::highlight(tn-narrator)` stylesheet at runtime.
+ *
+ * The CSS Custom Highlight API pseudo-element cannot live in globals.css:
+ * Turbopack's CSS parser rejects it and every page 500s in dev. Injecting it
+ * here is strictly better anyway — only browsers that ship the Highlight API
+ * ever parse the rule.
+ */
+function ensureHighlightStyle(): void {
+  if (typeof document === 'undefined') return
+  const STYLE_ID = 'tn-narrator-highlight-style'
+  if (document.getElementById(STYLE_ID)) return
+  if (!highlightRegistry() || !highlightCtor()) return
+  const style = document.createElement('style')
+  style.id = STYLE_ID
+  style.textContent = `
+    ::highlight(tn-narrator) {
+      background: color-mix(in oklab, var(--accent) 30%, transparent);
+      color: var(--ink);
+    }
+  `
+  document.head.appendChild(style)
+}
+
+/**
  * Web Speech API narrator: sentence-by-sentence playback with language
  * detection (ne-NP / en-US), active-sentence highlighting on the body copy,
  * and play/pause/stop controls.
@@ -186,6 +210,8 @@ export function ArticleNarrator({
   useEffect(() => {
     const ok = typeof window !== 'undefined' && 'speechSynthesis' in window
     setSupported(ok)
+    // Register the ::highlight(tn-narrator) rule in supporting browsers.
+    ensureHighlightStyle()
     if (ok) {
       // Warm the voice list early so the first tap speaks immediately.
       void loadVoices().then((voices) => {
